@@ -179,15 +179,15 @@ tr:hover td{background:rgba(19,16,58,.6)}
 .acg-legend-dot{width:12px;height:3px;border-radius:2px;}
 #acg-wheel-section{display:none;}
 #acg-section{
-  position:fixed;top:0;left:0;width:100vw;height:100vh;
-  z-index:9000;background:#fff;display:none;flex-direction:column;
+  width:100vw;position:relative;left:50%;transform:translateX(-50%);
+  background:#fff;display:none;flex-direction:column;
 }
 #acg-atlas{
   display:grid;
   grid-template-columns:52px 1fr 52px;
   grid-template-rows:36px 1fr 36px;
   flex:1;
-  height:calc(100vh - 36px); /* minus legend */
+  height:100vh;
 }
 .acg-corner{background:#f0ede6;border:1px solid #c8b89a;}
 .acg-strip-h{
@@ -621,6 +621,19 @@ tr:hover td{background:rgba(19,16,58,.6)}
   <div id="wheel-wrap"><svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg></div>
   <!-- Astrocartography map -->
   <div id="acg-section" style="display:none">
+    <!-- Wheel appears here on click -->
+    <div id="acg-wheel-above" style="display:none;max-width:820px;margin:0 auto;padding:16px 16px 0;width:100%;box-sizing:border-box;">
+      <div id="acg-reloc-title" style="font-family:Cinzel,serif;font-size:11px;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:12px;text-transform:uppercase;"></div>
+      <svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"></svg>
+      <div id="asp-filters" style="display:none;margin:10px 0;background:rgba(8,6,20,.7);border:1px solid rgba(45,31,110,.5);border-radius:12px;padding:12px 16px;">
+        <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px">ასპექტ ფილტრი</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-minor" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">მინორი</span></label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-virtual" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">ვირტუალური</span></label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-asteroid" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">ასტეროიდები</span></label>
+        </div>
+      </div>
+    </div>
     <div id="acg-atlas">
       <!-- Top: MC labels -->
       <div id="acg-top-left" class="acg-corner"></div>
@@ -636,6 +649,27 @@ tr:hover td{background:rgba(19,16,58,.6)}
       <div id="acg-bot-right" class="acg-corner"></div>
     </div>
     <div id="acg-legend" class="acg-legend"></div>
+    <!-- Tables appear here on click -->
+    <div id="acg-tables-below" style="display:none;max-width:820px;margin:0 auto;padding:16px;width:100%;box-sizing:border-box;">
+      <div class="tables-wrap" style="display:grid">
+        <div class="data-card">
+          <div class="data-card-title" id="planet-table-title">🪐 პლანეტები</div>
+          <table><thead><tr><th></th><th>სახელი</th><th>გრადუსი</th><th>ნიშანი</th><th>სახ.</th><th>℞</th></tr></thead>
+          <tbody id="planet-tbody"></tbody></table>
+        </div>
+        <div class="data-card">
+          <div class="data-card-title">🏠 სახლები</div>
+          <table><thead><tr><th>სახლი</th><th>ნიშანი</th><th>გრადუსი</th></tr></thead>
+          <tbody id="house-tbody"></tbody></table>
+        </div>
+      </div>
+      <div class="sec-title">ასპექტები</div>
+      <div class="data-card" style="margin-bottom:8px;padding:0 0 8px">
+        <div class="data-card-title" id="aspect-table-title">⚡ ასპექტები</div>
+        <table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
+        <tbody id="aspect-tbody"></tbody></table>
+      </div>
+    </div>
   </div>
 
   <!-- Modal wheel overlay -->
@@ -1166,34 +1200,29 @@ function initAcgMap(){
     if(!_acgBirthData)return;
     if(_acgMarker)_acgMap.removeLayer(_acgMarker);
     _acgMarker=L.circleMarker([lat,lon],{radius:8,color:'#f9c646',fillColor:'#f9c646',fillOpacity:.9,weight:2}).addTo(_acgMap);
-    // Show modal with loading state
-    showAcgModal(lat,lon,'⏳ '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'°');
-    const relData={..._acgBirthData,lat,lon};
+    const aboveEl=document.getElementById('acg-wheel-above');
+    const titleEl=document.getElementById('acg-reloc-title');
+    aboveEl.style.display='block';
+    titleEl.textContent='⏳ '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'° — იტვირთება...';
+    aboveEl.scrollIntoView({behavior:'smooth',block:'start'});
     try{
+      const relData={..._acgBirthData,lat,lon};
       const d=await fetchChart(relData);
       d._timeUnknown=false;
       d._allAspects=calcAllNatalAspects(d);
       _d1=d;_d2=null;_crossAsp=[];_swapped=false;_origD1=d;_origD2=null;
-      // Draw wheel into modal
-      document.getElementById('acg-modal-wheel').innerHTML='';
-      const svg=document.getElementById('acg-modal-wheel');
-      // Use main wheel SVG
-      const tmpSvg=document.getElementById('wheel');
+      if(d.asc!=null){const acSi=Math.floor(d.asc/30)%12,mcSi=Math.floor(d.mc/30)%12;d._aspPlanets={'AC':{degree:d.asc,sign:SIGN_KA[acSi],house:1,retrograde:false},'MC':{degree:d.mc,sign:SIGN_KA[mcSi],house:10,retrograde:false}};}
+      titleEl.textContent='📍 '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'°';
       drawWheel(d,null,null);
-      document.getElementById('acg-modal-wheel').appendChild(tmpSvg.cloneNode(true));
-      // Update modal title
-      document.getElementById('acg-modal-title').textContent='📍 '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'°';
-      // Show tables below map
-      document.getElementById('acg-tables').style.display='block';
+      document.getElementById('asp-filters').style.display='block';
+      const tablesEl=document.getElementById('acg-tables-below');
+      tablesEl.style.display='block';
       drawPlanetTable(d.planets,false,'planet-tbody');
       drawHouseTable(d);
       drawAspectTable(d._allAspects.filter(isAspectVisible));
-      document.getElementById('asp-filters').style.display='block';
-      document.getElementById('acg-tables').scrollIntoView({behavior:'smooth',block:'start'});
-    }catch(err){
-      document.getElementById('acg-modal-title').textContent='❌ '+err.message;
-    }
+    }catch(err){titleEl.textContent='❌ '+err.message;}
   });
+
 
 }
 
@@ -1399,7 +1428,7 @@ function scheduleAcgUpdate(){
       _acgBirthData=p;_acgChartData=d;
       // Show map if not already visible
       document.getElementById('chart-area').style.display='block';
-      document.getElementById('acg-section').style.display='flex';document.body.style.overflow='hidden';
+      document.getElementById('acg-section').style.display='flex';
       document.getElementById('wheel-wrap').style.display='none';
       document.getElementById('mode-label').textContent='🗺️ ასტროკარტოგრაფია';
       document.getElementById('legend-wrap').style.display='none';
@@ -1567,7 +1596,7 @@ async function generate(){
       document.getElementById('mode-label').textContent=`🗺️ ${document.getElementById('acg-name').value||''} — ასტროკარტოგრაფია`;
       document.getElementById('legend-wrap').style.display='none';
       document.getElementById('wheel-wrap').style.display='none';
-      document.getElementById('acg-section').style.display='flex';document.body.style.overflow='hidden';
+      document.getElementById('acg-section').style.display='flex';
       document.getElementById('acg-wheel-section').style.display='none';
       document.getElementById('asp-filters').style.display='none';
       const sbACG=document.getElementById('swap-btn');if(sbACG)sbACG.remove();
