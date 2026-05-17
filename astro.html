@@ -178,10 +178,7 @@ tr:hover td{background:rgba(19,16,58,.6)}
 .acg-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(180,150,255,.8);cursor:pointer;}
 .acg-legend-dot{width:12px;height:3px;border-radius:2px;}
 #acg-wheel-section{display:none;}
-#acg-section{
-  width:100vw;position:relative;left:50%;transform:translateX(-50%);
-  background:#fff;display:none;flex-direction:column;
-}
+#acg-section{width:100vw;position:relative;left:50%;transform:translateX(-50%);display:none;}
 #acg-atlas{
   display:grid;
   grid-template-columns:52px 1fr 52px;
@@ -189,15 +186,9 @@ tr:hover td{background:rgba(19,16,58,.6)}
   flex:1;
   height:100vh;
 }
-.acg-corner{background:#f0ede6;border:1px solid #c8b89a;}
-.acg-strip-h{
-  background:#f0ede6;border:1px solid #c8b89a;
-  position:relative;overflow:hidden;
-}
-.acg-strip-v{
-  background:#f0ede6;border:1px solid #c8b89a;
-  position:relative;overflow:hidden;
-}
+
+
+
 .acg-map-wrap{position:relative;}
 #acg-map{position:absolute;inset:0;border:none;border-radius:0;}
 .acg-legend{
@@ -620,56 +611,20 @@ tr:hover td{background:rgba(19,16,58,.6)}
   </div>
   <div id="wheel-wrap"><svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg></div>
   <!-- Astrocartography map -->
-  <div id="acg-section" style="display:none">
-    <!-- Wheel appears here on click -->
-    <div id="acg-wheel-above" style="display:none;max-width:820px;margin:0 auto;padding:16px 16px 0;width:100%;box-sizing:border-box;">
-      <div id="acg-reloc-title" style="font-family:Cinzel,serif;font-size:11px;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:12px;text-transform:uppercase;"></div>
-      <svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"></svg>
-      <div id="asp-filters" style="display:none;margin:10px 0;background:rgba(8,6,20,.7);border:1px solid rgba(45,31,110,.5);border-radius:12px;padding:12px 16px;">
-        <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px">ასპექტ ფილტრი</div>
-        <div style="display:flex;gap:24px;flex-wrap:wrap;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-minor" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">მინორი</span></label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-virtual" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">ვირტუალური</span></label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-asteroid" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">ასტეროიდები</span></label>
-        </div>
-      </div>
+  <div id="acg-section">
+    <div style="display:grid;grid-template-columns:46px 1fr 46px;grid-template-rows:28px calc(100vh - 92px) 28px;width:100%;">
+      <div style="background:#f0ede6;border:1px solid #c8b89a;"></div>
+      <div id="acg-labels-mc" style="background:#f0ede6;border:1px solid #c8b89a;position:relative;overflow:hidden;"></div>
+      <div style="background:#f0ede6;border:1px solid #c8b89a;"></div>
+      <div id="acg-labels-ac" style="background:#f0ede6;border:1px solid #c8b89a;position:relative;overflow:hidden;"></div>
+      <div style="position:relative;"><div id="acg-map" style="position:absolute;inset:0;"></div></div>
+      <div id="acg-labels-dc" style="background:#f0ede6;border:1px solid #c8b89a;position:relative;overflow:hidden;"></div>
+      <div style="background:#f0ede6;border:1px solid #c8b89a;"></div>
+      <div id="acg-labels-ic" style="background:#f0ede6;border:1px solid #c8b89a;position:relative;overflow:hidden;"></div>
+      <div style="background:#f0ede6;border:1px solid #c8b89a;"></div>
     </div>
-    <div id="acg-atlas">
-      <!-- Top: MC labels -->
-      <div id="acg-top-left" class="acg-corner"></div>
-      <div id="acg-labels-mc" class="acg-strip-h"></div>
-      <div id="acg-top-right" class="acg-corner"></div>
-      <!-- Middle: AC | MAP | DC -->
-      <div id="acg-labels-ac" class="acg-strip-v"></div>
-      <div class="acg-map-wrap"><div id="acg-map"></div></div>
-      <div id="acg-labels-dc" class="acg-strip-v"></div>
-      <!-- Bottom: IC labels -->
-      <div id="acg-bot-left" class="acg-corner"></div>
-      <div id="acg-labels-ic" class="acg-strip-h"></div>
-      <div id="acg-bot-right" class="acg-corner"></div>
-    </div>
-    <div id="acg-legend" class="acg-legend"></div>
-    <!-- Tables appear here on click -->
-    <div id="acg-tables-below" style="display:none;max-width:820px;margin:0 auto;padding:16px;width:100%;box-sizing:border-box;">
-      <div class="tables-wrap" style="display:grid">
-        <div class="data-card">
-          <div class="data-card-title" id="planet-table-title">🪐 პლანეტები</div>
-          <table><thead><tr><th></th><th>სახელი</th><th>გრადუსი</th><th>ნიშანი</th><th>სახ.</th><th>℞</th></tr></thead>
-          <tbody id="planet-tbody"></tbody></table>
-        </div>
-        <div class="data-card">
-          <div class="data-card-title">🏠 სახლები</div>
-          <table><thead><tr><th>სახლი</th><th>ნიშანი</th><th>გრადუსი</th></tr></thead>
-          <tbody id="house-tbody"></tbody></table>
-        </div>
-      </div>
-      <div class="sec-title">ასპექტები</div>
-      <div class="data-card" style="margin-bottom:8px;padding:0 0 8px">
-        <div class="data-card-title" id="aspect-table-title">⚡ ასპექტები</div>
-        <table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
-        <tbody id="aspect-tbody"></tbody></table>
-      </div>
-    </div>
+    <div id="acg-legend-bar" style="background:#f0ede6;border-top:1px solid #c8b89a;display:flex;flex-wrap:wrap;gap:8px;padding:5px 14px;min-height:36px;align-items:center;"></div>
+    <div id="acg-chart-below" style="display:none;max-width:820px;margin:0 auto;padding:16px;box-sizing:border-box;width:100%;"></div>
   </div>
 
   <!-- Modal wheel overlay -->
@@ -1189,41 +1144,48 @@ function ecl2eq(lon){
 
 function initAcgMap(){
   if(_acgMap)return;
-  _acgMap=L.map('acg-map',{center:[15,10],zoom:2,minZoom:2,maxZoom:2,zoomControl:false,scrollWheelZoom:false,doubleClickZoom:false,dragging:false,touchZoom:false,pinchZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19,subdomains:'abcd'}).addTo(_acgMap);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:19,subdomains:'abcd',pane:'shadowPane'}).addTo(_acgMap);
-  // Click marker
-  let _acgMarker=null;
-  _acgMap.on('moveend zoomend',updateOutsideLabels);
+  _acgMap=L.map('acg-map',{center:[15,10],zoom:2,minZoom:2,maxZoom:2,
+    zoomControl:false,scrollWheelZoom:false,doubleClickZoom:false,
+    dragging:false,touchZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd'}).addTo(_acgMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',pane:'shadowPane'}).addTo(_acgMap);
+  _acgLineData=[];
   _acgMap.on('click',async function(e){
     const lat=e.latlng.lat,lon=e.latlng.lng;
     if(!_acgBirthData)return;
-    if(_acgMarker)_acgMap.removeLayer(_acgMarker);
-    _acgMarker=L.circleMarker([lat,lon],{radius:8,color:'#f9c646',fillColor:'#f9c646',fillOpacity:.9,weight:2}).addTo(_acgMap);
-    const aboveEl=document.getElementById('acg-wheel-above');
-    const titleEl=document.getElementById('acg-reloc-title');
-    aboveEl.style.display='block';
-    titleEl.textContent='⏳ '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'° — იტვირთება...';
-    aboveEl.scrollIntoView({behavior:'smooth',block:'start'});
+    const below=document.getElementById('acg-chart-below');
+    below.style.display='block';
+    below.innerHTML='<div style="text-align:center;padding:24px;color:#a78bfa;font-family:Cinzel,serif;letter-spacing:2px;font-size:11px">⏳ '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'°</div>';
+    below.scrollIntoView({behavior:'smooth',block:'start'});
     try{
-      const relData={..._acgBirthData,lat,lon};
-      const d=await fetchChart(relData);
+      const d=await fetchChart({..._acgBirthData,lat,lon});
       d._timeUnknown=false;
       d._allAspects=calcAllNatalAspects(d);
       _d1=d;_d2=null;_crossAsp=[];_swapped=false;_origD1=d;_origD2=null;
-      if(d.asc!=null){const acSi=Math.floor(d.asc/30)%12,mcSi=Math.floor(d.mc/30)%12;d._aspPlanets={'AC':{degree:d.asc,sign:SIGN_KA[acSi],house:1,retrograde:false},'MC':{degree:d.mc,sign:SIGN_KA[mcSi],house:10,retrograde:false}};}
+      // Inject wheel SVG into below
+      below.innerHTML='';
+      const titleEl=document.createElement('div');titleEl.className='sec-title';
       titleEl.textContent='📍 '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'°';
+      below.appendChild(titleEl);
+      // Use main wheel SVG
+      const svgWrap=document.getElementById('wheel-wrap');
+      svgWrap.style.display='block';
+      below.appendChild(svgWrap);
       drawWheel(d,null,null);
       document.getElementById('asp-filters').style.display='block';
-      const tablesEl=document.getElementById('acg-tables-below');
-      tablesEl.style.display='block';
+      below.appendChild(document.getElementById('asp-filters'));
+      // Tables
+      const tw=document.createElement('div');tw.className='tables-wrap';tw.style.display='grid';
+      tw.innerHTML='<div class="data-card"><div class="data-card-title">🪐 პლანეტები</div><table><thead><tr><th></th><th>სახელი</th><th>გრადუსი</th><th>ნიშანი</th><th>სახ.</th><th>℞</th></tr></thead><tbody id="planet-tbody"></tbody></table></div><div class="data-card"><div class="data-card-title">🏠 სახლები</div><table><thead><tr><th>სახლი</th><th>ნიშანი</th><th>გრადუსი</th></tr></thead><tbody id="house-tbody"></tbody></table></div>';
+      below.appendChild(tw);
+      const aspSec=document.createElement('div');
+      aspSec.innerHTML='<div class="sec-title">ასპექტები</div><div class="data-card" style="margin-bottom:8px;padding:0 0 8px"><div class="data-card-title" id="aspect-table-title">⚡ ასპექტები</div><table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead><tbody id="aspect-tbody"></tbody></table></div>';
+      below.appendChild(aspSec);
       drawPlanetTable(d.planets,false,'planet-tbody');
       drawHouseTable(d);
       drawAspectTable(d._allAspects.filter(isAspectVisible));
-    }catch(err){titleEl.textContent='❌ '+err.message;}
+    }catch(err){below.innerHTML='<div style="color:#f87171;padding:16px">❌ '+err.message+'</div>';}
   });
-
-
 }
 
 // Store acg line data for outside labels
@@ -1287,8 +1249,8 @@ function drawAcgLines(chartData,birthLon){
     'იუპიტერი':'♃','სატურნი':'♄','ურანი':'♅','ნეპტუნი':'♆','პლუტონი':'⯓'
   };
   const PLANETS=['მზე','მთვარე','მერკური','ვენერა','მარსი','იუპიტერი','სატურნი','ურანი','ნეპტუნი','პლუტონი'];
-  const legend=document.getElementById('acg-legend');
-  legend.innerHTML='';
+  const legend=document.getElementById('acg-legend-bar');
+  if(legend)legend.innerHTML='';
 
   const {ra:RAMC}=ecl2eq(chartData.mc);
   const GST=((RAMC-birthLon)+360)%360;
@@ -1426,7 +1388,7 @@ function scheduleAcgUpdate(){
       _acgBirthData=p;_acgChartData=d;
       // Show map if not already visible
       document.getElementById('chart-area').style.display='block';
-      document.getElementById('acg-section').style.display='flex';document.body.style.overflow='';
+      document.getElementById('acg-section').style.display='block';
       document.getElementById('wheel-wrap').style.display='none';
       document.getElementById('mode-label').textContent='🗺️ ასტროკარტოგრაფია';
       document.getElementById('legend-wrap').style.display='none';
@@ -1594,7 +1556,7 @@ async function generate(){
       document.getElementById('mode-label').textContent=`🗺️ ${document.getElementById('acg-name').value||''} — ასტროკარტოგრაფია`;
       document.getElementById('legend-wrap').style.display='none';
       document.getElementById('wheel-wrap').style.display='none';
-      document.getElementById('acg-section').style.display='flex';document.body.style.overflow='';
+      document.getElementById('acg-section').style.display='block';
       document.getElementById('acg-wheel-section').style.display='none';
       document.getElementById('asp-filters').style.display='none';
       const sbACG=document.getElementById('swap-btn');if(sbACG)sbACG.remove();
