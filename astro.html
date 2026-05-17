@@ -1235,11 +1235,14 @@ function updateOutsideLabels(){
 function initAcgMap(){
   if(_acgMap)return;
   _acgMap=L.map('acg-map',{
-    center:[20,-5],zoom:2,minZoom:2,maxZoom:2,
     zoomControl:false,scrollWheelZoom:false,dragging:false,
     doubleClickZoom:false,touchZoom:false,boxZoom:false,
-    keyboard:false,attributionControl:false
+    keyboard:false,attributionControl:false,
+    zoomSnap:0.05,zoomDelta:0.05,worldCopyJump:false
   });
+  // fitBounds controls exactly which area is visible:
+  // left starts at -140 (reduce Americas), right ends at 175 (more Asia visible)
+  _acgMap.fitBounds([[-75, -140], [78, 175]]);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(_acgMap);
 
   // Graticule grid lines
