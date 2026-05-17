@@ -1182,94 +1182,108 @@ function updateOutsideLabels(){
   const W=_acgMap.getContainer().offsetWidth;
   const H=_acgMap.getContainer().offsetHeight;
   const bounds=_acgMap.getBounds();
-  const west=bounds.getWest(),east=bounds.getEast();
-  const south=bounds.getSouth(),north=bounds.getNorth();
 
-  function addLabel(el,x,y,sym,type,col,vertical){
-    const d=document.createElement('div');
-    if(vertical){
-      d.style.cssText='position:absolute;top:'+y+'px;left:50%;transform:translate(-50%,-50%);'+
-        'color:'+col+';font-size:8px;font-weight:bold;font-family:serif;line-height:1;'+
-        'text-align:center;white-space:nowrap;writing-mode:vertical-lr;';
-      d.innerHTML='<span style="font-size:11px">'+sym+'</span><span style="font-size:7px">'+type+'</span>';
-    }else{
-      d.style.cssText='position:absolute;left:'+x+'px;top:50%;transform:translate(-50%,-50%);'+
-        'color:'+col+';font-size:8px;font-weight:bold;font-family:serif;line-height:1;'+
-        'text-align:center;white-space:nowrap;';
-      d.innerHTML='<span style="font-size:11px">'+sym+'</span><br><span style="font-size:7px">'+type+'</span>';
-    }
-    el.appendChild(d);
+  // Collect all label candidates first, then place avoiding overlaps
+  const hLabels={top:[],bot:[]};  // {x, sym, type, col}
+  const vLabels={left:[],right:[]};// {y, sym, type, col}
+  const MIN_H=18, MIN_V=16; // min px between labels
+
+  function collectH(x,sym,type,col,side){
+    if(x<4||x>W-4)return;
+    hLabels[side].push({x,sym,type,col});
+  }
+  function collectV(y,sym,type,col,side){
+    if(y<4||y>H-4)return;
+    vLabels[side].push({y,sym,type,col});
   }
 
   _acgLineData.forEach(({type,lon,pts,col,sym})=>{
     if(type==='MC'||type==='IC'){
-      // Vertical lines: label at top and bottom strips at their longitude
       const pt=_acgMap.latLngToContainerPoint([0,lon]);
-      if(pt.x>=0&&pt.x<=W){
-        addLabel(tEl,pt.x,null,sym,type,col,false);
-        addLabel(bEl,pt.x,null,sym,type,col,false);
-      }
+      const side=type==='MC'?'top':'bot';
+      collectH(pt.x,sym,type,col,'top');
+      collectH(pt.x,sym,type,col,'bot');
     }else if(pts&&pts.length>1){
-      // Curved lines: find all intersections with map edges
-      const vis=pts.filter(p=>p[0]>=south-2&&p[0]<=north+2);
+      const vis=pts.filter(p=>p[0]>=bounds.getSouth()-2&&p[0]<=bounds.getNorth()+2);
       if(!vis.length)return;
+      const side=type==='AC'?'left':'right';
+      const labeled=[];
 
-      // Check intersections with left edge (x~0), right edge (x~W), top (y~0), bottom (y~H)
-      const labeled=new Set();
       for(let k=0;k<vis.length-1;k++){
         const p1=_acgMap.latLngToContainerPoint([vis[k][0],vis[k][1]]);
         const p2=_acgMap.latLngToContainerPoint([vis[k+1][0],vis[k+1][1]]);
-        // Skip if jump is too large (antimeridian split)
         if(Math.abs(p2.x-p1.x)>W/2||Math.abs(p2.y-p1.y)>H/2)continue;
 
-        // Left border crossing (x goes from >0 to <0 or vice versa)
+        // Left border
         if((p1.x>=0&&p2.x<0)||(p1.x<0&&p2.x>=0)){
           const t=p1.x/(p1.x-p2.x);
           const y=p1.y+t*(p2.y-p1.y);
-          if(y>=0&&y<=H&&!labeled.has('L'+Math.round(y/20))){
-            if(lEl)addLabel(lEl,null,y,sym,type,col,true);
-            labeled.add('L'+Math.round(y/20));
-          }
+          if(y>=0&&y<=H)collectV(y,sym,type,col,'left');
         }
-        // Right border crossing
+        // Right border
         if((p1.x<=W&&p2.x>W)||(p1.x>W&&p2.x<=W)){
           const t=(W-p1.x)/(p2.x-p1.x);
           const y=p1.y+t*(p2.y-p1.y);
-          if(y>=0&&y<=H&&!labeled.has('R'+Math.round(y/20))){
-            if(rEl)addLabel(rEl,null,y,sym,type,col,true);
-            labeled.add('R'+Math.round(y/20));
-          }
+          if(y>=0&&y<=H)collectV(y,sym,type,col,'right');
         }
-        // Top border crossing
+        // Top border
         if((p1.y>=0&&p2.y<0)||(p1.y<0&&p2.y>=0)){
           const t=p1.y/(p1.y-p2.y);
           const x=p1.x+t*(p2.x-p1.x);
-          if(x>=0&&x<=W&&!labeled.has('T'+Math.round(x/20))){
-            if(tEl)addLabel(tEl,x,null,sym,type,col,false);
-            labeled.add('T'+Math.round(x/20));
-          }
+          if(x>=0&&x<=W)collectH(x,sym,type,col,'top');
         }
-        // Bottom border crossing
+        // Bottom border
         if((p1.y<=H&&p2.y>H)||(p1.y>H&&p2.y<=H)){
           const t=(H-p1.y)/(p2.y-p1.y);
           const x=p1.x+t*(p2.x-p1.x);
-          if(x>=0&&x<=W&&!labeled.has('B'+Math.round(x/20))){
-            if(bEl)addLabel(bEl,x,null,sym,type,col,false);
-            labeled.add('B'+Math.round(x/20));
-          }
+          if(x>=0&&x<=W)collectH(x,sym,type,col,'bot');
         }
       }
-      // If line fully inside (no border crossing), label at the midpoint near an edge
-      if(labeled.size===0){
+      // If no border crossing, use midpoint
+      if(vLabels[side].length===0&&hLabels.top.filter(l=>l.sym===sym&&l.type===type).length===0){
         const mid=vis[Math.floor(vis.length/2)];
         const pt=_acgMap.latLngToContainerPoint([mid[0],mid[1]]);
-        if(pt.x>=0&&pt.x<=W&&pt.y>=0&&pt.y<=H){
-          const el2=type==='AC'?lEl:rEl;
-          if(el2)addLabel(el2,null,pt.y,sym,type,col,true);
-        }
+        if(pt.y>=0&&pt.y<=H)collectV(pt.y,sym,type,col,side);
       }
     }
   });
+
+  // Place horizontal labels (top/bot) avoiding x overlaps
+  function placeH(el,labels){
+    labels.sort((a,b)=>a.x-b.x);
+    let lastX=-999;
+    labels.forEach(({x,sym,type,col})=>{
+      if(x-lastX<MIN_H)return; // skip overlap
+      lastX=x;
+      const d=document.createElement('div');
+      d.style.cssText='position:absolute;left:'+x+'px;top:50%;transform:translate(-50%,-50%);'+
+        'color:'+col+';font-size:8px;font-weight:bold;font-family:serif;'+
+        'text-align:center;white-space:nowrap;line-height:1.1;pointer-events:none;';
+      d.innerHTML='<span style="font-size:10px">'+sym+'</span><span style="font-size:6px">'+type[0]+'</span>';
+      el.appendChild(d);
+    });
+  }
+
+  // Place vertical labels (left/right) avoiding y overlaps
+  function placeV(el,labels){
+    labels.sort((a,b)=>a.y-b.y);
+    let lastY=-999;
+    labels.forEach(({y,sym,type,col})=>{
+      if(y-lastY<MIN_V)return;
+      lastY=y;
+      const d=document.createElement('div');
+      d.style.cssText='position:absolute;top:'+y+'px;left:50%;transform:translate(-50%,-50%);'+
+        'color:'+col+';font-size:8px;font-weight:bold;font-family:serif;'+
+        'text-align:center;white-space:nowrap;line-height:1;pointer-events:none;';
+      d.innerHTML='<div style="font-size:10px">'+sym+'</div><div style="font-size:6px">'+type[0]+'</div>';
+      el.appendChild(d);
+    });
+  }
+
+  placeH(tEl,hLabels.top);
+  placeH(bEl,hLabels.bot);
+  placeV(lEl,vLabels.left);
+  placeV(rEl,vLabels.right);
 }
 
 function initAcgMap(){
