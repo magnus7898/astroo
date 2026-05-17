@@ -1317,11 +1317,11 @@ function initAcgMap(){
     try{
       const d=await fetchChart({..._acgBirthData,lat,lon});
       d._timeUnknown=false;
-      d._allAspects=calcAllNatalAspects(d);
       if(d.asc!=null){
         const acSi=Math.floor(d.asc/30)%12,mcSi=Math.floor(d.mc/30)%12;
         d._aspPlanets={'AC':{degree:d.asc,sign:SIGN_KA[acSi],house:1,retrograde:false},'MC':{degree:d.mc,sign:SIGN_KA[mcSi],house:10,retrograde:false}};
       }
+      d._allAspects=calcAllNatalAspects(d);
       // Title with ASC/MC
       const aS=Math.floor(d.asc/30)%12,mS=Math.floor(d.mc/30)%12;
       const aD=Math.floor(d.asc%30),aM=Math.floor((d.asc%1)*60);
@@ -1356,7 +1356,26 @@ function initAcgMap(){
           hb.appendChild(tr);
         });
       }
-      drawAspectTable(d._allAspects.filter(isAspectVisible),'acg-asp-tbody');
+      // Draw aspects with ACG-specific filters (AC/MC checked by default)
+      function acgAspVisible(asp){
+        const fM=document.getElementById('acg-f-minor')?.checked;
+        const fV=document.getElementById('acg-f-virtual')?.checked;
+        const fA=document.getElementById('acg-f-asteroid')?.checked;
+        if(MINOR_ASPECTS.has(asp.type)&&!fM)return false;
+        if((VIRTUAL_PLANETS.has(asp.p1)||VIRTUAL_PLANETS.has(asp.p2))&&!fV)return false;
+        if((ASTEROID_PLANETS.has(asp.p1)||ASTEROID_PLANETS.has(asp.p2))&&!fA)return false;
+        return true;
+      }
+      const acgFiltered=d._allAspects.filter(acgAspVisible);
+      drawAspectTable(acgFiltered,'acg-asp-tbody','acg-asp-title2','⚡ ასპექტები — '+acgFiltered.length);
+      // Re-filter on checkbox change
+      ['acg-f-minor','acg-f-virtual','acg-f-asteroid'].forEach(id=>{
+        const cb=document.getElementById(id);
+        if(cb)cb.onchange=()=>{
+          const filtered=d._allAspects.filter(acgAspVisible);
+          drawAspectTable(filtered,'acg-asp-tbody');
+        };
+      });
     }catch(err){titleEl.textContent='❌ '+err.message;}
   });
 }
