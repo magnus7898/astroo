@@ -592,8 +592,18 @@ tr:hover td{background:rgba(19,16,58,.6)}
   <div id="wheel-wrap"><svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg></div>
   <!-- Astrocartography map -->
   <div id="acg-section" style="display:none">
-    <div id="acg-map"></div>
-    <div id="acg-legend" class="acg-legend"></div>
+    <div style="position:relative;width:100%">
+      <!-- Labels above map (MC/IC) -->
+      <div id="acg-labels-top" style="position:relative;height:28px;overflow:hidden;pointer-events:none;"></div>
+      <div id="acg-map"></div>
+      <!-- Labels below map (MC/IC) -->
+      <div id="acg-labels-bot" style="position:relative;height:28px;overflow:hidden;pointer-events:none;"></div>
+      <!-- Left strip for AC labels -->
+      <div id="acg-labels-left" style="position:absolute;left:-50px;top:28px;bottom:28px;width:48px;pointer-events:none;overflow:hidden;"></div>
+      <!-- Right strip for DC labels -->
+      <div id="acg-labels-right" style="position:absolute;right:-50px;top:28px;bottom:28px;width:48px;pointer-events:none;overflow:hidden;"></div>
+    </div>
+    <div id="acg-legend" class="acg-legend" style="margin-top:8px"></div>
   </div>
   <!-- Relocation wheel (shown on map click) -->
   <div id="acg-wheel-section">
@@ -1079,11 +1089,13 @@ function ecl2eq(lon){
 function initAcgMap(){
   if(_acgMap)return;
   _acgMap=L.map('acg-map',{center:[30,0],zoom:2,minZoom:2});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    attribution:'© OpenStreetMap',maxZoom:18
-  }).addTo(_acgMap);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_matter_nolabels/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19,subdomains:'abcd'}).addTo(_acgMap);
+  // Add city labels layer on top
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:19,subdomains:'abcd',pane:'shadowPane'}).addTo(_acgMap);
   // Click marker
   let _acgMarker=null;
+  _acgLineData=[];
+  _acgMap.on('moveend zoomend',updateOutsideLabels);
   _acgMap.on('click',async function(e){
     const lat=e.latlng.lat,lon=e.latlng.lng;
     if(!_acgBirthData)return;
@@ -1122,6 +1134,26 @@ function initAcgMap(){
       drawAspectTable(d._allAspects.filter(isAspectVisible));
       document.getElementById('acg-wheel-section').scrollIntoView({behavior:'smooth',block:'start'});
     }catch(err){_acgMarker.setPopupContent('❌ '+err.message);}
+  });
+}
+
+// Store acg line data for outside labels
+let _acgLineData=[];
+
+function updateOutsideLabels(){
+  if(!_acgMap||!_acgLineData.length)return;
+  const top=document.getElementById('acg-labels-top');
+  const bot=document.getElementById('acg-labels-bot');
+  if(!top||!bot)return;
+  top.innerHTML='';bot.innerHTML='';
+  const mapW=_acgMap.getContainer().offsetWidth;
+  _acgLineData.forEach(({type,lon,col,sym,pName})=>{
+    // Get pixel X for this longitude
+    const pt=_acgMap.latLngToContainerPoint([0,lon]);
+    if(pt.x<0||pt.x>mapW)return;
+    const label=`<div style="position:absolute;left:${pt.x}px;transform:translateX(-50%);color:${col};font-size:9px;font-family:Cinzel,serif;font-weight:bold;text-shadow:0 0 4px #000;white-space:nowrap">${sym}${type}</div>`;
+    top.innerHTML+=label;
+    bot.innerHTML+=label;
   });
 }
 
@@ -1185,15 +1217,13 @@ function drawAcgLines(chartData,birthLon){
     mcLine._acgLine=true;mcLine.addTo(_acgMap);
     mcLine.bindTooltip(`${sym} ${pName} MC`,{sticky:true});
     // Labels top and bottom of MC line
-    lineLabel(mcLon, 82, `${sym}MC`, col);
-    lineLabel(mcLon,-82, `${sym}MC`, col);
+
 
     // IC vertical line (solid, lighter)
     const icLine=L.polyline([[-85,icLon],[85,icLon]],{color:col,weight:1.5,opacity:.6});
     icLine._acgLine=true;icLine.addTo(_acgMap);
     icLine.bindTooltip(`${sym} ${pName} IC`,{sticky:true});
-    lineLabel(icLon, 82, `${sym}IC`, col);
-    lineLabel(icLon,-82, `${sym}IC`, col);
+
 
     // AC/DC curves (solid)
     const acPts=[],dcPts=[];
@@ -1232,12 +1262,19 @@ function drawAcgLines(chartData,birthLon){
       if(botDC)lineLabel(botDC[1],botDC[0],`${sym}DC`,col);
     }
 
+    // Store for outside labels
+    _acgLineData.push({type:'MC',lon:mcLon,col,sym,pName});
+    _acgLineData.push({type:'IC',lon:icLon,col,sym,pName});
+
     // Legend
     const item=document.createElement('div');
     item.className='acg-legend-item';
     item.innerHTML=`<span style="color:${col};font-family:serif;font-size:14px">${sym}</span><span style="color:${col}">${pName}</span>`;
     legend.appendChild(item);
   });
+
+  // Update outside labels after render
+  setTimeout(updateOutsideLabels,200);
 }
 
 
