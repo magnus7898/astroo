@@ -33,7 +33,6 @@ body::before{
     radial-gradient(1px 1px at 82% 80%,rgba(255,255,255,.35) 0,transparent 100%),
     radial-gradient(1.5px 1.5px at 34% 51%,rgba(167,139,250,.25) 0,transparent 100%);
 }
-body:has(#acg-section[style*='flex']){overflow:hidden;padding:0;}
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
@@ -173,39 +172,11 @@ tr:hover td{background:rgba(19,16,58,.6)}
 <style>
 .acg-tip{background:rgba(8,6,20,.92)!important;border:1px solid rgba(100,65,200,.5)!important;color:#c8b8f0!important;font-family:"Noto Sans Georgian",sans-serif!important;font-size:11px!important;padding:4px 8px!important;border-radius:6px!important;}
 .acg-tip::before{display:none!important;}
-#acg-map{width:100%;height:100%;border-radius:0;border:none;background:#f8f8f8;}
+#acg-map{width:100%;height:720px;border-radius:12px;border:1px solid rgba(45,31,110,.5);margin-bottom:16px;background:#04030e;}
 .acg-legend{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 16px;padding:10px 14px;background:rgba(8,6,20,.7);border-radius:10px;border:1px solid rgba(45,31,110,.4);}
 .acg-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(180,150,255,.8);cursor:pointer;}
 .acg-legend-dot{width:12px;height:3px;border-radius:2px;}
 #acg-wheel-section{display:none;}
-#acg-section{
-  width:100vw;position:relative;left:50%;transform:translateX(-50%);
-  background:#fff;display:none;flex-direction:column;
-}
-#acg-atlas{
-  display:grid;
-  grid-template-columns:52px 1fr 52px;
-  grid-template-rows:36px 1fr 36px;
-  flex:1;
-  height:100vh;
-}
-.acg-corner{background:#f0ede6;border:1px solid #c8b89a;}
-.acg-strip-h{
-  background:#f0ede6;border:1px solid #c8b89a;
-  position:relative;overflow:hidden;
-}
-.acg-strip-v{
-  background:#f0ede6;border:1px solid #c8b89a;
-  position:relative;overflow:hidden;
-}
-.acg-map-wrap{position:relative;}
-#acg-map{position:absolute;inset:0;border:none;border-radius:0;}
-.acg-legend{
-  display:flex;flex-wrap:wrap;gap:10px;padding:6px 16px;
-  background:#f0ede6;border-top:1px solid #c8b89a;
-  min-height:36px;align-items:center;flex-shrink:0;
-}
-
 .acg-tip{background:rgba(8,6,20,.9);color:#e0d8ff;border:1px solid rgba(100,65,200,.4);border-radius:6px;font-family:'Noto Sans Georgian',sans-serif;font-size:11px;}
 </style>
 </head>
@@ -621,88 +592,8 @@ tr:hover td{background:rgba(19,16,58,.6)}
   <div id="wheel-wrap"><svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg></div>
   <!-- Astrocartography map -->
   <div id="acg-section" style="display:none">
-    <!-- Wheel appears here on click -->
-    <div id="acg-wheel-above" style="display:none;max-width:820px;margin:0 auto;padding:16px 16px 0;width:100%;box-sizing:border-box;">
-      <div id="acg-reloc-title" style="font-family:Cinzel,serif;font-size:11px;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:12px;text-transform:uppercase;"></div>
-      <svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block"></svg>
-      <div id="asp-filters" style="display:none;margin:10px 0;background:rgba(8,6,20,.7);border:1px solid rgba(45,31,110,.5);border-radius:12px;padding:12px 16px;">
-        <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px">ასპექტ ფილტრი</div>
-        <div style="display:flex;gap:24px;flex-wrap:wrap;">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-minor" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">მინორი</span></label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-virtual" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">ვირტუალური</span></label>
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="f-asteroid" onclick="applyAspFilter()" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer"><span style="font-size:11px;color:rgba(200,170,255,.9)">ასტეროიდები</span></label>
-        </div>
-      </div>
-    </div>
-    <div id="acg-atlas">
-      <!-- Top: MC labels -->
-      <div id="acg-top-left" class="acg-corner"></div>
-      <div id="acg-labels-mc" class="acg-strip-h"></div>
-      <div id="acg-top-right" class="acg-corner"></div>
-      <!-- Middle: AC | MAP | DC -->
-      <div id="acg-labels-ac" class="acg-strip-v"></div>
-      <div class="acg-map-wrap"><div id="acg-map"></div></div>
-      <div id="acg-labels-dc" class="acg-strip-v"></div>
-      <!-- Bottom: IC labels -->
-      <div id="acg-bot-left" class="acg-corner"></div>
-      <div id="acg-labels-ic" class="acg-strip-h"></div>
-      <div id="acg-bot-right" class="acg-corner"></div>
-    </div>
+    <div id="acg-map"></div>
     <div id="acg-legend" class="acg-legend"></div>
-    <!-- Tables appear here on click -->
-    <div id="acg-tables-below" style="display:none;max-width:820px;margin:0 auto;padding:16px;width:100%;box-sizing:border-box;">
-      <div class="tables-wrap" style="display:grid">
-        <div class="data-card">
-          <div class="data-card-title" id="planet-table-title">🪐 პლანეტები</div>
-          <table><thead><tr><th></th><th>სახელი</th><th>გრადუსი</th><th>ნიშანი</th><th>სახ.</th><th>℞</th></tr></thead>
-          <tbody id="planet-tbody"></tbody></table>
-        </div>
-        <div class="data-card">
-          <div class="data-card-title">🏠 სახლები</div>
-          <table><thead><tr><th>სახლი</th><th>ნიშანი</th><th>გრადუსი</th></tr></thead>
-          <tbody id="house-tbody"></tbody></table>
-        </div>
-      </div>
-      <div class="sec-title">ასპექტები</div>
-      <div class="data-card" style="margin-bottom:8px;padding:0 0 8px">
-        <div class="data-card-title" id="aspect-table-title">⚡ ასპექტები</div>
-        <table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
-        <tbody id="aspect-tbody"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal wheel overlay -->
-  <div id="acg-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:rgba(4,3,14,.85);display:flex;align-items:center;justify-content:center;">
-    <div style="background:rgba(8,6,20,.97);border:1px solid rgba(100,65,200,.5);border-radius:16px;padding:20px;max-width:520px;width:90%;position:relative;max-height:90vh;overflow-y:auto;">
-      <button onclick="document.getElementById('acg-modal').style.display='none'" style="position:absolute;top:10px;right:14px;background:transparent;border:none;color:#a78bfa;font-size:20px;cursor:pointer;line-height:1">✕</button>
-      <div id="acg-modal-title" style="font-family:Cinzel,serif;font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:12px;text-align:center"></div>
-      <div id="acg-modal-wheel" style="width:100%"><svg id="acg-wheel-svg" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto"></svg></div>
-    </div>
-  </div>
-  <!-- Tables below map -->
-  <div id="acg-tables" style="display:none;max-width:820px;margin:0 auto;padding:16px;">
-    <div id="mode-label-acg" class="sec-title">📍 რელოკაციის მონაცემები</div>
-    <div class="tables-wrap" style="display:grid">
-      <div class="data-card">
-        <div class="data-card-title" id="planet-table-title">🪐 პლანეტები</div>
-        <table><thead><tr><th></th><th>სახელი</th><th>გრადუსი</th><th>ნიშანი</th><th>სახ.</th><th>℞</th></tr></thead>
-        <tbody id="planet-tbody"></tbody></table>
-      </div>
-      <div class="data-card" id="house-card">
-        <div class="data-card-title">🏠 სახლები</div>
-        <table><thead><tr><th>სახლი</th><th>ნიშანი</th><th>გრადუსი</th></tr></thead>
-        <tbody id="house-tbody"></tbody></table>
-      </div>
-    </div>
-    <div class="sec-title">ასპექტები</div>
-    <div class="data-card" style="margin-bottom:8px;padding:0 0 8px">
-      <div class="data-card-title" id="aspect-table-title">⚡ ასპექტები</div>
-      <table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
-      <tbody id="aspect-tbody"></tbody></table>
-    </div>
-  </div>
-  <div style="display:none">
   </div>
   <!-- Relocation wheel (shown on map click) -->
   <div id="acg-wheel-section">
@@ -985,8 +876,6 @@ function setMode(mode){
   document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
   document.getElementById('form-'+mode).classList.add('active');
   document.getElementById('chart-area').style.display='none';
-  document.getElementById('acg-section').style.display='none';
-  document.body.style.overflow='';
 }
 
 // ── GEOCODE ──
@@ -1189,88 +1078,50 @@ function ecl2eq(lon){
 
 function initAcgMap(){
   if(_acgMap)return;
-  _acgMap=L.map('acg-map',{center:[20,10],zoom:2,minZoom:2,maxZoom:2,zoomControl:false,scrollWheelZoom:false,doubleClickZoom:false,dragging:false,touchZoom:false,boxZoom:false,keyboard:false,attributionControl:false});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19,subdomains:'abcd'}).addTo(_acgMap);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',{attribution:'',maxZoom:19,subdomains:'abcd',pane:'shadowPane'}).addTo(_acgMap);
+  _acgMap=L.map('acg-map',{center:[30,0],zoom:2,minZoom:2});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',maxZoom:18
+  }).addTo(_acgMap);
   // Click marker
   let _acgMarker=null;
-  _acgMap.on('moveend zoomend',updateOutsideLabels);
   _acgMap.on('click',async function(e){
     const lat=e.latlng.lat,lon=e.latlng.lng;
     if(!_acgBirthData)return;
     if(_acgMarker)_acgMap.removeLayer(_acgMarker);
-    _acgMarker=L.circleMarker([lat,lon],{radius:8,color:'#f9c646',fillColor:'#f9c646',fillOpacity:.9,weight:2}).addTo(_acgMap);
-    const aboveEl=document.getElementById('acg-wheel-above');
-    const titleEl=document.getElementById('acg-reloc-title');
-    aboveEl.style.display='block';
-    titleEl.textContent='⏳ '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'° — იტვირთება...';
-    aboveEl.scrollIntoView({behavior:'smooth',block:'start'});
+    _acgMarker=L.circleMarker([lat,lon],{radius:7,color:'#f9c646',fillColor:'#f9c646',fillOpacity:.8,weight:2}).addTo(_acgMap);
+    _acgMarker.bindPopup(`<div style="font-family:sans-serif;font-size:12px">📍 <b>${lat.toFixed(2)}°, ${lon.toFixed(2)}°</b><br><span style="color:#888">⏳ გამოთვლა...</span></div>`).openPopup();
+    const relData={..._acgBirthData,lat,lon,tz_name:'UTC'};
     try{
-      const relData={..._acgBirthData,lat,lon};
       const d=await fetchChart(relData);
       d._timeUnknown=false;
+      // Build angle summary
+      const angleInfo=[];
+      const MAIN_P=['მზე','მთვარე','მერკური','ვენერა','მარსი','იუპიტერი','სატურნი','ნეპტუნი','პლუტონი'];
+      MAIN_P.forEach(pn=>{
+        const p=d.planets[pn];if(!p)return;
+        const h=p.house;
+        if(h===1)angleInfo.push(`${PI[pn]?.sym||pn} AC (I)`);
+        else if(h===4)angleInfo.push(`${PI[pn]?.sym||pn} IC (IV)`);
+        else if(h===7)angleInfo.push(`${PI[pn]?.sym||pn} DC (VII)`);
+        else if(h===10)angleInfo.push(`${PI[pn]?.sym||pn} MC (X)`);
+      });
+      const angleStr=angleInfo.length?'<br>📐 '+angleInfo.join(' · '):'';
+      _acgMarker.setPopupContent(`<div style="font-family:sans-serif;font-size:12px">📍 <b>${lat.toFixed(2)}°, ${lon.toFixed(2)}°</b>${angleStr}</div>`);
+      // Show wheel BELOW map without hiding the map
+      document.getElementById('acg-wheel-section').style.display='block';
+      document.getElementById('acg-reloc-title').textContent=`📍 რელოკაცია: ${lat.toFixed(2)}°N, ${lon.toFixed(2)}°E`;
+      document.getElementById('wheel-wrap').style.display='block';
+      // Directly draw wheel and tables (without hiding acg-section)
       d._allAspects=calcAllNatalAspects(d);
       _d1=d;_d2=null;_crossAsp=[];_swapped=false;_origD1=d;_origD2=null;
       if(d.asc!=null){const acSi=Math.floor(d.asc/30)%12,mcSi=Math.floor(d.mc/30)%12;d._aspPlanets={'AC':{degree:d.asc,sign:SIGN_KA[acSi],house:1,retrograde:false},'MC':{degree:d.mc,sign:SIGN_KA[mcSi],house:10,retrograde:false}};}
-      titleEl.textContent='📍 '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'°';
+      d._allAspects=calcAllNatalAspects(d);
       drawWheel(d,null,null);
-      document.getElementById('asp-filters').style.display='block';
-      const tablesEl=document.getElementById('acg-tables-below');
-      tablesEl.style.display='block';
       drawPlanetTable(d.planets,false,'planet-tbody');
       drawHouseTable(d);
       drawAspectTable(d._allAspects.filter(isAspectVisible));
-    }catch(err){titleEl.textContent='❌ '+err.message;}
-  });
-
-
-}
-
-// Store acg line data for outside labels
-let _acgLineData=[];
-
-function updateOutsideLabels(){
-  if(!_acgMap||!_acgLineData.length)return;
-  const mcEl=document.getElementById('acg-labels-mc');
-  const icEl=document.getElementById('acg-labels-ic');
-  const acEl=document.getElementById('acg-labels-ac');
-  const dcEl=document.getElementById('acg-labels-dc');
-  if(!mcEl)return;
-  mcEl.innerHTML='';icEl.innerHTML='';if(acEl)acEl.innerHTML='';if(dcEl)dcEl.innerHTML='';
-
-  const mapW=_acgMap.getContainer().offsetWidth;
-  const mapH=_acgMap.getContainer().offsetHeight;
-  const bounds=_acgMap.getBounds();
-  const minLon=bounds.getWest(),maxLon=bounds.getEast();
-  const minLat=bounds.getSouth(),maxLat=bounds.getNorth();
-
-  _acgLineData.forEach(({type,lon,pts,col,sym,pName})=>{
-    if(type==='MC'||type==='IC'){
-      // Find pixel X for this longitude
-      const pt=_acgMap.latLngToContainerPoint([0,lon]);
-      if(pt.x<0||pt.x>mapW)return;
-      const el=type==='MC'?mcEl:icEl;
-      const div=document.createElement('div');
-      div.style.cssText=`position:absolute;left:${pt.x}px;top:50%;transform:translate(-50%,-50%);color:${col};font-size:9px;font-family:serif;font-weight:bold;white-space:nowrap;`;
-      div.textContent=sym+type;
-      el.appendChild(div);
-
-    }else if((type==='AC'||type==='DC')&&pts){
-      const el=type==='AC'?acEl:dcEl;
-      if(!el)return;
-      // Find a point on the curve that is within the visible latitude range
-      const visible=pts.filter(p=>p[0]>=minLat&&p[0]<=maxLat);
-      if(!visible.length)return;
-      // Use the middle visible point
-      const p=visible[Math.floor(visible.length/2)];
-      const pt=_acgMap.latLngToContainerPoint([p[0],p[1]]);
-      // pt.y gives vertical position
-      if(pt.y<0||pt.y>mapH)return;
-      const div=document.createElement('div');
-      div.style.cssText=`position:absolute;top:${pt.y}px;left:50%;transform:translate(-50%,-50%);color:${col};font-size:8px;font-family:serif;font-weight:bold;white-space:nowrap;writing-mode:vertical-rl;text-orientation:mixed;`;
-      div.textContent=sym+(type==='AC'?'←':'→');
-      el.appendChild(div);
-    }
+      document.getElementById('acg-wheel-section').scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){_acgMarker.setPopupContent('❌ '+err.message);}
   });
 }
 
@@ -1297,11 +1148,9 @@ function drawAcgLines(chartData,birthLon){
   function normLon(l){const r=((l%360)+360)%360;return r>180?r-360:r;}
 
   function splitLine(pts){
-    // Split where longitude jumps (antimeridian crossing or discontinuity)
     const segs=[[pts[0]]];
     for(let k=1;k<pts.length;k++){
-      const dl=Math.abs(pts[k][1]-pts[k-1][1]);
-      if(dl>45)segs.push([]); // split on large jump
+      if(Math.abs(pts[k][1]-pts[k-1][1])>90)segs.push([]);
       segs[segs.length-1].push(pts[k]);
     }
     return segs.filter(s=>s.length>1);
@@ -1334,13 +1183,15 @@ function drawAcgLines(chartData,birthLon){
     mcLine._acgLine=true;mcLine.addTo(_acgMap);
     mcLine.bindTooltip(`${sym} ${pName} MC`,{sticky:true});
     // Labels top and bottom of MC line
-
+    lineLabel(mcLon, 78, `${sym}MC`, col);
+    lineLabel(mcLon,-78, `${sym}MC`, col);
 
     // IC vertical line (solid, lighter)
     const icLine=L.polyline([[-85,icLon],[85,icLon]],{color:col,weight:1.5,opacity:.6});
     icLine._acgLine=true;icLine.addTo(_acgMap);
     icLine.bindTooltip(`${sym} ${pName} IC`,{sticky:true});
-
+    lineLabel(icLon, 78, `${sym}IC`, col);
+    lineLabel(icLon,-78, `${sym}IC`, col);
 
     // AC/DC curves (solid)
     const acPts=[],dcPts=[];
@@ -1358,22 +1209,17 @@ function drawAcgLines(chartData,birthLon){
         ac._acgLine=true;ac.addTo(_acgMap);
         ac.bindTooltip(`${sym} ${pName} AC`,{sticky:true});
       });
-
+      // Label AC at mid-latitude on each segment
+      const midAC=acPts[Math.floor(acPts.length/2)];
+      if(midAC)lineLabel(midAC[1],midAC[0],`${sym}AC`,col);
 
       splitLine(dcPts).forEach(seg=>{
         const dc=L.polyline(seg,{color:col,weight:2,opacity:.9});
         dc._acgLine=true;dc.addTo(_acgMap);
         dc.bindTooltip(`${sym} ${pName} DC`,{sticky:true});
       });
-
-    }
-
-    // Store for outside labels — AC/DC store full point arrays
-    _acgLineData.push({type:'MC',lon:mcLon,col,sym,pName});
-    _acgLineData.push({type:'IC',lon:icLon,col,sym,pName});
-    if(acPts.length>2){
-      _acgLineData.push({type:'AC',pts:acPts,col,sym,pName});
-      _acgLineData.push({type:'DC',pts:dcPts,col,sym,pName});
+      const midDC=dcPts[Math.floor(dcPts.length/2)];
+      if(midDC)lineLabel(midDC[1],midDC[0],`${sym}DC`,col);
     }
 
     // Legend
@@ -1381,34 +1227,6 @@ function drawAcgLines(chartData,birthLon){
     item.className='acg-legend-item';
     item.innerHTML=`<span style="color:${col};font-family:serif;font-size:14px">${sym}</span><span style="color:${col}">${pName}</span>`;
     legend.appendChild(item);
-  });
-
-  // Update outside labels after render
-  setTimeout(updateOutsideLabels,200);
-
-  // Populate AC/DC side strips
-  const acStrip=document.getElementById('acg-labels-ac');
-  const dcStrip=document.getElementById('acg-labels-dc');
-  if(acStrip)acStrip.innerHTML='<div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:rgba(167,139,250,.5);margin-bottom:4px">AC</div>';
-  if(dcStrip)dcStrip.innerHTML='<div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:1px;color:rgba(167,139,250,.5);margin-bottom:4px">DC</div>';
-
-  // Store AC/DC planet info for strips
-  (_acgLineData||[]).forEach(line=>{/* handled above */});
-
-  // Re-draw strips from planets
-  const planetsForStrips=chartData.planets;
-  const PLANETS2=['მზე','მთვარე','მერკური','ვენერა','მარსი','იუპიტერი','სატურნი','ურანი','ნეპტუნი','პლუტონი'];
-  const PSYM2={'მზე':'☉','მთვარე':'☽','მერკური':'☿','ვენერა':'♀','მარსი':'♂','იუპიტერი':'♃','სატურნი':'♄','ურანი':'♅','ნეპტუნი':'♆','პლუტონი':'⯓'};
-  const PCOL2={'მზე':'#e84040','მთვარე':'#6090d8','მერკური':'#30c890','ვენერა':'#30c890','მარსი':'#e84040','იუპიტერი':'#e84040','სატურნი':'#8090a0','ურანი':'#a0a8b8','ნეპტუნი':'#8060a0','პლუტონი':'#e84040'};
-  PLANETS2.forEach(pName=>{
-    const p=planetsForStrips[pName];if(!p)return;
-    const sym=PSYM2[pName]||'?',col=PCOL2[pName]||'#aaa';
-    const div=`<div style="text-align:center;line-height:1.2;">
-      <div style="color:${col};font-family:serif;font-size:15px">${sym}</div>
-      <div style="color:rgba(180,160,220,.6);font-size:7px;font-family:Cinzel,serif">${pName.substring(0,4)}</div>
-    </div>`;
-    if(acStrip)acStrip.innerHTML+=div;
-    if(dcStrip)dcStrip.innerHTML+=div;
   });
 }
 
@@ -1428,7 +1246,7 @@ function scheduleAcgUpdate(){
       _acgBirthData=p;_acgChartData=d;
       // Show map if not already visible
       document.getElementById('chart-area').style.display='block';
-      document.getElementById('acg-section').style.display='flex';
+      document.getElementById('acg-section').style.display='block';
       document.getElementById('wheel-wrap').style.display='none';
       document.getElementById('mode-label').textContent='🗺️ ასტროკარტოგრაფია';
       document.getElementById('legend-wrap').style.display='none';
@@ -1437,14 +1255,6 @@ function scheduleAcgUpdate(){
       else{drawAcgLines(d,p.lon);}
     }catch(e){}
   },1200); // wait 1.2s after last input
-}
-
-
-function showAcgModal(lat,lon,title){
-  const modal=document.getElementById('acg-modal');
-  modal.style.display='flex';
-  document.getElementById('acg-modal-title').textContent=title;
-  document.getElementById('acg-modal-wheel').innerHTML='<div style="text-align:center;padding:40px;color:#a78bfa">⏳ იტვირთება...</div>';
 }
 
 // ── MAIN GENERATE ──
@@ -1596,12 +1406,11 @@ async function generate(){
       document.getElementById('mode-label').textContent=`🗺️ ${document.getElementById('acg-name').value||''} — ასტროკარტოგრაფია`;
       document.getElementById('legend-wrap').style.display='none';
       document.getElementById('wheel-wrap').style.display='none';
-      document.getElementById('acg-section').style.display='flex';
+      document.getElementById('acg-section').style.display='block';
       document.getElementById('acg-wheel-section').style.display='none';
       document.getElementById('asp-filters').style.display='none';
       const sbACG=document.getElementById('swap-btn');if(sbACG)sbACG.remove();
-      document.body.style.overflow='hidden';
-      setTimeout(()=>{initAcgMap();_acgMap.invalidateSize();drawAcgLines(dACG,p.lon);},200);
+      setTimeout(()=>{initAcgMap();_acgMap.invalidateSize();drawAcgLines(dACG,p.lon);},150);
       document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
     }
   }catch(e){alert('შეცდომა: '+e.message);console.error(e);}
@@ -1616,7 +1425,6 @@ function showSingleChart(data,label,dual){
   _d1=data;_d2=null;_crossAsp=[];_swapped=false;_origD1=data;_origD2=null;
   document.getElementById('acg-section').style.display='none';
   document.getElementById('wheel-wrap').style.display='block';
-  document.body.style.overflow='';
   document.getElementById('mode-label').textContent=label;
   document.getElementById('asp-filters').style.display='block';
   document.getElementById('legend-wrap').style.display='none';
