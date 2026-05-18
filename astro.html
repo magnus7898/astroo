@@ -1398,17 +1398,17 @@ function drawAcgLines(chartData,birthLon){
 
   function normLon(l){const r=((l%360)+360)%360;return r>180?r-360:r;}
 
-  // Unwrap array of [lat,lon] so longitudes are continuous (no ±180 jumps)
-  function unwrap(pts){
-    if(!pts.length)return pts;
-    const out=[[pts[0][0],pts[0][1]]];
-    for(let k=1;k<pts.length;k++){
-      let diff=pts[k][1]-out[k-1][1];
-      while(diff>180)diff-=360;
-      while(diff<-180)diff+=360;
-      out.push([pts[k][0],out[k-1][1]+diff]);
+  function splitAtMeridian(pts){
+    const out=[[]];
+    for(let k=0;k<pts.length;k++){
+      if(k>0){
+        const prev=pts[k-1][1],cur=pts[k][1];
+        const gap=Math.abs(cur-prev);
+        if(gap>90)out.push([]);
+      }
+      out[out.length-1].push(pts[k]);
     }
-    return out;
+    return out.filter(s=>s.length>=2);
   }
 
   PLANETS.forEach(pName=>{
@@ -1420,35 +1420,33 @@ function drawAcgLines(chartData,birthLon){
     const mcLon=normLon(ra-GST);
     const icLon=normLon(mcLon+180);
 
-    // MC/IC vertical lines
     const mcLine=L.polyline([[-85,mcLon],[85,mcLon]],{color:col,weight:2,opacity:.9});
     mcLine._acgLine=true;mcLine.addTo(_acgMap);
     const icLine=L.polyline([[-85,icLon],[85,icLon]],{color:col,weight:1.5,opacity:.65});
     icLine._acgLine=true;icLine.addTo(_acgMap);
 
-    // AC/DC curves: collect raw points then unwrap for continuous lines
-    const acRaw=[],dcRaw=[];
+    const acPts=[],dcPts=[];
     for(let lat=-82;lat<=82;lat+=0.5){
       const cosH=-Math.tan(lat*RAD)*Math.tan(dec*RAD);
-      if(Math.abs(cosH)>=0.9998)continue;
+      if(Math.abs(cosH)>=1)continue;
       const H=Math.acos(cosH)*DEG;
-      acRaw.push([lat, normLon(ra-H-GST)]);
-      dcRaw.push([lat, normLon(ra+H-GST)]);
+      acPts.push([lat,normLon(ra-H-GST)]);
+      dcPts.push([lat,normLon(ra+H-GST)]);
     }
 
-    if(acRaw.length>4){
-      // Unwrap to make continuous, then draw as single polyline
-      const acPts=unwrap(acRaw);
-      const dcPts=unwrap(dcRaw);
-      const ac=L.polyline(acPts,{color:col,weight:2,opacity:.9});
-      ac._acgLine=true;ac.addTo(_acgMap);
-      const dc=L.polyline(dcPts,{color:col,weight:2,opacity:.9});
-      dc._acgLine=true;dc.addTo(_acgMap);
+    splitAtMeridian(acPts).forEach(seg=>{
+      const ln=L.polyline(seg,{color:col,weight:2,opacity:.9});
+      ln._acgLine=true;ln.addTo(_acgMap);
+    });
+    splitAtMeridian(dcPts).forEach(seg=>{
+      const ln=L.polyline(seg,{color:col,weight:2,opacity:.9});
+      ln._acgLine=true;ln.addTo(_acgMap);
+    });
 
-      _acgLineData.push({type:'AC',pts:acRaw,col,sym,pName});
-      _acgLineData.push({type:'DC',pts:dcRaw,col,sym,pName});
+    if(acPts.length>2){
+      _acgLineData.push({type:'AC',pts:acPts,col,sym,pName});
+      _acgLineData.push({type:'DC',pts:dcPts,col,sym,pName});
     }
-
     _acgLineData.push({type:'MC',lon:mcLon,col,sym,pName});
     _acgLineData.push({type:'IC',lon:icLon,col,sym,pName});
 
