@@ -1242,7 +1242,7 @@ function initAcgMap(){
   });
   // fitBounds controls exactly which area is visible:
   // left starts at -140 (reduce Americas), right ends at 175 (more Asia visible)
-  _acgMap.fitBounds([[-80, -180], [80, 180]]);
+  _acgMap.fitBounds([[-75, -168], [78, 182]]);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(_acgMap);
 
   // Graticule grid lines
@@ -1401,11 +1401,11 @@ function drawAcgLines(chartData,birthLon){
   function normLon(l){const r=((l%360)+360)%360;return r>180?r-360:r;}
 
   function splitLine(pts){
-    // Split where longitude jumps (antimeridian crossing or discontinuity)
+    // Only split on genuine antimeridian crossings (lon jumps >180°)
     const segs=[[pts[0]]];
     for(let k=1;k<pts.length;k++){
       const dl=Math.abs(pts[k][1]-pts[k-1][1]);
-      if(dl>45)segs.push([]); // split on large jump
+      if(dl>180)segs.push([]); // only split on true antimeridian crossing
       segs[segs.length-1].push(pts[k]);
     }
     return segs.filter(s=>s.length>1);
@@ -1434,7 +1434,7 @@ function drawAcgLines(chartData,birthLon){
 
     // AC/DC curves (solid)
     const acPts=[],dcPts=[];
-    for(let lat=-85;lat<=85;lat+=1){
+    for(let lat=-85;lat<=85;lat+=0.5){
       const cosH=-Math.tan(lat*RAD)*Math.tan(dec*RAD);
       if(Math.abs(cosH)>1)continue;
       const H=Math.acos(Math.max(-1,Math.min(1,cosH)))*DEG;
