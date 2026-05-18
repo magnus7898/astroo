@@ -1396,25 +1396,32 @@ function drawAcgLines(chartData,birthLon){
 
     // AC/DC curves
     const acPts=[],dcPts=[];
+    let prevAc=null,prevDc=null;
     for(let lat=-82;lat<=82;lat+=0.5){
       const cosH=-Math.tan(lat*RAD)*Math.tan(dec*RAD);
-      if(Math.abs(cosH)>=1)continue;
+      if(Math.abs(cosH)>=1){prevAc=null;prevDc=null;continue;}
       const H=Math.acos(cosH)*DEG;
-      acPts.push([lat,normLon(ra-H-GST)]);
-      dcPts.push([lat,normLon(ra+H-GST)]);
+      let acL=normLon(ra-H-GST);
+      let dcL=normLon(ra+H-GST);
+      // Unwrap to stay continuous
+      if(prevAc!==null){
+        while(acL-prevAc>180)acL-=360;
+        while(acL-prevAc<-180)acL+=360;
+        while(dcL-prevDc>180)dcL-=360;
+        while(dcL-prevDc<-180)dcL+=360;
+      }
+      acPts.push([lat,acL]);dcPts.push([lat,dcL]);
+      prevAc=acL;prevDc=dcL;
     }
 
-    [-1080,-720,-360,0,360,720,1080].forEach(offset=>{
-      splitAtMeridian(acPts).forEach(seg=>{
-        const shifted=seg.map(p=>[p[0],p[1]+offset]);
-        const ln=L.polyline(shifted,{color:col,weight:2,opacity:.9});
-        ln._acgLine=true;ln.addTo(_acgMap);
-      });
-      splitAtMeridian(dcPts).forEach(seg=>{
-        const shifted=seg.map(p=>[p[0],p[1]+offset]);
-        const ln=L.polyline(shifted,{color:col,weight:2,opacity:.9});
-        ln._acgLine=true;ln.addTo(_acgMap);
-      });
+    // Draw each curve once with looping copies — no splits needed
+    [-720,-360,0,360,720].forEach(offset=>{
+      if(acPts.length>2){
+        const ac=L.polyline(acPts.map(p=>[p[0],p[1]+offset]),{color:col,weight:2,opacity:.9});
+        ac._acgLine=true;ac.addTo(_acgMap);
+        const dc=L.polyline(dcPts.map(p=>[p[0],p[1]+offset]),{color:col,weight:2,opacity:.9});
+        dc._acgLine=true;dc.addTo(_acgMap);
+      }
     });
     // Label on AC curve (midpoint)
     if(acPts.length>4){
