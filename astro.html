@@ -1236,50 +1236,111 @@ function initAcgMap(){
 // Store acg line data for outside labels
 function updateOutsideLabels(){
   if(!_acgMap||!_acgLineData.length)return;
-  const tEl=document.getElementById('acg-top');  // MC
-  const bEl=document.getElementById('acg-bot');  // IC
-  const lEl=document.getElementById('acg-left'); // AC
-  const rEl=document.getElementById('acg-right');// DC
+  const tEl=document.getElementById('acg-top');
+  const bEl=document.getElementById('acg-bot');
+  const lEl=document.getElementById('acg-left');
+  const rEl=document.getElementById('acg-right');
   if(!tEl)return;
-  [tEl,bEl,lEl,rEl].forEach(e=>{if(e)e.innerHTML='';});
+  tEl.innerHTML='';bEl.innerHTML='';
+  if(lEl)lEl.innerHTML='';if(rEl)rEl.innerHTML='';
   const W=_acgMap.getContainer().offsetWidth;
   const H=_acgMap.getContainer().offsetHeight;
   const bounds=_acgMap.getBounds();
+
+  // Collect all label candidates
+  const hTop=[],hBot=[],vLeft=[],vRight=[];
+
   _acgLineData.forEach(({type,lon,pts,col,sym})=>{
-    if(type==='MC'){
+    if(type==='MC'||type==='IC'){
       const pt=_acgMap.latLngToContainerPoint([0,lon]);
-      if(pt.x<2||pt.x>W-2)return;
-      const d=document.createElement('div');
-      d.style.cssText='position:absolute;left:'+pt.x+'px;top:50%;transform:translate(-50%,-50%);color:'+col+';font-size:8px;font-weight:bold;font-family:serif;white-space:nowrap;text-align:center;line-height:1;';
-      d.innerHTML='<span style="font-size:11px">'+sym+'</span><span style="font-size:7px">M</span>';
-      if(tEl)tEl.appendChild(d.cloneNode(true));
-      if(bEl)bEl.appendChild(d);
-    }else if(type==='IC'){
-      // IC shown differently - lighter
-      const pt=_acgMap.latLngToContainerPoint([0,lon]);
-      if(pt.x<2||pt.x>W-2)return;
-      const d=document.createElement('div');
-      d.style.cssText='position:absolute;left:'+pt.x+'px;top:50%;transform:translate(-50%,-50%);color:'+col+';font-size:7px;font-weight:bold;font-family:serif;white-space:nowrap;opacity:0.7;';
-      d.innerHTML='<span style="font-size:10px">'+sym+'</span><span style="font-size:6px">I</span>';
-      if(tEl)tEl.appendChild(d.cloneNode(true));
-      if(bEl)bEl.appendChild(d);
-    }else if(pts){
+      if(pt.x>=2&&pt.x<=W-2){
+        const label={x:pt.x,sym,type:type==='MC'?'M':'I',col};
+        hTop.push(label);
+        hBot.push({...label});
+      }
+    }else if(pts&&pts.length>1){
       const vis=pts.filter(p=>p[0]>=bounds.getSouth()-2&&p[0]<=bounds.getNorth()+2);
       if(!vis.length)return;
-      // AC on left, DC on right
-      const targetEl=type==='AC'?lEl:rEl;
-      if(!targetEl)return;
-      // Find point closest to respective edge
-      const edgeLon=type==='AC'?bounds.getWest():bounds.getEast();
-      const closest=vis.reduce((a,b)=>Math.abs(b[1]-edgeLon)<Math.abs(a[1]-edgeLon)?b:a);
-      const pt=_acgMap.latLngToContainerPoint([closest[0],closest[1]]);
-      if(pt.y<2||pt.y>H-2)return;
-      const d=document.createElement('div');
-      d.style.cssText='position:absolute;top:'+pt.y+'px;left:50%;transform:translate(-50%,-50%);color:'+col+';font-size:7px;font-weight:bold;font-family:serif;writing-mode:vertical-lr;white-space:nowrap;';
-      d.innerHTML='<span style="font-size:11px">'+sym+'</span><span style="font-size:7px">'+type+'</span>';
-      targetEl.appendChild(d);
+      const arr=type==='AC'?vLeft:vRight;
+      const suf=type==='AC'?'A':'D';
+      // Find border crossings
+      let found=false;
+      for(let k=0;k<vis.length-1;k++){
+        const p1=_acgMap.latLngToContainerPoint([vis[k][0],vis[k][1]]);
+        const p2=_acgMap.latLngToContainerPoint([vis[k+1][0],vis[k+1][1]]);
+        if(Math.abs(p2.x-p1.x)>W/2||Math.abs(p2.y-p1.y)>H/2)continue;
+        // Left crossing
+        if((p1.x>=0&&p2.x<0)||(p1.x<0&&p2.x>=0)){
+          const t=p1.x/(p1.x-p2.x);
+          const y=p1.y+t*(p2.y-p1.y);
+          if(y>=4&&y<=H-4){arr.push({y,sym,type:suf,col});found=true;}
+        }
+        // Right crossing
+        if((p1.x<=W&&p2.x>W)||(p1.x>W&&p2.x<=W)){
+          const t=(W-p1.x)/(p2.x-p1.x);
+          const y=p1.y+t*(p2.y-p1.y);
+          if(y>=4&&y<=H-4){arr.push({y,sym,type:suf,col});found=true;}
+        }
+        // Top crossing
+        if((p1.y>=0&&p2.y<0)||(p1.y<0&&p2.y>=0)){
+          const t=p1.y/(p1.y-p2.y);
+          const x=p1.x+t*(p2.x-p1.x);
+          if(x>=4&&x<=W-4){hTop.push({x,sym,type:suf,col});found=true;}
+        }
+        // Bottom crossing
+        if((p1.y<=H&&p2.y>H)||(p1.y>H&&p2.y<=H)){
+          const t=(H-p1.y)/(p2.y-p1.y);
+          const x=p1.x+t*(p2.x-p1.x);
+          if(x>=4&&x<=W-4){hBot.push({x,sym,type:suf,col});found=true;}
+        }
+      }
+      if(!found){
+        const mid=vis[Math.floor(vis.length/2)];
+        const pt=_acgMap.latLngToContainerPoint([mid[0],mid[1]]);
+        if(pt.y>=4&&pt.y<=H-4)arr.push({y:pt.y,sym,type:suf,col});
+      }
     }
   });
+
+  // Place labels with min spacing, push apart if too close
+  function placeH(el,items){
+    if(!el)return;
+    items.sort((a,b)=>a.x-b.x);
+    // Push apart overlapping labels (min 16px)
+    for(let i=1;i<items.length;i++){
+      if(items[i].x-items[i-1].x<16)items[i].x=items[i-1].x+16;
+    }
+    items.forEach(({x,sym,type,col})=>{
+      if(x<0||x>W)return;
+      const d=document.createElement('div');
+      d.style.cssText='position:absolute;left:'+x+'px;top:50%;transform:translate(-50%,-50%);color:'+col+
+        ';font-size:9px;font-weight:bold;font-family:serif;text-align:center;line-height:1;white-space:nowrap;pointer-events:none;';
+      d.innerHTML='<span style="font-size:11px">'+sym+'</span><span style="font-size:7px">'+type+'</span>';
+      el.appendChild(d);
+    });
+  }
+
+  function placeV(el,items){
+    if(!el)return;
+    items.sort((a,b)=>a.y-b.y);
+    // Push apart overlapping labels (min 14px)
+    for(let i=1;i<items.length;i++){
+      if(items[i].y-items[i-1].y<14)items[i].y=items[i-1].y+14;
+    }
+    items.forEach(({y,sym,type,col})=>{
+      if(y<0||y>H)return;
+      const d=document.createElement('div');
+      d.style.cssText='position:absolute;top:'+y+'px;left:2px;right:2px;transform:translateY(-50%);color:'+col+
+        ';font-size:8px;font-weight:bold;font-family:serif;text-align:center;line-height:1.1;white-space:nowrap;pointer-events:none;';
+      d.innerHTML='<span style="font-size:10px">'+sym+'</span><span style="font-size:7px">'+type+'</span>';
+      el.appendChild(d);
+    });
+  }
+
+  placeH(tEl,hTop);
+  placeH(bEl,hBot);
+  placeV(lEl,vLeft);
+  placeV(rEl,vRight);
 }
 
 function drawAcgLines(chartData,birthLon){
