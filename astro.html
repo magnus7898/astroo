@@ -1166,7 +1166,8 @@ function initAcgMap(){
     const titleEl=document.getElementById('acg-result-title');
     resultEl.style.display='block';
     titleEl.textContent='⏳ '+lat.toFixed(2)+'°, '+lon.toFixed(2)+'° — იტვირთება...';
-    resultEl.scrollIntoView({behavior:'smooth',block:'start'});
+    // scroll gently so result is visible below map
+    setTimeout(()=>resultEl.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
     try{
       const d=await fetchChart({..._acgBirthData,lat,lon});
       d._timeUnknown=false;
@@ -1320,18 +1321,20 @@ function updateOutsideLabels(){
     });
   }
 
-  function placeV(el,items){
+  function placeV(el,items,side){
     if(!el)return;
     items.sort((a,b)=>a.y-b.y);
-    // Push apart overlapping labels (min 14px)
     for(let i=1;i<items.length;i++){
       if(items[i].y-items[i-1].y<14)items[i].y=items[i-1].y+14;
     }
-    items.forEach(({y,sym,type,col})=>{
+    const isLeft=side==='left';
+    items.forEach(({y,sym,type,col,origY})=>{
       if(y<0||y>H)return;
       const d=document.createElement('div');
-      d.style.cssText='position:absolute;top:'+y+'px;left:2px;right:2px;transform:translateY(-50%);color:'+col+
-        ';font-size:8px;font-weight:bold;font-family:serif;text-align:center;line-height:1.1;white-space:nowrap;pointer-events:none;';
+      // Small tick line toward the map
+      const tick=isLeft?'border-right:2px solid '+col+';padding-right:3px;':'border-left:2px solid '+col+';padding-left:3px;';
+      d.style.cssText='position:absolute;top:'+y+'px;left:0;right:0;transform:translateY(-50%);color:'+col+
+        ';font-size:8px;font-weight:bold;font-family:serif;text-align:center;line-height:1.1;white-space:nowrap;pointer-events:none;'+tick;
       d.innerHTML='<span style="font-size:10px">'+sym+'</span><span style="font-size:7px">'+type+'</span>';
       el.appendChild(d);
     });
@@ -1339,8 +1342,8 @@ function updateOutsideLabels(){
 
   placeH(tEl,hTop);
   placeH(bEl,hBot);
-  placeV(lEl,vLeft);
-  placeV(rEl,vRight);
+  placeV(lEl,vLeft,'left');
+  placeV(rEl,vRight,'right');
 }
 
 function drawAcgLines(chartData,birthLon){
