@@ -1401,14 +1401,13 @@ function drawAcgLines(chartData,birthLon){
   function normLon(l){const r=((l%360)+360)%360;return r>180?r-360:r;}
 
   function splitLine(pts){
-    // Only split on genuine antimeridian crossings (lon jumps >180°)
     const segs=[[pts[0]]];
     for(let k=1;k<pts.length;k++){
       const dl=Math.abs(pts[k][1]-pts[k-1][1]);
-      if(dl>180)segs.push([]); // only split on true antimeridian crossing
+      if(dl>90)segs.push([]);
       segs[segs.length-1].push(pts[k]);
     }
-    return segs.filter(s=>s.length>1);
+    return segs.filter(s=>s.length>=6);
   }
 
 
@@ -1436,7 +1435,7 @@ function drawAcgLines(chartData,birthLon){
     const acPts=[],dcPts=[];
     for(let lat=-85;lat<=85;lat+=0.5){
       const cosH=-Math.tan(lat*RAD)*Math.tan(dec*RAD);
-      if(Math.abs(cosH)>1)continue;
+      if(Math.abs(cosH)>=0.9998)continue;
       const H=Math.acos(Math.max(-1,Math.min(1,cosH)))*DEG;
       acPts.push([lat,normLon(ra-H-GST)]);
       dcPts.push([lat,normLon(ra+H-GST)]);
