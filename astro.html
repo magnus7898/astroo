@@ -664,25 +664,8 @@ tr:hover td{background:rgba(19,16,58,.6)}
 
   <div id="acg-section">
     <!-- Atlas layout: strips + map -->
-    <div id="acg-grid" style="display:grid;grid-template-columns:56px 1fr 56px;grid-template-rows:28px calc(100vh - 150px) 28px;width:100%;height:calc(100vh - 150px);background:#e8e4d8;">
-      <!-- Corners -->
-      <div style="background:#d8d0bc;border:1px solid #8a7a5a;"></div>
-      <!-- Top: MC labels -->
-      <div id="acg-top" style="background:#d8d0bc;border:1px solid #8a7a5a;position:relative;overflow:hidden;"></div>
-      <div style="background:#d8d0bc;border:1px solid #8a7a5a;"></div>
-      <!-- Left: AC labels -->
-      <div id="acg-left" style="background:#d8d0bc;border:1px solid #8a7a5a;position:relative;overflow:hidden;"></div>
-      <!-- Map -->
-      <div id="acg-map-wrap" style="position:relative;overflow:hidden;">
-        <div id="acg-map" style="position:absolute;inset:0;"></div>
-      </div>
-      <!-- Right: DC labels -->
-      <div id="acg-right" style="background:#d8d0bc;border:1px solid #8a7a5a;position:relative;overflow:hidden;"></div>
-      <!-- Corners -->
-      <div style="background:#d8d0bc;border:1px solid #8a7a5a;"></div>
-      <!-- Bottom: IC labels -->
-      <div id="acg-bot" style="background:#d8d0bc;border:1px solid #8a7a5a;position:relative;overflow:hidden;"></div>
-      <div style="background:#d8d0bc;border:1px solid #8a7a5a;"></div>
+    <div id="acg-grid" style="width:100%;height:calc(100vh - 64px);position:relative;">
+      <div id="acg-map" style="position:absolute;inset:0;"></div>
     </div>
     <!-- Legend -->
     <div id="acg-legend-bar" style="background:#e8e4d8;border-top:1px solid #8a7a5a;display:flex;flex-wrap:wrap;gap:8px;padding:4px 14px;align-items:center;font-size:10px;min-height:28px;width:100%;box-sizing:border-box;"></div>
@@ -1363,20 +1346,33 @@ function drawAcgLines(chartData,birthLon){
 
   const {ra:RAMC}=ecl2eq(chartData.mc);
   const GST=((RAMC-birthLon)+360)%360;
-
   function normLon(l){const r=((l%360)+360)%360;return r>180?r-360:r;}
 
   function splitAtMeridian(pts){
     const out=[[]];
     for(let k=0;k<pts.length;k++){
-      if(k>0){
-        const prev=pts[k-1][1],cur=pts[k][1];
-        const gap=Math.abs(cur-prev);
-        if(gap>90)out.push([]);
-      }
+      if(k>0&&Math.abs(pts[k][1]-pts[k-1][1])>90)out.push([]);
       out[out.length-1].push(pts[k]);
     }
     return out.filter(s=>s.length>=2);
+  }
+
+  // Track placed label positions to avoid overlap (in degrees)
+  const placedLabels=[];
+  function canPlace(lat,lon){
+    return!placedLabels.some(p=>Math.abs(p[0]-lat)<6&&Math.abs(p[1]-lon)<8);
+  }
+  function placeLabel(lat,lon,sym,type,col){
+    if(!canPlace(lat,lon))return;
+    placedLabels.push([lat,lon]);
+    [-1080,-720,-360,0,360,720,1080].forEach(offset=>{
+      const icon=L.divIcon({
+        html:'<div style="color:'+col+';font-family:serif;font-size:10px;font-weight:bold;white-space:nowrap;background:rgba(255,255,255,0.75);border-radius:2px;padding:0 2px;line-height:1.2">'+sym+'<span style="font-size:7px">'+type+'</span></div>',
+        className:'',iconAnchor:[0,6]
+      });
+      const m=L.marker([lat,lon+offset],{icon,interactive:false,zIndexOffset:500});
+      m._acgLine=true;m.addTo(_acgMap);
+    });
   }
 
   PLANETS.forEach(pName=>{
@@ -1384,18 +1380,21 @@ function drawAcgLines(chartData,birthLon){
     const col=PCOL[pName]||'#aaa';
     const sym=PSYM[pName]||pName[0];
     const {ra,dec}=ecl2eq(p.degree);
-
     const mcLon=normLon(ra-GST);
     const icLon=normLon(mcLon+180);
 
-    // Draw MC/IC at original + ±360° for map wrap
-    [-1800,-1440,-1080,-720,-360,0,360,720,1080,1440,1800].forEach(offset=>{
+    // MC/IC vertical lines
+    [-1080,-720,-360,0,360,720,1080].forEach(offset=>{
       const ml=L.polyline([[-85,mcLon+offset],[85,mcLon+offset]],{color:col,weight:2,opacity:.9});
       ml._acgLine=true;ml.addTo(_acgMap);
       const il=L.polyline([[-85,icLon+offset],[85,icLon+offset]],{color:col,weight:1.5,opacity:.65});
       il._acgLine=true;il.addTo(_acgMap);
     });
+    // Labels on MC/IC lines
+    placeLabel(35,mcLon,sym,'M',col);
+    placeLabel(-35,icLon,sym,'I',col);
 
+    // AC/DC curves
     const acPts=[],dcPts=[];
     for(let lat=-82;lat<=82;lat+=0.5){
       const cosH=-Math.tan(lat*RAD)*Math.tan(dec*RAD);
@@ -1405,8 +1404,7 @@ function drawAcgLines(chartData,birthLon){
       dcPts.push([lat,normLon(ra+H-GST)]);
     }
 
-    // Draw AC/DC at original + ±360° for map wrap
-    [-1800,-1440,-1080,-720,-360,0,360,720,1080,1440,1800].forEach(offset=>{
+    [-1080,-720,-360,0,360,720,1080].forEach(offset=>{
       splitAtMeridian(acPts).forEach(seg=>{
         const shifted=seg.map(p=>[p[0],p[1]+offset]);
         const ln=L.polyline(shifted,{color:col,weight:2,opacity:.9});
@@ -1418,21 +1416,28 @@ function drawAcgLines(chartData,birthLon){
         ln._acgLine=true;ln.addTo(_acgMap);
       });
     });
+    // Label on AC curve (midpoint)
+    if(acPts.length>4){
+      const mid=acPts[Math.floor(acPts.length/2)];
+      placeLabel(mid[0],mid[1],sym,'A',col);
+    }
+    if(dcPts.length>4){
+      const mid=dcPts[Math.floor(dcPts.length/2)];
+      placeLabel(mid[0],mid[1],sym,'D',col);
+    }
 
+    _acgLineData.push({type:'MC',lon:mcLon,col,sym,pName});
+    _acgLineData.push({type:'IC',lon:icLon,col,sym,pName});
     if(acPts.length>2){
       _acgLineData.push({type:'AC',pts:acPts,col,sym,pName});
       _acgLineData.push({type:'DC',pts:dcPts,col,sym,pName});
     }
-    _acgLineData.push({type:'MC',lon:mcLon,col,sym,pName});
-    _acgLineData.push({type:'IC',lon:icLon,col,sym,pName});
-
     if(legend){
       const item=document.createElement('div');item.className='acg-legend-item';
       item.innerHTML='<span style="color:'+col+';font-family:serif;font-size:14px">'+sym+'</span><span style="color:'+col+';font-size:9px">'+pName+'</span>';
       legend.appendChild(item);
     }
   });
-  setTimeout(updateOutsideLabels,400);
 }
 
 
