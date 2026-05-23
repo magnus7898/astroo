@@ -55,25 +55,17 @@ tr:hover td{background:rgba(19,16,58,.6)}
 .moon-sym{color:#b8d8ff;text-shadow:0 0 8px rgba(100,160,255,.9);font-size:20px;font-family:serif}
 .p-sym{font-family:serif;font-size:18px;line-height:1;display:inline-block}
 /* Varga section */
-.varga-layout{display:grid;grid-template-columns:220px 1fr;gap:16px;margin-top:8px;}
-@media(max-width:700px){.varga-layout{grid-template-columns:1fr}}
-.varga-list-wrap{background:rgba(8,6,20,.8);border:1px solid rgba(45,31,110,.5);border-radius:12px;overflow:hidden;max-height:600px;display:flex;flex-direction:column;}
-.varga-list-header{background:rgba(167,139,250,.07);padding:8px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--purple);text-transform:uppercase;border-bottom:1px solid rgba(45,31,110,.5);flex-shrink:0;}
-.varga-list{overflow-y:auto;flex:1;}
 .varga-list::-webkit-scrollbar{width:4px}
 .varga-list::-webkit-scrollbar-track{background:rgba(8,6,20,.5)}
 .varga-list::-webkit-scrollbar-thumb{background:rgba(100,65,200,.4);border-radius:2px}
-.varga-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;border-bottom:1px solid rgba(15,13,40,.6);transition:background .15s;}
+.varga-item{display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;border:1px solid rgba(15,13,40,.6);transition:background .15s;}
 .varga-item:hover{background:rgba(45,31,110,.4)}
 .varga-item.active{background:rgba(109,40,217,.25);border-left:2px solid var(--purple)}
 .varga-num{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);min-width:32px;font-weight:600}
 .varga-name{font-size:11px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .varga-meaning{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .main-badge{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;opacity:.7}
-.varga-display{background:rgba(8,6,20,.75);border:1px solid rgba(45,31,110,.5);border-radius:12px;overflow:hidden;padding:16px;}
-#varga-wheel-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:var(--gold);text-align:center;margin-bottom:8px}
-svg#varga-wheel{width:100%;height:auto;display:block;overflow:visible}
-.varga-planet-table{margin-top:12px;}
+
 </style>
 </head>
 <body>
@@ -150,20 +142,14 @@ svg#varga-wheel{width:100%;height:auto;display:block;overflow:visible}
   </div>
 
   <!-- VARGA CHARTS SECTION -->
-  <div class="sec-title">ვარგები · 60 Divisional Charts</div>
-  <div class="varga-layout">
-    <div class="varga-list-wrap">
-      <div class="varga-list-header">✦ ვარგა სია · Click to view</div>
-      <div class="varga-list" id="varga-list"></div>
-    </div>
-    <div class="varga-display">
-      <div id="varga-wheel-title">← აირჩიეთ ვარგა</div>
-      <svg id="varga-wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg>
-      <div class="varga-planet-table">
-        <table><thead><tr><th></th><th>გრჰა</th><th>D-N გრადუსი</th><th>რაში</th><th>℞</th></tr></thead>
-        <tbody id="varga-tbody"></tbody></table>
-      </div>
-    </div>
+  <div style="display:flex;align-items:center;gap:14px;margin:28px 0 14px;">
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.3),transparent)"></div>
+    <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--gold);text-transform:uppercase">ვარგები · 60 Divisional Charts</span>
+    <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,.3),transparent)"></div>
+  </div>
+  <div id="varga-list-wrap" style="background:rgba(8,6,20,.8);border:1px solid rgba(45,31,110,.5);border-radius:12px;overflow:hidden;margin-bottom:16px;">
+    <div style="background:rgba(167,139,250,.07);padding:8px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:var(--purple);text-transform:uppercase;border-bottom:1px solid rgba(45,31,110,.5);">✦ ვარგა — click to update wheel above</div>
+    <div id="varga-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));max-height:300px;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -384,6 +370,7 @@ async function generate(){
     drawHouseTable(data);
     drawNakTable(data);
     buildVargaList();
+    showVarga(1);
     document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
   }catch(e){alert('შეცდომა: '+e.message);}
   finally{btn.disabled=false;btn.textContent='✦ ვედური რუქის გენერაცია ✦';}
@@ -420,6 +407,35 @@ function drawWheel(data, svgId){
   el('circle',{cx:CX,cy:CY,r:R2,fill:'none',stroke:'rgba(100,65,200,.8)','stroke-width':1.5},svg);
   el('circle',{cx:CX,cy:CY,r:R3,fill:'none',stroke:'rgba(70,45,160,.75)','stroke-width':1.2},svg);
   el('circle',{cx:CX,cy:CY,r:R4,fill:'none',stroke:'rgba(50,32,120,.7)','stroke-width':1},svg);
+
+  // ── ASPECTS ──
+  const ASPECTS_DEF=[
+    {angles:[0],orb:10,color:'#f9c646',dash:''},
+    {angles:[180],orb:10,color:'#e89040',dash:'4 3'},
+    {angles:[120,240],orb:8,color:'#a078f0',dash:''},
+    {angles:[90,270],orb:8,color:'#e84040',dash:'4 3'},
+    {angles:[60,300],orb:6,color:'#30c890',dash:'2 3'},
+    {angles:[150,210],orb:4,color:'#9ba8b8',dash:'2 4'},
+  ];
+  const pNames=PORDER.filter(n=>data.planets[n]);
+  for(let i=0;i<pNames.length;i++){
+    for(let j=i+1;j<pNames.length;j++){
+      const d1=data.planets[pNames[i]].sidereal;
+      const d2=data.planets[pNames[j]].sidereal;
+      const raw=((d2-d1)+360)%360;
+      let best=null,bestOrb=999;
+      for(const asp of ASPECTS_DEF){
+        for(const target of asp.angles){
+          let diff=Math.abs(raw-target);if(diff>180)diff=360-diff;
+          if(diff<=asp.orb&&diff<bestOrb){bestOrb=diff;best=asp;}
+        }
+      }
+      if(!best)continue;
+      const a1=v2a(d1,lagStart),a2=v2a(d2,lagStart);
+      const p1=pxy(a1,R4),p2=pxy(a2,R4);
+      const ln=el('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:best.color,'stroke-width':0.8,opacity:.4,'stroke-dasharray':best.dash||'none'},svg);
+    }
+  }
   // Lagna
   if(!data._timeUnknown){
     const la=v2a(data.asc,lagStart);
@@ -433,6 +449,35 @@ function drawWheel(data, svgId){
   const dispA={};for(const n of present)dispA[n]=trueA[n];
   const MINGAP=22/(R1+30);
   for(let it=0;it<400;it++){let mv=false;for(let i=0;i<sorted.length;i++)for(let j=i+1;j<sorted.length;j++){const a=sorted[i],b=sorted[j];let d=dispA[b]-dispA[a];while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;if(Math.abs(d)<MINGAP&&Math.abs(d)>0.0001){const push=(MINGAP-Math.abs(d))/2,dir=d>0?1:-1;dispA[a]-=push*dir;dispA[b]+=push*dir;mv=true;}}if(!mv)break;}
+  // ── ASPECT LINES ──
+  const ASPECTS=[
+    {a:0,orb:10,color:'#f9c646',dash:''},
+    {a:180,orb:10,color:'#e89040',dash:''},
+    {a:120,orb:8,color:'#a078f0',dash:'4 3'},
+    {a:240,orb:8,color:'#a078f0',dash:'4 3'},
+    {a:90,orb:8,color:'#e84040',dash:''},
+    {a:270,orb:8,color:'#e84040',dash:''},
+    {a:60,orb:6,color:'#30c890',dash:'4 3'},
+    {a:300,orb:6,color:'#30c890',dash:'4 3'},
+  ];
+  for(let i=0;i<present.length;i++){
+    for(let j=i+1;j<present.length;j++){
+      const n1=present[i],n2=present[j];
+      const d1=data.planets[n1].sidereal,d2=data.planets[n2].sidereal;
+      const raw=((d2-d1)+360)%360;
+      let best=null,bestOrb=999;
+      for(const asp of ASPECTS){
+        let diff=Math.abs(raw-asp.a);if(diff>180)diff=360-diff;
+        if(diff<=asp.orb&&diff<bestOrb){bestOrb=diff;best=asp;}
+      }
+      if(best){
+        const a1=v2a(d1,lagStart),a2=v2a(d2,lagStart);
+        const p1=pxy(a1,R4),p2=pxy(a2,R4);
+        el('line',{x1:p1.x,y1:p1.y,x2:p2.x,y2:p2.y,stroke:best.color,'stroke-width':0.7,opacity:.4,'stroke-dasharray':best.dash},svg);
+      }
+    }
+  }
+
   for(const name of present){
     const info=PI[name]||{sym:'?',color:'#fff'};
     const tA=trueA[name],col=info.color;
@@ -446,6 +491,34 @@ function drawWheel(data, svgId){
     else if(name==='Moon'){const mg=el('g',{},svg);txt(mg,'☽',gxy.x,gxy.y,{fill:'#b8d8ff','font-size':20,'font-family':'serif'});}
     else txt(svg,info.sym,gxy.x,gxy.y,{fill:col,'font-size':18,'font-family':'serif'});
     if(data.planets[name].retrograde)txt(svg,'℞',gxy.x+10,gxy.y-8,{fill:'#f87171','font-size':7,'font-family':'serif'});
+  }
+
+  // ── VEDIC ASPECTS (Graha Drishti) ──
+  // All planets: 7th (180°). Mars: +4th,8th. Jupiter: +5th,9th. Saturn: +3rd,10th.
+  const ASPECTS_V={
+    'default':[180],
+    'Mars':[90,210],
+    'Jupiter':[120,240],
+    'Saturn':[60,270],
+    'Rahu':[120,240],'Ketu':[120,240]
+  };
+  const ASP_COLS={'default':'rgba(100,65,200,.25)','Mars':'rgba(200,60,60,.22)','Jupiter':'rgba(200,150,40,.22)','Saturn':'rgba(100,150,200,.2)'};
+  for(const name of present){
+    const p1=data.planets[name];
+    const a1=v2a(p1.sidereal,lagStart);
+    const aspects=[...(ASPECTS_V['default']||[]),...(ASPECTS_V[name]||[])];
+    for(const aspDeg of aspects){
+      // Find target degree
+      const targetSid=(p1.sidereal+aspDeg)%360;
+      // Draw line from planet to target point on inner circle
+      const a2=v2a(targetSid,lagStart);
+      const col=ASP_COLS[name]||ASP_COLS['default'];
+      el('line',{
+        x1:CX+Math.cos(a1)*R4,y1:CY+Math.sin(a1)*R4,
+        x2:CX+Math.cos(a2)*R4,y2:CY+Math.sin(a2)*R4,
+        stroke:col,'stroke-width':0.7,opacity:.6,'stroke-dasharray':'3 3'
+      },svg);
+    }
   }
 }
 
@@ -494,24 +567,19 @@ function buildVargaList(){
 
 function showVarga(N){
   if(!_chartData)return;
-  // Update active state
-  document.querySelectorAll('.varga-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.varga-item').forEach(e=>e.classList.remove('active'));
   const item=document.getElementById('vi-'+N);
   if(item){item.classList.add('active');item.scrollIntoView({block:'nearest'});}
   const v=VARGAS.find(x=>x.n===N);
   const vd=getVargaData(_chartData,N);
-  document.getElementById('varga-wheel-title').textContent=`D${N} · ${v?.ka||''} · ${v?.name||''} — ${v?.meaning||''}`;
-  drawWheel(vd,'varga-wheel');
-  // Planet table for varga
-  const tb=document.getElementById('varga-tbody');tb.innerHTML='';
-  for(const name of PORDER){
-    if(!vd.planets[name])continue;
-    const info=PI[name],p=vd.planets[name],si=p.sign_idx;
-    const sym=name==='Sun'?sunSVG(16):name==='Moon'?'<span style="color:#b8d8ff;font-family:serif;font-size:14px">☽</span>':`<span style="color:${info.color};font-family:serif;font-size:14px">${info.sym}</span>`;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${sym}</td><td style="color:${info.color};font-size:11px">${name}</td><td class="deg-val">${fmtDegVarga(p.sidereal)}</td><td><span style="font-size:13px;font-family:serif;color:${RCOL[si]}">${ZSYM[si]}</span> <span style="font-size:10px;color:${RCOL[si]}">${RASHI[si]}</span></td><td>${p.retrograde?'<span class="retro">℞</span>':''}</td>`;
-    tb.appendChild(tr);
-  }
+  // Update sec-title above wheel
+  document.querySelector('.sec-title').textContent=`D${N} · ${v?.ka} · ${v?.name} — ${v?.meaning}`;
+  // Update MAIN wheel
+  drawWheel(vd,'wheel');
+  // Update main planet table
+  drawPlanetTable(vd);
+  // Scroll to wheel
+  document.getElementById('wheel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 </script>
 </body>
