@@ -648,9 +648,10 @@ function showVarga(N){
   document.querySelector('.sec-title').textContent=`D${N} · ${v?.ka} · ${v?.name} — ${v?.meaning}`;
   // Update MAIN wheel
   drawWheel(vd,'wheel');
-  // Update main planet table
+  // Update main planet table + aspect table
   drawPlanetTable(vd);
-  // Scroll to wheel
+  drawHouseTable(vd);
+  calcAndDrawAspects(vd);
   document.getElementById('wheel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 </script>
