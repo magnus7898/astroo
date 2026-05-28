@@ -400,11 +400,11 @@ function highlightPlanet(name){
   const svg=document.getElementById('wheel');
   svg.querySelectorAll('.asp-line').forEach(l=>{
     const active=l.dataset.p1===name||l.dataset.p2===name;
-    l.style.opacity=active?'0.9':'0.15';
-    l.style.strokeWidth=active?'2':'0.5';
+    l.style.opacity=active?'0.9':'0';
+    l.style.strokeWidth=active?'2':'0';
   });
   document.querySelectorAll('#asp-tbody tr').forEach(tr=>{
-    tr.style.opacity=tr.textContent.includes(name)?'1':'0.35';
+    tr.style.opacity=tr.textContent.includes(name)?'1':'0.1';
   });
 }
 function clearHighlight(){
