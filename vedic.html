@@ -415,6 +415,29 @@ function clearHighlight(){
   document.querySelectorAll('#asp-tbody tr').forEach(tr=>tr.style.opacity='1');
 }
 
+
+function setupWheelHover(){
+  const svg=document.getElementById('wheel');
+  let _active=null;
+  svg.onmousemove=function(e){
+    const rect=svg.getBoundingClientRect();
+    const scaleX=700/rect.width;
+    const mx=(e.clientX-rect.left)*scaleX;
+    const my=(e.clientY-rect.top)*scaleX;
+    let nearest=null,minDist=30;
+    for(const [name,pos] of Object.entries(window._vedicPlanets||{})){
+      const d=Math.sqrt((mx-pos.x)**2+(my-pos.y)**2);
+      if(d<minDist){minDist=d;nearest=name;}
+    }
+    if(nearest!==_active){
+      _active=nearest;
+      if(nearest)highlightPlanet(nearest);
+      else clearHighlight();
+    }
+  };
+  svg.onmouseleave=function(){_active=null;clearHighlight();};
+}
+
 // ── GEOCODE ──
 let _ct=null;
 function searchCity(){
@@ -457,6 +480,7 @@ async function generate(){
     document.getElementById('chart-area').style.display='block';
     document.getElementById('ayanamsa-bar').textContent=`Lahiri Ayanamsa: ${data.ayanamsa.toFixed(4)}° · Lagna: ${data.asc_sign} ${fmtDeg(data.asc)}`;
     drawWheel(data,'wheel');
+    setupWheelHover();
     drawPlanetTable(data);
     drawHouseTable(data);
     calcAndDrawAspects(data);
@@ -583,13 +607,13 @@ function drawWheel(data, svgId){
     else if(name==='Moon'){const mg=el('g',{},svg);txt(mg,'☽',gxy.x,gxy.y,{fill:'#b8d8ff','font-size':20,'font-family':'serif'});}
     else txt(svg,info.sym,gxy.x,gxy.y,{fill:col,'font-size':18,'font-family':'serif'});
     if(data.planets[name].retrograde)txt(svg,'℞',gxy.x+10,gxy.y-8,{fill:'#f87171','font-size':7,'font-family':'serif'});
+    window._vedicPlanets[name]={x:gxy.x,y:gxy.y};
     // Hover hit area
-    const hit=el('circle',{cx:gxy.x,cy:gxy.y,r:22,fill:'rgba(0,0,0,.01)',stroke:'none','pointer-events':'all','data-hit':'1'},svg);
-    hit.style.cursor='crosshair';
-    hit.addEventListener('mouseenter',()=>highlightPlanet(name));
-    hit.addEventListener('mouseleave',()=>clearHighlight());
+
   }
 
+  // Store planet positions for hover
+  window._vedicPlanets={};
   // ── PLANET-TO-PLANET ASPECTS ──
   const ASP_DEFS2=[
     {angle:0,orb:10,color:'#f9c646'},{angle:180,orb:10,color:'#e89040'},
@@ -617,8 +641,6 @@ function drawWheel(data, svgId){
         },svg);
         ln.dataset.p1=n1;ln.dataset.p2=n2;
    
-  // Bring hit areas to front (re-append after aspect lines)
-  svg.querySelectorAll('[data-hit]').forEach(h=>svg.appendChild(h));
    }
     }
   }
