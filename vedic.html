@@ -6,7 +6,7 @@
 <title>ვედური ასტროლოგია · ჯიოტიში</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&family=Cinzel:wght@300;400;600&family=IM+Fell+English:ital@0;1&family=Noto+Sans+Georgian:wght@300;400&display=swap" rel="stylesheet">
 <style>
-:root{--void:#04030a;--deep:#07071a;--gold:#c9a84c;--gold-l:#f0d080;--purple:#a78bfa;--purple-d:#2d1f6e;--txt:#e0d8ff;--dim:rgba(155,168,184,0.6);--brd:rgba(45,31,110,0.8);} 
+:root{--void:#04030a;--deep:#07071a;--gold:#c9a84c;--gold-l:#f0d080;--purple:#a78bfa;--purple-d:#2d1f6e;--txt:#e0d8ff;--dim:rgba(155,168,184,0.6);--brd:rgba(45,31,110,0.8);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--void);color:var(--txt);font-family:'Noto Sans Georgian',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 80px;overflow-x:hidden;position:relative;}
@@ -27,7 +27,7 @@ label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold
 input{background:rgba(10,8,30,.7);border:1px solid rgba(61,42,138,.6);border-radius:8px;color:var(--txt);padding:9px 12px;font-size:13px;font-family:'Noto Sans Georgian',sans-serif;width:100%;transition:border-color .2s;}
 input:focus{outline:none;border-color:var(--purple)}
 input::placeholder{color:rgba(155,168,184,.35)}
-#city-hint{font-size:11px;color:var(--purple);margin-top:2px;min-height:14px}https://github.com/magnus7898/matrix-destiny/blob/main/vedic.html
+#city-hint{font-size:11px;color:var(--purple);margin-top:2px;min-height:14px}
 #tz-display{font-size:11px;color:var(--gold);margin-bottom:12px;background:rgba(6,5,18,.5);border-radius:6px;padding:5px 10px;border-left:2px solid rgba(201,168,76,.3);min-height:28px;}
 .gen-btn{width:100%;background:linear-gradient(135deg,#6d28d9,#4c1d95);color:#fff;border:1px solid rgba(124,58,237,.4);border-radius:10px;padding:13px;font-size:13px;cursor:pointer;letter-spacing:2px;font-family:'Cinzel',serif;transition:all .3s;box-shadow:0 4px 20px rgba(109,40,217,.3);margin-top:8px;}
 .gen-btn:hover{background:linear-gradient(135deg,#7c3aed,#5b21b6);transform:translateY(-1px)}
@@ -395,6 +395,26 @@ function calcAndDrawAspects(data){
   document.getElementById('asp-icon').textContent='▲';
 }
 
+
+function highlightPlanet(name){
+  const svg=document.getElementById('wheel');
+  svg.querySelectorAll('.asp-line').forEach(l=>{
+    const active=l.dataset.p1===name||l.dataset.p2===name;
+    l.style.opacity=active?'0.85':'0.04';
+    l.style.strokeWidth=active?'1.5':'0.4';
+  });
+  document.querySelectorAll('#asp-tbody tr').forEach(tr=>{
+    tr.style.opacity=tr.textContent.includes(name)?'1':'0.2';
+  });
+}
+function clearHighlight(){
+  const svg=document.getElementById('wheel');
+  svg.querySelectorAll('.asp-line').forEach(l=>{
+    l.style.opacity='0.5';l.style.strokeWidth='0.7';
+  });
+  document.querySelectorAll('#asp-tbody tr').forEach(tr=>tr.style.opacity='1');
+}
+
 // ── GEOCODE ──
 let _ct=null;
 function searchCity(){
@@ -563,33 +583,40 @@ function drawWheel(data, svgId){
     else if(name==='Moon'){const mg=el('g',{},svg);txt(mg,'☽',gxy.x,gxy.y,{fill:'#b8d8ff','font-size':20,'font-family':'serif'});}
     else txt(svg,info.sym,gxy.x,gxy.y,{fill:col,'font-size':18,'font-family':'serif'});
     if(data.planets[name].retrograde)txt(svg,'℞',gxy.x+10,gxy.y-8,{fill:'#f87171','font-size':7,'font-family':'serif'});
+    // Hover hit area
+    const hit=el('circle',{cx:gxy.x,cy:gxy.y,r:16,fill:'transparent','stroke-width':0},svg);
+    hit.style.cursor='crosshair';hit.style.pointerEvents='all';
+    hit.addEventListener('mouseenter',()=>highlightPlanet(name));
+    hit.addEventListener('mouseleave',()=>clearHighlight());
   }
 
-  // ── VEDIC ASPECTS (Graha Drishti) ──
-  // All planets: 7th (180°). Mars: +4th,8th. Jupiter: +5th,9th. Saturn: +3rd,10th.
-  const ASPECTS_V={
-    'default':[180],
-    'Mars':[90,210],
-    'Jupiter':[120,240],
-    'Saturn':[60,270],
-    'Rahu':[120,240],'Ketu':[120,240]
-  };
-  const ASP_COLS={'default':'rgba(100,65,200,.25)','Mars':'rgba(200,60,60,.22)','Jupiter':'rgba(200,150,40,.22)','Saturn':'rgba(100,150,200,.2)'};
-  for(const name of present){
-    const p1=data.planets[name];
-    const a1=v2a(p1.sidereal,lagStart);
-    const aspects=[...(ASPECTS_V['default']||[]),...(ASPECTS_V[name]||[])];
-    for(const aspDeg of aspects){
-      // Find target degree
-      const targetSid=(p1.sidereal+aspDeg)%360;
-      // Draw line from planet to target point on inner circle
-      const a2=v2a(targetSid,lagStart);
-      const col=ASP_COLS[name]||ASP_COLS['default'];
-      el('line',{
-        x1:CX+Math.cos(a1)*R4,y1:CY+Math.sin(a1)*R4,
-        x2:CX+Math.cos(a2)*R4,y2:CY+Math.sin(a2)*R4,
-        stroke:col,'stroke-width':0.7,opacity:.6,'stroke-dasharray':'3 3'
-      },svg);
+  // ── PLANET-TO-PLANET ASPECTS ──
+  const ASP_DEFS2=[
+    {angle:0,orb:10,color:'#f9c646'},{angle:180,orb:10,color:'#e89040'},
+    {angle:120,orb:8,color:'#a078f0'},{angle:240,orb:8,color:'#a078f0'},
+    {angle:90,orb:8,color:'#e84040'},{angle:270,orb:8,color:'#e84040'},
+    {angle:60,orb:6,color:'#30c890'},{angle:300,orb:6,color:'#30c890'},
+    {angle:150,orb:4,color:'#9ba8b8'},{angle:210,orb:4,color:'#9ba8b8'},
+  ];
+  for(let i=0;i<present.length;i++){
+    for(let j=i+1;j<present.length;j++){
+      const n1=present[i],n2=present[j];
+      const sid1=data.planets[n1].sidereal,sid2=data.planets[n2].sidereal;
+      const raw=((sid2-sid1)+360)%360;
+      let bestCol=null,bestOrb=999;
+      for(const asp of ASP_DEFS2){
+        let diff=Math.abs(raw-asp.angle);if(diff>180)diff=360-diff;
+        if(diff<=asp.orb&&diff<bestOrb){bestOrb=diff;bestCol=asp.color;}
+      }
+      if(bestCol){
+        const a1=v2a(sid1,lagStart),a2=v2a(sid2,lagStart);
+        const ln=el('line',{
+          x1:CX+Math.cos(a1)*R4,y1:CY+Math.sin(a1)*R4,
+          x2:CX+Math.cos(a2)*R4,y2:CY+Math.sin(a2)*R4,
+          stroke:bestCol,'stroke-width':0.7,opacity:.5,'stroke-dasharray':'3 3','class':'asp-line'
+        },svg);
+        ln.dataset.p1=n1;ln.dataset.p2=n2;
+      }
     }
   }
 }
