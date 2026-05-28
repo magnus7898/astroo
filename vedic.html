@@ -559,6 +559,7 @@ function drawWheel(data, svgId){
     txt(svg,'Lg',CX+Math.cos(la)*(R1+38),CY+Math.sin(la)*(R1+38),{fill:'#e8c06e','font-size':11,'font-weight':'bold','font-family':'Cinzel,serif'});
   }
   // Planets
+  window._vedicPlanets={};
   const present=PORDER.filter(n=>data.planets[n]);
   const trueA={};for(const n of present)trueA[n]=v2a(data.planets[n].sidereal,lagStart);
   const sorted=[...present].sort((a,b)=>trueA[a]-trueA[b]);
@@ -612,8 +613,6 @@ function drawWheel(data, svgId){
 
   }
 
-  // Store planet positions for hover
-  window._vedicPlanets={};
   // ── PLANET-TO-PLANET ASPECTS ──
   const ASP_DEFS2=[
     {angle:0,orb:10,color:'#f9c646'},{angle:180,orb:10,color:'#e89040'},
