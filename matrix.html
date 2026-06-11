@@ -85,30 +85,22 @@
 
     .age-table td{padding:0;border-bottom:1px solid rgba(255,255,255,0.035);vertical-align:top;}
 
-    /* age cell */
     .age-table .tc-age{padding:10px 10px 10px 0;text-align:right;font-size:11px;font-weight:600;color:rgba(140,210,255,0.7);white-space:nowrap;vertical-align:middle;}
-    /* number cell */
     .age-table .tc-num{padding:10px 6px;text-align:center;font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:#FFD700;vertical-align:middle;}
-    /* archetype cell */
     .age-table .tc-arch{padding:10px 8px;text-align:center;vertical-align:middle;}
-    /* description cell */
     .age-table .tc-desc{padding:10px 14px 10px 10px;text-align:left;font-size:12px;line-height:1.65;color:rgba(195,220,255,0.75);vertical-align:middle;}
 
-    /* badge */
     .e-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;color:white;white-space:nowrap;line-height:1.3;text-align:center;}
     .e-en{display:block;font-size:8px;font-weight:400;opacity:.75;margin-top:1px;letter-spacing:.3px;}
 
-    /* anchor row */
     .age-table tr.anchor{background:rgba(0,75,130,0.55);}
     .age-table tr.anchor .tc-age{color:#7ff0ff;font-size:12.5px;font-weight:700;}
     .age-table tr.anchor .tc-num{font-size:20px;color:#FFD700;}
     .age-table tr.anchor .tc-desc{color:rgba(210,235,255,0.9);font-size:13px;}
-    /* mid row (4th sub-period) */
     .age-table tr.mid{background:rgba(0,55,95,0.35);}
     .age-table tr.mid .tc-num{font-size:17px;}
     .age-table tr:not(.anchor):hover td{background:rgba(0,100,170,0.18);}
 
-    /* section title row */
     .age-table tr.sec-hdr td{background:rgba(0,30,60,0.8);padding:8px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(127,240,255,0.45);text-align:center;border-top:1px solid rgba(0,180,220,0.12);}
 
     .footer-text{margin-top:36px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,0.4);position:relative;z-index:1;}
@@ -241,9 +233,24 @@
     </table>
   </div>
 
+  <!-- ▼▼ B3 KARMIC-TAIL ARTICLE BOX (closed until B3 circle clicked) ▼▼ -->
+  <div id="b3-article-panel" style="display:none;width:100%;max-width:860px;
+       background:rgba(30,8,18,0.92);border:1px solid rgba(226,75,74,0.5);
+       border-radius:13px;overflow:hidden;box-shadow:0 6px 28px rgba(120,20,30,0.3);">
+    <div id="b3-article-head" style="padding:13px 18px;background:rgba(180,40,50,0.28);
+         font-weight:700;font-size:14px;letter-spacing:.5px;color:#ffd8d8;
+         border-bottom:1px solid rgba(226,75,74,0.3);">🔻 კარმული კუდი</div>
+    <div id="b3-article-body" style="padding:16px 20px;font-size:13px;line-height:1.75;
+         color:rgba(225,205,210,0.85);"></div>
+  </div>
+  <!-- ▲▲ END B3 ARTICLE BOX ▲▲ -->
+
 </div>
 
 <p class="footer-text">✦ სამყაროს რიცხვები · ენერგიის ნიმუში ✦</p>
+
+<!-- ▼ B3 combination articles (edit article texts in this file) ▼ -->
+<script src="matrix_b3_addon.js"></script>
 
 <script>
 // ── ENERGIES — 8=სამართლიანობა, 11=სიძლიერე ──────────────────────────
@@ -312,6 +319,7 @@ function setMethod(m){
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
   document.getElementById('age-panel').style.display='none';
+  const bp=document.getElementById('b3-article-panel');if(bp)bp.style.display='none';
 }
 
 function m3Preview(){
@@ -377,12 +385,10 @@ function buildAgeTable(L3,T3,R3,B3,TL3,TR3,BR3,BL3){
   const tb=document.getElementById('age-table-body'); tb.innerHTML='';
 
   for(let sec=0;sec<8;sec++){
-    // Section header
     const sh=document.createElement('tr');sh.className='sec-hdr';
     sh.innerHTML=`<td colspan="4">${secNames[sec]} &nbsp;·&nbsp; ${starts[sec]}–${starts[sec]+9} წელი</td>`;
     tb.appendChild(sh);
 
-    // Anchor
     const a=anchors[sec], ae=getE(a.v);
     const ar=document.createElement('tr'); ar.className='anchor';
     ar.innerHTML=`
@@ -392,7 +398,6 @@ function buildAgeTable(L3,T3,R3,B3,TL3,TR3,BR3,BL3){
       <td class="tc-desc">${ae.desc}</td>`;
     tb.appendChild(ar);
 
-    // 7 sub-periods
     const ens=subEn(secs[sec][0],secs[sec][1]);
     for(let d=0;d<7;d++){
       const en=ens[d], info=getE(en), isMid=d===3;
@@ -420,11 +425,12 @@ function calculateCompat(){
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
   document.getElementById('age-panel').style.display='none';
+  const bp=document.getElementById('b3-article-panel');if(bp)bp.style.display='none';
 }
 
 function base(p){const L3=r22(p.dd),T3=r22(p.mm),R3=r22(p.yyyy),B3=r22(L3+T3+R3);return{L3,T3,R3,B3};}
 
-// ── Draw (unchanged) ─────────────────────────────────────────────────────
+// ── Draw ─────────────────────────────────────────────────────
 function draw(v){
   const svg=document.getElementById('diagram');svg.innerHTML='';
   const cx=600,cy=600,rc_r=60,r1_r=25,r2_r=40,r3_r=64,gap=180;
@@ -489,6 +495,29 @@ function draw(v){
       if(!isCompat){const out=outerR+38,ex=Math.round(cx+out*Math.cos(rad)),ey=Math.round(cy+out*Math.sin(rad));el('text',{x:ex,y:ey,'font-size':isMid?17:15,'font-weight':isMid?700:600,fill:isMid?'#FFD700':'rgba(167,139,250,0.95)','text-anchor':'middle','dominant-baseline':'central','font-family':'Cinzel,serif'},ens[d]);}
     }
   }
+
+  // ▼▼ CLICKABLE B3 KARMIC-TAIL CIRCLE ▼▼
+  if(v.B3!=null && typeof openB3Article==='function'){
+    // dashed hint ring so the user knows B3 is clickable
+    const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    ring.setAttribute('cx',cx); ring.setAttribute('cy',cy+d3);
+    ring.setAttribute('r',r3_r+5);
+    ring.setAttribute('fill','none');
+    ring.setAttribute('stroke','rgba(255,140,140,0.6)');
+    ring.setAttribute('stroke-width','2');
+    ring.setAttribute('stroke-dasharray','4 4');
+    ring.style.pointerEvents='none';
+    svg.appendChild(ring);
+    // invisible hit target on top
+    const hitB3=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    hitB3.setAttribute('cx',cx); hitB3.setAttribute('cy',cy+d3);
+    hitB3.setAttribute('r',r3_r+8);
+    hitB3.setAttribute('fill','rgba(0,0,0,0.01)');
+    hitB3.style.cursor='pointer';
+    hitB3.addEventListener('click',()=>openB3Article(v.B3, v.B2, v.B1));
+    svg.appendChild(hitB3);
+  }
+  // ▲▲ END B3 CLICK ▲▲
 }
 </script>
 </body>
