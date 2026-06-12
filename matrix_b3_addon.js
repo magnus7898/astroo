@@ -81,14 +81,17 @@ const MATRIX_ARTICLES = {
 
 /* ---- 3. BUILD the boxes (called from calculate(), after draw) ---- */
 let _MATRIX_V = null;   // holds the last computed values
-function buildMatrixBoxes(v){
+function buildMatrixBoxes(v, method){
   _MATRIX_V = v;
+  method = method || 1;
   const wrap = document.getElementById('matrix-boxes');
   if(!wrap) return;
   wrap.innerHTML = '';
   wrap.style.display = 'flex';
 
   for(const box of MATRIX_BOXES){
+    // სექსუალურობა (Cv) only valid for method 1
+    if(box.id==='cv' && method!==1) continue;
     // compute the key + label for this box
     let key, label;
     if(box.kind === 'chakra'){
