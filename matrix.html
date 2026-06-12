@@ -229,21 +229,9 @@
     </table>
   </div>
 
-  <!-- Age & Energy Table -->
-  <div class="age-wrap" id="age-panel" style="display:none;">
-    <table class="age-table">
-      <thead>
-        <tr>
-          <th>ასაკი</th>
-          <th>№</th>
-          <th>არქეტიპი</th>
-          <th>ამ პერიოდის განმარტება და მოქმედება</th>
-        </tr>
-      </thead>
-      <tbody id="age-table-body">
-        <tr><td colspan="4" style="color:rgba(150,220,255,0.3);padding:22px;text-align:center;font-size:13px;">შეიყვანეთ თარიღი</td></tr>
-      </tbody>
-    </table>
+  <!-- Single-row age/energy reveal (replaces age table) -->
+  <div id="age-row-panel" style="display:none;width:100%;max-width:860px;">
+    <table class="age-table"><tbody id="age-row-body"></tbody></table>
   </div>
 
 </div>
@@ -305,6 +293,24 @@ const ENERGIES = {
 
 function getE(n){ return ENERGIES[String(n)] || {name:`ენ.${n}`,en:'',color:'#444',desc:''}; }
 
+
+// ── Single-row energy reveal (click an age point on the diagram) ──
+function showAgeRow(ageLabel, energy){
+  const panel=document.getElementById('age-row-panel');
+  const body=document.getElementById('age-row-body');
+  if(!panel||!body)return;
+  const en=getE(energy);
+  body.innerHTML=`
+    <tr class="anchor">
+      <td class="tc-age" style="text-align:center;">${ageLabel} <span style="font-size:9px;opacity:.6">წელი</span></td>
+      <td class="tc-num">${energy}</td>
+      <td class="tc-arch"><span class="e-badge" style="background:${en.color}">${en.name}<span class="e-en">${en.en}</span></span></td>
+      <td class="tc-desc">${en.desc}</td>
+    </tr>`;
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
 // ── Numerology ────────────────────────────────────────────────────────────
 function r22(n){while(n>22)n=String(n).split('').reduce((a,d)=>a+parseInt(d),0);return n;}
 const GEO={'ა':1,'ბ':2,'გ':3,'დ':4,'ე':5,'ვ':6,'ზ':7,'ჱ':8,'თ':9,'ი':1,'კ':2,'ლ':3,'მ':4,'ნ':5,'ჲ':6,'ო':7,'პ':8,'ჟ':9,'რ':1,'ს':2,'ტ':3,'უ':4,'ფ':5,'ქ':6,'ღ':7,'ყ':8,'შ':9,'ჩ':1,'ც':2,'ძ':3,'წ':4,'ჭ':5,'ხ':6,'ჯ':7,'ჰ':8};
@@ -320,8 +326,9 @@ function setMethod(m){
   document.getElementById('diagram').innerHTML='';
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
-  document.getElementById('age-panel').style.display='none';
+  {const ap=document.getElementById('age-row-panel');if(ap)ap.style.display='none';}
   const mb=document.getElementById('matrix-boxes');if(mb)mb.style.display='none';
+  const arp=document.getElementById('age-row-panel');if(arp)arp.style.display='none';
 }
 
 function m3Preview(){
@@ -348,11 +355,11 @@ function calculate(){
   const dCv=CUR===1?RC1:CUR===2?Cv:m3Cv2;
   const TL1=r22(TL3+dCv),TL2=r22(TL1+TL3),TR1=r22(TR3+dCv),TR2=r22(TR1+TR3),BR1=r22(BR3+dCv),BR2=r22(BR1+BR3),BL1=r22(BL3+dCv),BL2=r22(BL1+BL3);
   const W2=r22(B1+R1),W1=r22(B1+W2),W3=r22(R1+W2);
-  draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1,TL2,TR1,TR2,BR1,BR2,BL1,BL2,W1,W2,W3,showRC:CUR!==2,m3Cv2,compat:false});
-  buildAgeTable(L3,T3,R3,B3,TL3,TR3,BR3,BL3);
+  // person's current age from birth date
+  const _today=new Date();let _age=_today.getFullYear()-yyyy;const _bd=new Date(yyyy,mm-1,dd);const _anniv=new Date(_today.getFullYear(),mm-1,dd);if(_today<_anniv)_age--;
+  draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1,TL2,TR1,TR2,BR1,BR2,BL1,BL2,W1,W2,W3,showRC:CUR!==2,m3Cv2,compat:false,age:_age});
   document.getElementById('extra-panels').style.display='block';
   document.getElementById('chakra-panel').style.display='block';
-  document.getElementById('age-panel').style.display='block';
   const sc=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
   sc('ep-tl3',TL3);sc('ep-br3',BR3);sc('ep-male-sum',r22(TL3+BR3));
   sc('ep-tr3',TR3);sc('ep-bl3',BL3);sc('ep-fem-sum',r22(TR3+BL3));
@@ -372,7 +379,26 @@ function calculate(){
   }
 }
 
-// ── Age Table ─────────────────────────────────────────────────────────────
+// ── Single-row energy reveal (replaces previous on each click) ──
+function showAgeRow(ageLabel, energy){
+  const panel=document.getElementById('age-row-panel');
+  const body=document.getElementById('age-row-body');
+  if(!panel||!body)return;
+  const e=getE(energy);
+  body.innerHTML=`
+    <tr class="anchor">
+      <td class="tc-age" style="width:90px;">${ageLabel} წ.</td>
+      <td class="tc-num" style="width:50px;">${energy}</td>
+      <td class="tc-arch" style="width:160px;">
+        <span class="e-badge" style="background:${e.color}">${e.name}<span class="e-en">${e.en}</span></span>
+      </td>
+      <td class="tc-desc">${e.desc}</td>
+    </tr>`;
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── Age Table (legacy, unused) ──────────────────────────────────────────────
 function buildAgeTable(L3,T3,R3,B3,TL3,TR3,BR3,BL3){
   const anchors=[{age:'0',v:L3,lbl:'· დაბადება'},{age:'10',v:TL3,lbl:''},{age:'20',v:T3,lbl:''},{age:'30',v:TR3,lbl:''},{age:'40',v:R3,lbl:''},{age:'50',v:BR3,lbl:''},{age:'60',v:B3,lbl:''},{age:'70',v:BL3,lbl:''}];
   const secs=[[L3,TL3],[TL3,T3],[T3,TR3],[TR3,R3],[R3,BR3],[BR3,B3],[B3,BL3],[BL3,L3]];
@@ -432,11 +458,29 @@ function calculateCompat(){
   draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1:0,TL2:0,TR1:0,TR2:0,BR1:0,BR2:0,BL1:0,BL2:0,W1,W2,W3,showRC:false,m3Cv2:0,compat:true});
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
-  document.getElementById('age-panel').style.display='none';
+  {const ap=document.getElementById('age-row-panel');if(ap)ap.style.display='none';}
   const mb=document.getElementById('matrix-boxes');if(mb)mb.style.display='none';
+  const arp=document.getElementById('age-row-panel');if(arp)arp.style.display='none';
 }
 
 function base(p){const L3=r22(p.dd),T3=r22(p.mm),R3=r22(p.yyyy),B3=r22(L3+T3+R3);return{L3,T3,R3,B3};}
+
+// ── Single-row age/energy reveal ──
+function showAgeRow(ageLabel, energy){
+  const panel=document.getElementById('age-row-panel');
+  const body=document.getElementById('age-row-body');
+  if(!panel||!body)return;
+  const e=getE(energy);
+  body.innerHTML=`
+    <tr class="anchor">
+      <td class="tc-age" style="font-size:13px;">${ageLabel} \u10ec.</td>
+      <td class="tc-num">${energy}</td>
+      <td class="tc-arch"><span class="e-badge" style="background:${e.color}">${e.name}<span class="e-en">${e.en}</span></span></td>
+      <td class="tc-desc">${e.desc}</td>
+    </tr>`;
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 
 // ── Draw ─────────────────────────────────────────────────────
 function draw(v){
@@ -489,9 +533,16 @@ function draw(v){
   const aAngles=[180,225,270,315,0,45,90,135],sEnAnch=[[v.L3,v.TL3],[v.TL3,v.T3],[v.T3,v.TR3],[v.TR3,v.R3],[v.R3,v.BR3],[v.BR3,v.B3],[v.B3,v.BL3],[v.BL3,v.L3]],sStarts=[1,11,21,31,41,51,61,71];
   function sEn(A,B){const d4=r22(A+B),d2=r22(A+d4),d1b=r22(A+d2),d3b=r22(d2+d4),d6=r22(d4+B),d5=r22(d4+d6),d7=r22(d6+B);return[d1b,d2,d3b,d4,d5,d6,d7];}
   function sAg(s){const f=n=>n===Math.floor(n)?String(n):String(n.toFixed(1)).replace('.',',');return[`${f(s)}-${f(s+1.5)}`,`${f(s+1.5)}-${f(s+2.5)}`,`${f(s+2.5)}-${f(s+3)}`,`${f(s+4)}`,`${f(s+5)}-${f(s+6.5)}`,`${f(s+6.5)}-${f(s+7.5)}`,`${f(s+7.5)}-${f(s+8)}`];}
+  // anchor ages for each section start (the big corner circles): 0,10,20,30,40,50,60,70
+  const anchorAges=[0,10,20,30,40,50,60,70];
+  // collect all age points for glow + click
+  const agePoints=[]; // {ageNum, energy, px, py, rad, isMid}
   for(let sec=0;sec<8;sec++){
     const sa=aAngles[sec],ea=aAngles[(sec+1)%8];let diff=ea-sa;if(diff<=0)diff+=360;
     const ages=sAg(sStarts[sec]),ens=sEn(sEnAnch[sec][0],sEnAnch[sec][1]);
+    // sub-period mid-ages (numeric) for matching to person's age:
+    const baseAge=sStarts[sec]-1; // section starts at this age
+    const subMidAges=[0.75,2,2.75,4,5.75,7,7.75].map(o=>baseAge+o);
     for(let d=0;d<7;d++){
       const t=(d+1)/8,ang=sa+diff*t,rad=ang*Math.PI/180;
       const px=Math.round(cx+outerR*Math.cos(rad)),py=Math.round(cy+outerR*Math.sin(rad));
@@ -501,6 +552,62 @@ function draw(v){
       const ins=outerR-18,ax=Math.round(cx+ins*Math.cos(aR)),ay=Math.round(cy+ins*Math.sin(aR));
       el('text',{x:ax,y:ay,'font-size':isMid?8:7,'font-weight':isMid?700:400,fill:isMid?'#FFD700':'rgba(200,180,255,0.85)','text-anchor':'middle','dominant-baseline':'central','font-family':'sans-serif'},ages[d]);
       if(!isCompat){const out=outerR+38,ex=Math.round(cx+out*Math.cos(rad)),ey=Math.round(cy+out*Math.sin(rad));el('text',{x:ex,y:ey,'font-size':isMid?17:15,'font-weight':isMid?700:600,fill:isMid?'#FFD700':'rgba(167,139,250,0.95)','text-anchor':'middle','dominant-baseline':'central','font-family':'Cinzel,serif'},ens[d]);}
+      agePoints.push({ageNum:subMidAges[d], ageLabel:ages[d], energy:ens[d], px, py, rad, isMid, anchor:false});
+    }
+  }
+  // anchor (corner) age points
+  const cornerPos=[[cx-d3,cy],[cx-dd3,cy-dd3],[cx,cy-d3],[cx+dd3,cy-dd3],[cx+d3,cy],[cx+dd3,cy+dd3],[cx,cy+d3],[cx-dd3,cy+dd3]];
+  const cornerEnergy=[v.L3,v.TL3,v.T3,v.TR3,v.R3,v.BR3,v.B3,v.BL3];
+  for(let i=0;i<8;i++){
+    agePoints.push({ageNum:anchorAges[i], ageLabel:String(anchorAges[i]), energy:cornerEnergy[i], px:cornerPos[i][0], py:cornerPos[i][1], rad:aAngles[i]*Math.PI/180, isMid:false, anchor:true});
+  }
+
+  // ── GLOW the age point nearest to person's current age ──
+  if(!isCompat && v.age!=null && v.age>=0){
+    let best=null,bestDiff=1e9;
+    for(const ap of agePoints){
+      const dd=Math.abs(ap.ageNum-v.age);
+      if(dd<bestDiff){bestDiff=dd;best=ap;}
+    }
+    if(best){
+      // glowing halo around that age point
+      const glow=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      glow.setAttribute('cx',best.px);glow.setAttribute('cy',best.py);
+      glow.setAttribute('r',16);
+      glow.setAttribute('fill','none');
+      glow.setAttribute('stroke','#FFD700');
+      glow.setAttribute('stroke-width','3');
+      glow.setAttribute('opacity','0.9');
+      const an=document.createElementNS('http://www.w3.org/2000/svg','animate');
+      an.setAttribute('attributeName','r');an.setAttribute('values','13;19;13');an.setAttribute('dur','1.8s');an.setAttribute('repeatCount','indefinite');
+      glow.appendChild(an);
+      const an2=document.createElementNS('http://www.w3.org/2000/svg','animate');
+      an2.setAttribute('attributeName','opacity');an2.setAttribute('values','0.9;0.35;0.9');an2.setAttribute('dur','1.8s');an2.setAttribute('repeatCount','indefinite');
+      glow.appendChild(an2);
+      svg.appendChild(glow);
+      // small "თქვენ" marker
+      const yr=document.createElementNS('http://www.w3.org/2000/svg','text');
+      const lblOut=outerR+62;const lr=best.rad;
+      yr.setAttribute('x',Math.round(cx+lblOut*Math.cos(lr)));
+      yr.setAttribute('y',Math.round(cy+lblOut*Math.sin(lr)));
+      yr.setAttribute('font-size','11');yr.setAttribute('font-weight','700');
+      yr.setAttribute('fill','#FFD700');yr.setAttribute('text-anchor','middle');yr.setAttribute('dominant-baseline','central');
+      yr.setAttribute('font-family','Noto Sans Georgian,sans-serif');
+      yr.textContent=v.age+' წ.';
+      svg.appendChild(yr);
+    }
+  }
+
+  // ── CLICKABLE age points → reveal single energy row ──
+  if(!isCompat && typeof showAgeRow==='function'){
+    for(const ap of agePoints){
+      const hit=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      hit.setAttribute('cx',ap.px);hit.setAttribute('cy',ap.py);
+      hit.setAttribute('r',12);
+      hit.setAttribute('fill','rgba(0,0,0,0.01)');
+      hit.style.cursor='pointer';
+      hit.addEventListener('click',()=>showAgeRow(ap.ageLabel, ap.energy));
+      svg.appendChild(hit);
     }
   }
 
@@ -508,7 +615,7 @@ function draw(v){
   if(!isCompat && typeof openBoxById==='function'){
     // map: [x, y, hit-radius, box-id]
     const CIRCLE_BOXES = [
-      [cx,            cy,            rc_r,  'cv'],     // yellow center
+      [cx,            cy,            rc_r,  'comfort'], // yellow center → comfort zone
       [cx-d3,         cy,            r3_r,  'l3'],     // L3 visit card / persona
       [cx,            cy-d3,         r3_r,  't3'],     // T3 talents
       [cx+d3,         cy,            r3_r,  'r3'],     // R3 material karma combo
