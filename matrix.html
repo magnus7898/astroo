@@ -116,6 +116,12 @@
     .mx-key{font-family:'Cinzel',serif;font-size:12px;color:rgba(200,180,255,0.8);white-space:nowrap;display:flex;align-items:center;gap:8px;}
     .mx-arrow{font-size:10px;opacity:.6;}
     .mx-box-body{padding:14px 18px;font-size:13px;line-height:1.75;color:rgba(210,195,235,0.85);border-top:1px solid rgba(140,110,255,0.2);}
+
+    /* diagram + chakra side by side */
+    .diagram-chakra-row{display:flex;gap:24px;align-items:flex-start;justify-content:center;width:100%;flex-wrap:wrap;}
+    .diagram-chakra-row .diagram-wrapper{flex:1 1 460px;max-width:620px;min-width:300px;}
+    .diagram-chakra-row #chakra-panel{flex:1 1 340px;max-width:480px;min-width:280px;margin-top:0;}
+    @media(max-width:820px){.diagram-chakra-row{flex-direction:column;align-items:center;}.diagram-chakra-row .diagram-wrapper,.diagram-chakra-row #chakra-panel{max-width:100%;width:100%;}}
   </style>
 </head>
 <body>
@@ -166,8 +172,25 @@
 </div>
 
 <div class="main-layout" id="main-layout">
+  <div class="diagram-chakra-row">
   <div class="diagram-wrapper">
     <svg id="diagram" width="1800" height="1800" viewBox="-120 -120 1440 1440" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="table-wrapper" id="chakra-panel">
+    <table class="chakra-table">
+      <thead><tr><th>ჩაკრა</th><th>ენერგია</th><th>მატერია (სხეული)</th><th>ემოცია</th></tr></thead>
+      <tbody>
+        <tr class="row-sahasrara"><td>საჰასრარა (გვირგვინი)</td><td id="c-t3">-</td><td id="c-l3">-</td><td id="c-s1">-</td></tr>
+        <tr class="row-ajna"><td>აჯნა (მესამე თვალი)</td><td id="c-t2">-</td><td id="c-l2">-</td><td id="c-s2">-</td></tr>
+        <tr class="row-vishudha"><td>ვიშუდჰა (ყელის ჩაკრა)</td><td id="c-t1">-</td><td id="c-l1">-</td><td id="c-s3">-</td></tr>
+        <tr class="row-anahata"><td>ანაჰატა (გულის ჩაკრა)</td><td id="c-g2">-</td><td id="c-g1">-</td><td id="c-s4">-</td></tr>
+        <tr class="row-manipura"><td>მანიპურა (მზის წნული)</td><td id="c-cv">-</td><td id="c-cv2">-</td><td id="c-s5">-</td></tr>
+        <tr class="row-svadhistana"><td>სვადჰისტანა (საკრალური)</td><td id="c-b1">-</td><td id="c-r1">-</td><td id="c-s6">-</td></tr>
+        <tr class="row-muladhara"><td>მულადჰარა (ფუძის ჩაკრა)</td><td id="c-b3">-</td><td id="c-r3">-</td><td id="c-s7">-</td></tr>
+        <tr class="row-total"><td>სულ</td><td id="c-sum-e">-</td><td id="c-sum-l">-</td><td id="c-sum-s">-</td></tr>
+      </tbody>
+    </table>
+  </div>
   </div>
 
 
@@ -222,21 +245,7 @@
     <table class="age-table"><tbody id="age-row-body"></tbody></table>
   </div>
 
-  <div class="table-wrapper" id="chakra-panel">
-    <table class="chakra-table">
-      <thead><tr><th>ჩაკრა</th><th>ენერგია</th><th>მატერია (სხეული)</th><th>ემოცია</th></tr></thead>
-      <tbody>
-        <tr class="row-sahasrara"><td>საჰასრარა (გვირგვინი)</td><td id="c-t3">-</td><td id="c-l3">-</td><td id="c-s1">-</td></tr>
-        <tr class="row-ajna"><td>აჯნა (მესამე თვალი)</td><td id="c-t2">-</td><td id="c-l2">-</td><td id="c-s2">-</td></tr>
-        <tr class="row-vishudha"><td>ვიშუდჰა (ყელის ჩაკრა)</td><td id="c-t1">-</td><td id="c-l1">-</td><td id="c-s3">-</td></tr>
-        <tr class="row-anahata"><td>ანაჰატა (გულის ჩაკრა)</td><td id="c-g2">-</td><td id="c-g1">-</td><td id="c-s4">-</td></tr>
-        <tr class="row-manipura"><td>მანიპურა (მზის წნული)</td><td id="c-cv">-</td><td id="c-cv2">-</td><td id="c-s5">-</td></tr>
-        <tr class="row-svadhistana"><td>სვადჰისტანა (საკრალური)</td><td id="c-b1">-</td><td id="c-r1">-</td><td id="c-s6">-</td></tr>
-        <tr class="row-muladhara"><td>მულადჰარა (ფუძის ჩაკრა)</td><td id="c-b3">-</td><td id="c-r3">-</td><td id="c-s7">-</td></tr>
-        <tr class="row-total"><td>სულ</td><td id="c-sum-e">-</td><td id="c-sum-l">-</td><td id="c-sum-s">-</td></tr>
-      </tbody>
-    </table>
-  </div>
+
 
 
 
