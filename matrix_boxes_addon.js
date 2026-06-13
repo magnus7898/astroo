@@ -12,7 +12,7 @@
 const MATRIX_BOXES = [
   // id            title (Georgian)                                  type      keys (which v.* circles)         color
   { id:'comfort', title:'კომფორტის ზონა',                            kind:'single', keys:['Cv'],               color:'#d4a017' },
-  { id:'sex',     title:'სექსუალურობა',                             kind:'single', keys:['Cv'],               color:'#d4a017' },
+  { id:'sex', title:'სექსუალურობა', kind:'combo', keys:['Cv','T1','B1'], color:'#d4a017' },
   { id:'l3',   title:'სავიზიტო ბარათი',                              kind:'single', keys:['L3'],               color:'#7F77DD' },
   { id:'persona', title:'პერსონა',                                  kind:'combo',  keys:['L3','L2','L1'],     color:'#7F77DD' },
   { id:'t3',   title:'ტალანტები',                                    kind:'single', keys:['T3'],               color:'#7F77DD' },
@@ -26,8 +26,8 @@ const MATRIX_BOXES = [
   { id:'g2',   title:'ჩვენი სოციალური სურვილები',                    kind:'single', keys:['G2'],               color:'#639922' },
   { id:'b1',   title:'როგორ შევდივართ ურთიერთობაში',                 kind:'single', keys:['B1'],               color:'#EF9F27' },
   { id:'r1',   title:'როგორი სტილის სამუშაო გარემო გვჭირდება',       kind:'single', keys:['R1'],               color:'#EF9F27' },
-  { id:'love', title:'პირადი ურთიერთობების ხაზი',                    kind:'combo',  keys:['B1','W1'],          color:'#ff6b8a' },
-  { id:'money',title:'ფულის ხაზი',                                   kind:'combo',  keys:['R1','W3'],          color:'#7ec850' },
+  { id:'love', title:'პირადი ურთიერთობების ხაზი',                    kind:'combo',  keys:['B1','W1','W2'],     color:'#ff6b8a' },
+  { id:'money',title:'ფულის ხაზი',                                   kind:'combo',  keys:['R1','W3','W2'],     color:'#7ec850' },
   { id:'tl',   title:'ნიჭები — კაცი წინაპრების ხაზიდან',             kind:'combo',  keys:['TL3','TL2','TL1'],  color:'#a06cff' },
   { id:'tr',   title:'ნიჭები — ქალი წინაპრების ხაზიდან',             kind:'combo',  keys:['TR3','TR2','TR1'],  color:'#ff8cc0' },
   { id:'br',   title:'კაცი წინაპრების კარმა',                        kind:'combo',  keys:['BR3','BR2','BR1'],  color:'#a06cff' },
