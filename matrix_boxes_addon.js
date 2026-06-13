@@ -35,6 +35,19 @@ const MATRIX_BOXES = [
   { id:'health', title:'ჯანმრთელობა',                               kind:'chakra', keys:[],                   color:'#7e57c2' },
 ];
 
+/* ---- B3 karmic-tail combination NAMES (shown automatically when box opens) ---- */
+const B3_NAMES = {
+  "10-13-3":"სუიციდი", "10-4-21":"უუფლებო სული", "19-22-3":"დაუბადებელი ბავშვი",
+  "11-8-15":"მოძალადე", "11-17-6":"დაკარგული ნიჭი", "20-8-6":"გვარის ღალატი",
+  "3-12-9":"მარტოხელა ქალი", "12-3-18":"ფიზიკური ტანჯვა", "21-3-9":"ჯალათი, ზედამხედველი",
+  "4-16-12":"იმპერატორი", "13-7-21":"მასობრივი სიკვდილი", "22-7-3":"თავისუფლება წართმეული სული",
+  "5-20-15":"მეამბოხე", "14-20-6":"მსხვერპლი", "6-6-18":"სასიყვარულო მაგია",
+  "6-15-9":"ზღაპრული სამყარო", "15-6-18":"შავი მაგი", "7-10-21":"რწმენის რაინდი",
+  "7-19-12":"მეომარი", "16-10-21":"სულიერი წინამძღოლი", "8-5-15":"ღალატი, ოჯახური პრობლემები",
+  "8-14-6":"დიქტატორი", "17-5-6":"სიამაყე", "9-9-18":"ჯადოქარი",
+  "9-18-9":"მაგიური მსხვერპლი", "18-9-9":"ჯადოქარი",
+};
+
 /* ---- 2. ARTICLES — fill these in. Keys are arcana numbers (joined for combos). ---- */
 /*    single circle: "N"   |   3-combo: "A-B-C"   |   2-combo: "A-B"                  */
 const MATRIX_ARTICLES = {
@@ -109,6 +122,11 @@ function buildMatrixBoxes(v, method){
       label = nums.join('–');
     }
 
+    // for B3, append the karmic-tail name to the header title
+    let headTitle = box.title;
+    if(box.id === 'b3' && typeof B3_NAMES !== 'undefined' && B3_NAMES[key]){
+      headTitle = box.title + ' · <span style="opacity:.85">' + B3_NAMES[key] + '</span>';
+    }
     const el = document.createElement('div');
     el.className = 'mx-box';
     el.dataset.boxid = box.id;
@@ -116,7 +134,7 @@ function buildMatrixBoxes(v, method){
     el.style.borderColor = box.color + '88';
     el.innerHTML = `
       <div class="mx-box-head" style="background:${box.color}22;">
-        <span><span class="mx-dot" style="background:${box.color}"></span>${box.title}</span>
+        <span><span class="mx-dot" style="background:${box.color}"></span>${headTitle}</span>
         <span class="mx-key">${label ? label : ''} <span class="mx-arrow">▼</span></span>
       </div>
       <div class="mx-box-body" style="display:none;"></div>`;
@@ -130,10 +148,21 @@ function fillBoxBody(box, key, bodyEl){
     bodyEl.innerHTML = renderChakraHealth();
     return;
   }
+  // karmic-tail name (B3 box) shown automatically above the article
+  let nameHtml = '';
+  if(box.id === 'b3' && typeof B3_NAMES !== 'undefined' && B3_NAMES[key]){
+    nameHtml = `<div style="font-size:16px;font-weight:700;color:${box.color};margin-bottom:10px;
+                 padding-bottom:8px;border-bottom:1px solid ${box.color}44;">
+                 🔻 ${B3_NAMES[key]} <span style="font-size:11px;opacity:.55;font-weight:400">${key}</span></div>`;
+  }
   const articles = MATRIX_ARTICLES[box.id] || {};
   const txt = articles[key];
   if(txt && txt.trim()){
-    bodyEl.innerHTML = txt;
+    bodyEl.innerHTML = nameHtml + txt;
+  }else if(nameHtml){
+    // B3 with a known name but no article yet → show the name + a soft note
+    bodyEl.innerHTML = nameHtml + `<div style="color:rgba(180,160,220,0.5);font-style:italic;">
+        სტატია ჯერ არ არის შევსებული.</div>`;
   }else{
     bodyEl.innerHTML = `<div style="color:rgba(180,160,220,0.5);font-style:italic;">
         სტატია ჯერ არ არის შევსებული — კომბინაცია: <b style="color:${box.color}">${key}</b>
