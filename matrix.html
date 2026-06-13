@@ -170,6 +170,13 @@
     <svg id="diagram" width="1800" height="1800" viewBox="-120 -120 1440 1440" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
+  <!-- Single-row age/energy reveal (replaces age table) -->
+  <div id="age-row-panel" style="display:none;width:100%;max-width:860px;">
+    <table class="age-table"><tbody id="age-row-body"></tbody></table>
+  </div>
+
+</div>
+
   <!-- ▼▼ INTERPRETATION BOXES (closed until a box header or its circle is clicked) ▼▼ -->
   <div id="matrix-boxes" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:860px;"></div>
   <!-- ▲▲ END INTERPRETATION BOXES ▲▲ -->
@@ -229,12 +236,7 @@
     </table>
   </div>
 
-  <!-- Single-row age/energy reveal (replaces age table) -->
-  <div id="age-row-panel" style="display:none;width:100%;max-width:860px;">
-    <table class="age-table"><tbody id="age-row-body"></tbody></table>
-  </div>
 
-</div>
 
 <p class="footer-text">✦ სამყაროს რიცხვები · ენერგიის ნიმუში ✦</p>
 
@@ -601,6 +603,8 @@ function draw(v){
       yr.setAttribute('font-family','Noto Sans Georgian,sans-serif');
       yr.textContent=v.age+' წ.';
       svg.appendChild(yr);
+      // auto-reveal the current-age energy row under the diagram
+      if(typeof showAgeRow==='function') showAgeRow(best.ageLabel, best.energy);
     }
   }
 
