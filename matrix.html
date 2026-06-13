@@ -547,7 +547,7 @@ function draw(v){
       const t=(d+1)/8,ang=sa+diff*t,rad=ang*Math.PI/180;
       const px=Math.round(cx+outerR*Math.cos(rad)),py=Math.round(cy+outerR*Math.sin(rad));
       const isMid=d===3;
-      el('circle',{cx:px,cy:py,r:isMid?5:3,fill:isMid?'#FFD700':'rgba(200,180,255,0.9)',stroke:'none'});
+      el('circle',{cx:px,cy:py,r:isMid?7:5,fill:isMid?'#FFD700':'rgba(200,180,255,0.95)',stroke:'none'});
       // age range label inside ring
       const tA=0.20+(d/6)*0.60,aAng=sa+diff*tA,aR=aAng*Math.PI/180;
       const ins=outerR-18,ax=Math.round(cx+ins*Math.cos(aR)),ay=Math.round(cy+ins*Math.sin(aR));
@@ -564,7 +564,7 @@ function draw(v){
     const rad=anchorAngles[i]*Math.PI/180;
     const px=Math.round(cx+outerR*Math.cos(rad)),py=Math.round(cy+outerR*Math.sin(rad));
     // visible gold dot ONLY (no label on decade anchors 10,20,30...)
-    el('circle',{cx:px,cy:py,r:5,fill:'#FFD700',stroke:'#a87f00','stroke-width':1});
+    el('circle',{cx:px,cy:py,r:7,fill:'#FFD700',stroke:'#a87f00','stroke-width':1});
     agePoints.push({ageNum:anchorAges[i], ageLabel:String(anchorAges[i]), energy:cornerEnergy[i], px, py, rad, isMid:false, anchor:true});
   }
 
@@ -638,6 +638,8 @@ function draw(v){
       [cx+dd3,        cy-dd3,        r3_r,  'tr'],     // TR3 female ancestors talents
       [cx+dd3,        cy+dd3,        r3_r,  'br'],     // BR3 male ancestors karma
       [cx-dd3,        cy+dd3,        r3_r,  'bl'],     // BL3 female ancestors karma
+      [W1x,           W1y,           r1_r,  'love'],   // ♥ heart circle → relationships line
+      [W3x,           W3y,           r1_r,  'money'],  // ₾ money circle → money line
     ];
     for(const [hx,hy,hr,bid] of CIRCLE_BOXES){
       const hit=document.createElementNS('http://www.w3.org/2000/svg','circle');
