@@ -12,7 +12,7 @@
 const MATRIX_BOXES = [
   // id            title (Georgian)                                  type      keys (which v.* circles)         color
   { id:'comfort', title:'კომფორტის ზონა',                            kind:'single', keys:['Cv'],               color:'#d4a017' },
-  { id:'sex', title:'სექსუალურობა', kind:'combo', keys:['Cv','CR1','CR2'], color:'#d4a017' },
+  { id:'sex',  title:'სექსუალურობა',  kind:'combo', keys:['G1','Cv','RC1'], color:'#d4a017' },
   { id:'l3',   title:'სავიზიტო ბარათი',                              kind:'single', keys:['L3'],               color:'#7F77DD' },
   { id:'persona', title:'პერსონა',                                  kind:'combo',  keys:['L3','L2','L1'],     color:'#7F77DD' },
   { id:'t3',   title:'ტალანტები',                                    kind:'single', keys:['T3'],               color:'#7F77DD' },
