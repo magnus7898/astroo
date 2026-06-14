@@ -42,12 +42,21 @@
     .compat-row input.yyyy{width:78px;}
     .compat-row input:focus{border-color:rgba(167,139,250,0.8);}
 
-    .main-layout{display:flex;flex-direction:column;align-items:center;gap:32px;position:relative;z-index:1;width:100%;max-width:1120px;margin:0 auto;}
-    .diagram-wrapper{width:100%;max-width:min(90vh,1120px);}
-    .diagram-wrapper svg{height:100%;width:auto;max-width:100%;display:block;}
-    .diagram-chakra-row .diagram-wrapper svg{height:100%;width:auto;}
+    .main-layout{display:flex;flex-direction:column;align-items:center;gap:32px;position:relative;z-index:1;width:100%;max-width:1180px;margin:0 auto;}
 
-    #extra-panels{display:none;width:100%;max-width:860px;}
+    /* ── diagram (left) + right column (chakra + age) ── */
+    .diagram-chakra-row{display:flex;gap:20px;align-items:stretch;justify-content:center;width:100%;flex-wrap:wrap;}
+    .diagram-chakra-row .diagram-wrapper{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:center;min-width:340px;background:none;border:none;padding:0;}
+    .diagram-chakra-row .diagram-wrapper svg{width:100%;height:auto;max-width:680px;display:block;}
+    .mx-right-col{flex:0 0 auto;width:540px;max-width:48%;min-width:300px;display:flex;flex-direction:column;gap:14px;}
+    .mx-right-col #chakra-panel{margin-top:0;width:100%;}
+    .mx-right-col #age-row-panel{width:100%;max-width:100%;margin:0;}
+    @media(max-width:860px){
+      .diagram-chakra-row{flex-direction:column;align-items:center;}
+      .diagram-chakra-row .diagram-wrapper,.mx-right-col{max-width:100%;width:100%;}
+    }
+
+    #extra-panels{display:none;width:100%;max-width:920px;}
     .ep-box{flex:1;min-width:140px;background:rgba(18,10,45,0.9);border:1px solid rgba(140,110,255,0.35);border-radius:13px;padding:13px 16px;display:flex;flex-direction:column;gap:9px;}
     .ep-title{font-size:12px;font-weight:700;letter-spacing:1px;color:rgba(180,160,255,0.95);text-align:center;}
     .ep-row{display:flex;gap:11px;align-items:center;justify-content:center;flex-wrap:wrap;}
@@ -56,8 +65,8 @@
     .ep-circ.ep-big{width:63px;height:63px;font-size:21px;}
     .ep-label{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(160,140,220,0.7);white-space:nowrap;font-family:sans-serif;}
 
-    .table-wrapper{width:100%;max-width:860px;border-radius:13px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.4);margin-top:12px;}
-    .chakra-table{border-collapse:collapse;width:100%;font-family:'Noto Sans Georgian',sans-serif;}
+    .table-wrapper{width:100%;border-radius:13px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.4);}
+    .chakra-table{border-collapse:collapse;width:100%;height:100%;font-family:'Noto Sans Georgian',sans-serif;}
     .chakra-table thead tr{background:linear-gradient(135deg,rgba(240,100,160,0.85),rgba(180,60,120,0.85));}
     .chakra-table th{padding:12px 14px;text-align:center;font-weight:700;font-size:13px;letter-spacing:1px;color:white;border-right:1px solid rgba(255,255,255,0.15);}
     .chakra-table th:first-child{text-align:left;}
@@ -73,43 +82,20 @@
     .row-muladhara td{background:rgba(220,70,70,0.85);color:white;}
     .row-total td{background:rgba(90,90,90,0.75);color:#e8e8e8;font-weight:700;font-size:14px;}
 
-    /* ── Age & Energy Table ── */
-    .age-wrap{width:100%;max-width:1020px;}
+    /* age/energy single-row reveal */
+    .age-wrap{width:100%;}
     .age-table{border-collapse:collapse;width:100%;font-family:'Noto Sans Georgian',sans-serif;}
-
-    .age-table thead tr{background:linear-gradient(135deg,rgba(0,90,150,0.95),rgba(0,55,110,0.95));}
-    .age-table th{padding:11px 10px;font-weight:700;font-size:11px;letter-spacing:1px;color:#7ff0ff;border-right:1px solid rgba(0,200,230,0.15);}
-    .age-table th:first-child{width:80px;text-align:right;padding-right:12px;}
-    .age-table th:nth-child(2){width:44px;text-align:center;}
-    .age-table th:nth-child(3){width:150px;text-align:center;}
-    .age-table th:last-child{text-align:left;padding-left:14px;}
-
-    .age-table td{padding:0;border-bottom:1px solid rgba(255,255,255,0.035);vertical-align:top;}
-
-    .age-table .tc-age{padding:10px 10px 10px 0;text-align:right;font-size:11px;font-weight:600;color:rgba(140,210,255,0.7);white-space:nowrap;vertical-align:middle;}
-    .age-table .tc-num{padding:10px 6px;text-align:center;font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:#FFD700;vertical-align:middle;}
-    .age-table .tc-arch{padding:10px 8px;text-align:center;vertical-align:middle;}
-    .age-table .tc-desc{padding:10px 14px 10px 10px;text-align:left;font-size:12px;line-height:1.65;color:rgba(195,220,255,0.75);vertical-align:middle;}
-
-    .e-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.4px;color:white;white-space:nowrap;line-height:1.3;text-align:center;}
+    .age-table td{padding:0;vertical-align:middle;}
+    .age-table .tc-age{padding:12px 10px;text-align:center;font-size:12px;font-weight:600;color:rgba(140,210,255,0.85);white-space:nowrap;}
+    .age-table .tc-num{padding:12px 8px;text-align:center;font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:#FFD700;}
+    .age-table .tc-arch{padding:12px 8px;text-align:center;}
+    .age-table .tc-desc{padding:12px 16px;text-align:left;font-size:12px;line-height:1.7;color:rgba(205,225,255,0.85);}
+    .age-table tr.anchor{background:rgba(0,55,100,0.5);}
+    .e-badge{display:inline-block;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.4px;color:white;white-space:nowrap;line-height:1.3;text-align:center;}
     .e-en{display:block;font-size:8px;font-weight:400;opacity:.75;margin-top:1px;letter-spacing:.3px;}
+    #age-row-panel{background:rgba(0,40,80,0.4);border:1px solid rgba(0,150,200,0.3);border-radius:13px;overflow:hidden;}
 
-    .age-table tr.anchor{background:rgba(0,75,130,0.55);}
-    .age-table tr.anchor .tc-age{color:#7ff0ff;font-size:12.5px;font-weight:700;}
-    .age-table tr.anchor .tc-num{font-size:20px;color:#FFD700;}
-    .age-table tr.anchor .tc-desc{color:rgba(210,235,255,0.9);font-size:13px;}
-    .age-table tr.mid{background:rgba(0,55,95,0.35);}
-    .age-table tr.mid .tc-num{font-size:17px;}
-    .age-table tr:not(.anchor):hover td{background:rgba(0,100,170,0.18);}
-
-    .age-table tr.sec-hdr td{background:rgba(0,30,60,0.8);padding:8px 14px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(127,240,255,0.45);text-align:center;border-top:1px solid rgba(0,180,220,0.12);}
-
-    .footer-text{margin-top:36px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,0.4);position:relative;z-index:1;}
-
-    @media(max-width:900px){body{padding:12px 8px 36px;}.page-title{font-size:18px;}.diagram-wrapper{max-width:100vw!important;}.age-table .tc-desc{font-size:11px;}}
-    @media(max-width:600px){.page-title{font-size:14px;letter-spacing:1px;}.page-subtitle{display:none;}.chakra-table th,.chakra-table td{padding:6px 4px;font-size:10px;}.chakra-table td:first-child{font-size:8px;}.ep-box{min-width:130px;}}
-
-    /* ── Interpretation boxes ── */
+    /* interpretation boxes */
     .mx-box{border:1px solid rgba(140,110,255,0.4);border-radius:11px;overflow:hidden;background:rgba(18,10,40,0.85);}
     .mx-box-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;font-size:13px;font-weight:600;color:#e8dcff;user-select:none;transition:background .15s;}
     .mx-box-head:hover{filter:brightness(1.25);}
@@ -118,19 +104,10 @@
     .mx-arrow{font-size:10px;opacity:.6;}
     .mx-box-body{padding:14px 18px;font-size:13px;line-height:1.75;color:rgba(210,195,235,0.85);border-top:1px solid rgba(140,110,255,0.2);}
 
-    /* diagram + chakra side by side — same height, diagram fills with no empty box */
-    .diagram-chakra-row{display:flex;gap:20px;align-items:stretch;justify-content:center;width:100%;flex-wrap:wrap;}
-    /* chakra table sets the height */
-    .diagram-chakra-row #chakra-panel{flex:0 0 auto;width:560px;max-width:50%;min-width:300px;margin-top:0;}
-    .diagram-chakra-row #chakra-panel .chakra-table{height:100%;}
-    /* diagram fills the same height, square, no background box */
-    .diagram-chakra-row .diagram-wrapper{flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-width:340px;background:none;border:none;padding:0;}
-    .diagram-chakra-row .diagram-wrapper svg{height:100%;width:100%;max-height:100%;object-fit:contain;display:block;}
-    @media(max-width:820px){
-      .diagram-chakra-row{flex-direction:column;align-items:center;}
-      .diagram-chakra-row .diagram-wrapper,.diagram-chakra-row #chakra-panel{max-width:100%;width:100%;}
-      .diagram-chakra-row .diagram-wrapper svg{height:auto;}
-    }
+    .footer-text{margin-top:36px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,0.4);position:relative;z-index:1;}
+
+    @media(max-width:900px){body{padding:12px 8px 36px;}.page-title{font-size:18px;}.age-table .tc-desc{font-size:11px;}}
+    @media(max-width:600px){.page-title{font-size:14px;letter-spacing:1px;}.page-subtitle{display:none;}.chakra-table th,.chakra-table td{padding:6px 4px;font-size:10px;}.chakra-table td:first-child{font-size:8px;}.ep-box{min-width:130px;}}
   </style>
 </head>
 <body>
@@ -181,33 +158,37 @@
 </div>
 
 <div class="main-layout" id="main-layout">
+
+  <!-- diagram (left) + right column: chakra table over age-energy explanation -->
   <div class="diagram-chakra-row">
-  <div class="diagram-wrapper">
-    <svg id="diagram" viewBox="30 30 1140 1140" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
-  </div>
-  <div class="table-wrapper" id="chakra-panel">
-    <table class="chakra-table">
-      <thead><tr><th>ჩაკრა</th><th>ენერგია</th><th>მატერია (სხეული)</th><th>ემოცია</th></tr></thead>
-      <tbody>
-        <tr class="row-sahasrara"><td>საჰასრარა (გვირგვინი)</td><td id="c-t3">-</td><td id="c-l3">-</td><td id="c-s1">-</td></tr>
-        <tr class="row-ajna"><td>აჯნა (მესამე თვალი)</td><td id="c-t2">-</td><td id="c-l2">-</td><td id="c-s2">-</td></tr>
-        <tr class="row-vishudha"><td>ვიშუდჰა (ყელის ჩაკრა)</td><td id="c-t1">-</td><td id="c-l1">-</td><td id="c-s3">-</td></tr>
-        <tr class="row-anahata"><td>ანაჰატა (გულის ჩაკრა)</td><td id="c-g2">-</td><td id="c-g1">-</td><td id="c-s4">-</td></tr>
-        <tr class="row-manipura"><td>მანიპურა (მზის წნული)</td><td id="c-cv">-</td><td id="c-cv2">-</td><td id="c-s5">-</td></tr>
-        <tr class="row-svadhistana"><td>სვადჰისტანა (საკრალური)</td><td id="c-b1">-</td><td id="c-r1">-</td><td id="c-s6">-</td></tr>
-        <tr class="row-muladhara"><td>მულადჰარა (ფუძის ჩაკრა)</td><td id="c-b3">-</td><td id="c-r3">-</td><td id="c-s7">-</td></tr>
-        <tr class="row-total"><td>სულ</td><td id="c-sum-e">-</td><td id="c-sum-l">-</td><td id="c-sum-s">-</td></tr>
-      </tbody>
-    </table>
-  </div>
+    <div class="diagram-wrapper">
+      <svg id="diagram" viewBox="30 30 1140 1140" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="mx-right-col">
+      <div class="table-wrapper" id="chakra-panel">
+        <table class="chakra-table">
+          <thead><tr><th>ჩაკრა</th><th>ენერგია</th><th>მატერია (სხეული)</th><th>ემოცია</th></tr></thead>
+          <tbody>
+            <tr class="row-sahasrara"><td>საჰასრარა (გვირგვინი)</td><td id="c-t3">-</td><td id="c-l3">-</td><td id="c-s1">-</td></tr>
+            <tr class="row-ajna"><td>აჯნა (მესამე თვალი)</td><td id="c-t2">-</td><td id="c-l2">-</td><td id="c-s2">-</td></tr>
+            <tr class="row-vishudha"><td>ვიშუდჰა (ყელის ჩაკრა)</td><td id="c-t1">-</td><td id="c-l1">-</td><td id="c-s3">-</td></tr>
+            <tr class="row-anahata"><td>ანაჰატა (გულის ჩაკრა)</td><td id="c-g2">-</td><td id="c-g1">-</td><td id="c-s4">-</td></tr>
+            <tr class="row-manipura"><td>მანიპურა (მზის წნული)</td><td id="c-cv">-</td><td id="c-cv2">-</td><td id="c-s5">-</td></tr>
+            <tr class="row-svadhistana"><td>სვადჰისტანა (საკრალური)</td><td id="c-b1">-</td><td id="c-r1">-</td><td id="c-s6">-</td></tr>
+            <tr class="row-muladhara"><td>მულადჰარა (ფუძის ჩაკრა)</td><td id="c-b3">-</td><td id="c-r3">-</td><td id="c-s7">-</td></tr>
+            <tr class="row-total"><td>სულ</td><td id="c-sum-e">-</td><td id="c-sum-l">-</td><td id="c-sum-s">-</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Single-row age/energy reveal (under the chakra table) -->
+      <div class="age-wrap" id="age-row-panel" style="display:none;">
+        <table class="age-table"><tbody id="age-row-body"></tbody></table>
+      </div>
+    </div>
   </div>
 
-  <!-- Single-row age/energy reveal (replaces age table) -->
-  <div id="age-row-panel" style="display:none;width:100%;max-width:860px;margin:18px 0;">
-    <table class="age-table"><tbody id="age-row-body"></tbody></table>
-  </div>
-
-<div id="extra-panels">
+  <!-- ცა / მიწა / ქალი / კაცი panels -->
+  <div id="extra-panels">
     <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
       <div class="ep-box"><div class="ep-title" style="color:rgba(210,130,255,0.95);">მამაკაცის ხაზი</div><div class="ep-row"><div class="ep-circ" id="ep-tl3"><span class="ep-label">TL3</span></div><div class="ep-circ" id="ep-br3"><span class="ep-label">BR3</span></div><div class="ep-circ ep-gold" id="ep-male-sum"><span class="ep-label">ჯამი</span></div></div></div>
       <div class="ep-box"><div class="ep-title" style="color:rgba(255,140,140,0.95);">ქალის ხაზი</div><div class="ep-row"><div class="ep-circ" id="ep-tr3"><span class="ep-label">TR3</span></div><div class="ep-circ" id="ep-bl3"><span class="ep-label">BL3</span></div><div class="ep-circ ep-gold" id="ep-fem-sum"><span class="ep-label">ჯამი</span></div></div></div>
@@ -247,77 +228,43 @@
   </div>
 
   <!-- ▼▼ INTERPRETATION BOXES (closed until a box header or its circle is clicked) ▼▼ -->
-  <div id="matrix-boxes" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:860px;margin:18px 0;"></div>
+  <div id="matrix-boxes" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:920px;"></div>
   <!-- ▲▲ END INTERPRETATION BOXES ▲▲ -->
-
-
 
 </div>
 
-
-  
-
-
-
-
-
 <p class="footer-text">✦ სამყაროს რიცხვები · ენერგიის ნიმუში ✦</p>
 
-<!-- ▼ Interpretation boxes + articles (edit article texts in THIS block) ▼ -->
 <!-- Interpretation boxes + articles (edit in matrix_boxes_addon.js) -->
 <script src="matrix_boxes_addon.js"></script>
 
 <script>
 // ── ENERGIES — 8=სამართლიანობა, 11=სიძლიერე ──────────────────────────
 const ENERGIES = {
-  "1":  { name:"მაგი",             en:"The Magician",      color:"#c0392b",
-    desc:"ეს ნება-ძალის, ოსტატობისა და შეგნებული ქმნადობის პერიოდია. შენ ფლობ ყველა საჭირო ინსტრუმენტს — მხოლოდ გადაწყვეტა გჭირდება, რომ გამოიყენო ისინი. ამ დროს სამყარო შენს ინიციატივას ელოდება: ის, ვინც ახლა ბედს ხელში აიღებს, გასაოცარ შედეგებს ღებულობს. ნიჭი, სიტყვა და ქმედება ერთად — ეს შენი ძალთა სამება ამ პერიოდში." },
-  "2":  { name:"მღვდელმთავარი",    en:"High Priestess",    color:"#8e44ad",
-    desc:"ამ პერიოდში სიბრძნე სიჩუმეში ცხოვრობს — ყველაზე ღრმა პასუხები გარედან არ მოდის, ისინი შენს შიგნით ელოდება. ინტუიცია ახლა განსაკუთრებულად გამახვილებულია, ამიტომ ენდე პირველ შეგრძნებებს. ეს გამოვლენის კი არ, დაკვირვებისა და გაგების პერიოდია. ჩაშვება, ოცნება, ნელი ცოდნა — ეს შენი გზაა. სიღრმეში ჩაღრმავება ყველა ზედაპირულ კითხვაზე ერთდროულად პასუხობს." },
-  "3":  { name:"იმპერატრიცა",      en:"The Empress",       color:"#27ae60",
-    desc:"სიცოცხლე ახლა სავსეა — ეს პერიოდი ნაყოფიერების, შემოქმედების და სიყვარულის ვიბრაციაზე ცხოვრობს. ყველაფერი, რასაც ახლა ქმნი — ხელოვნება, სახლი, ურთიერთობა, ბიზნესი — ბუნებრივად იზრდება. სხეული, გრძნობები, სილამაზე — ყველა ეს ენერგია ახლა შენი მოკავშირეა. ბუნებასთან კავშირი განსაკუთრებით ამ პერიოდში გყვავის. ისიამოვნე ამ სიმდიდრით, გაზიარე, გაარგე — მომცემი გული მუდამ სავსეა." },
-  "4":  { name:"იმპერატორი",       en:"The Emperor",       color:"#d35400",
-    desc:"ახლა სტრუქტურის, წესრიგისა და სტაბილური საფუძვლის შექმნის დროა. ეს პერიოდი გიწოდებს — გახდე ლიდერი, არა სხვებზე, არამედ საკუთარ ცხოვრებაში. სახლი, ფინანსები, სამსახური — ყველა სფეროში ახლა ააგე ის, რაც ათწლეულები გაძლებს. გადაწყვეტილებები, რომლებსაც ახლა მიიღებ, კარი ხდება მომავლისთვის. შენი ავტორიტეტი სიმტკიცისა და პასუხისმგებლობის ნამდვილი ძალიდან მომდინარეობს." },
-  "5":  { name:"იერარქი",          en:"The Hierophant",    color:"#2471a3",
-    desc:"სულიერი ჭეშმარიტება და ადამიანური ტრადიცია ამ პერიოდში ცოცხლობს. სწავლება, გადმოცემა და ცოდნის გაზიარება — ეს შენი მისიაა. ამ ენერგიით ნაკურთხ ადამიანებს ხშირად ევალება სხვებისთვის შუქის გამხსნელი გახდნენ. ეძიე მასწავლებელი, ან გახდი ის, ვინც სხვებს გზას უჩვენებს. ღმერთი, ეთიკა, საზოგადოებრივი სიბრძნე — ეს ყველა ახლა შენი ძლიერება და ღუზაა." },
-  "6":  { name:"შეყვარებულები",    en:"The Lovers",        color:"#c0392b",
-    desc:"ეს ყველაზე მნიშვნელოვანი არჩევანების პერიოდია — გულისა და გონების, ურთიერთობისა და ღირებულებების. სიყვარული ამ ენერგიაში მხოლოდ რომანტიკა არ არის: ეს ღრმა ერთობა საკუთარ ჭეშმარიტ თავთანაა. ამ პერიოდში, ოდესაც შენი ღირებულებებიდან ამოსული გადაწყვეტილება მიიღება, სამყარო მხარდამხარ დგება. ჰარმონია — გარედან კი არ მოდის, ის ჯერ შიგნიდან იბადება, შემდეგ კი ურთიერთობებში ასახვას ჰპოვებს." },
-  "7":  { name:"ეტლი",             en:"The Chariot",       color:"#1565c0",
-    desc:"გამარჯვება ახლა ნამდვილად შესაძლებელია — მაგრამ ის ბრძოლით კი არ მოდის, ორი საპირისპირო ძალის ოსტატური მართვით. ამ პერიოდში ენერგია ძლიერია, განსჯა გამახვილებულია და ფოკუსი — მთავარი ინსტრუმენტი. წინ ილაშქრე, მაგრამ ემოციებით კი არ — შეგნებით. ამ ენერგიის ადამიანი ყოველ სფეროში გზას გაიკვლევს, ვინც ინსტინქტსა და ინტელექტს ერთ კოლოფში ამყოფებს." },
-  "8":  { name:"სამართლიანობა",    en:"Justice",           color:"#7d3c98",
-    desc:"სამართლიანობის ენერგია ყველაფერს თავის ადგილზე ანიჭებს — ობიექტურად, ზუსტად, გამჭვირვალედ. ეს პერიოდი კარმული წონასწორობის დრო არის: ის, რაც ნამდვილად შენია, დარჩება; ის, რაც გასვლისთვის მომწიფდა — გაივლის. ეს ანგარიშსწორების კი არ, გათავისუფლების პერიოდია. ყოველი ურთიერთობა, გარიგება, გადაწყვეტილება — ახლა გაცილებით ნათელია. პატიოსნება საკუთარ თავთან ახლა ყველა კარს ღებავს." },
-  "9":  { name:"განდეგილი",        en:"The Hermit",        color:"#546e7a",
-    desc:"ეს ერთ-ერთი ყველაზე ძვირფასი პერიოდია — ის, ვინც სიჩუმეს ეძებს, სიბრძნეს პოვებს. განდეგილი არ გარბის სამყაროსგან: ის ეძებს შიდა ნათელს, რომ სხვებსაც მიუნათოს. ამ ასაკში ინსაიტი, ინტუიცია და ღრმა გაგება ფიზიკურ ქმედებაზე ძლიერია. მარტოობა, ვინც ამ ენერგიას ატარებს, ტვირთი კი არ არის — ეს ნიჭია. ახლა ის, რაც ნელა სიღრმეში ახვდება, მთელი ცხოვრება გნათებს." },
-  "10": { name:"ბედის ბორბალი",    en:"Wheel of Fortune",  color:"#e67e22",
-    desc:"ბედის ბორბალი ბრუნავს — და ეს ახალი ციკლის, ახალი შესაძლებლობების, ახალი ბედისწერის ნიშანია. ცვლილება გარდაუვალია, მაგრამ ამ ენერგიაში ის შენი სასარგებლოდ მუშაობს. ის, ვინც ახლა ღიაა ახლისთვის, ვინც ენდება ნაკადს — ის ყველაზე მეტს იღებს. იუპიტერი — სიუხვის, გაფართოების და ბედის პლანეტა — ახლა ზედმდგომია. ჩაკეტე კარი ძველის მიმართ, გახსენი ახლისთვის." },
-  "11": { name:"სიძლიერე",         en:"Strength",          color:"#f39c12",
-    desc:"ჭეშმარიტი სიძლიერე ნაზობაში ცხოვრობს — ლომი ნება-ძალით კი არ ემორჩილება, სიყვარულით. ეს პერიოდი ასწავლის, რომ ყველაზე დიდი გმირობა არის საკუთარი შიშებისა და ვნებების გარდაქმნა ძალად. ამ ასაკში ადამიანი სრული ტრანსფორმაციისთვის მწიფდება — მაგრამ იმ გზით, რომ გულმა გადაარჩინოს ის, რაც ძალამ ვერ შეძლო. გამძლეობა, მოთმინება, სიმამაცე — ეს სამი სიტყვა ახლა შენი სამი სვეტია." },
-  "12": { name:"ჩამოხრჩობილი",     en:"The Hanged Man",    color:"#00838f",
-    desc:"ეს პერიოდი ნებაყოფლობითი პაუზის, ახალი კუთხიდან ხედვის და ღრმა ტრანსფორმაციის დროა. ჩამოხრჩობილი ყველაფერს თავდაყირა ხედავს — და სწორედ ამ გადაბრუნებაში პოვებს იმას, რაც ადრე ვერ ჩანდა. ამ ასაკში ის, ვინც ეგოს გაუშვებს, სიახლეს პოვებს. ლოდინი ამ პერიოდში სიზარმაცე კი არ, სიბრძნეა — რადგან ყველა ყვავილი მომწიფებისას იხსნება. გაჩერება ზოგჯერ ყველაზე სწრაფი გზაა." },
-  "13": { name:"ტრანსფორმაცია",    en:"Death / Transform", color:"#2d3436",
-    desc:"13 — არ არის სიკვდილი, ეს სიმბოლური გარდასახვაა: ძველი ფორმა ქრება, ახალი იბადება. ეს ყველაზე ძლიერი ტრანსფორმაციული ენერგია მთელ სისტემაში. ის, ვინც ამ პერიოდში ძველს გაუშვებს — პიროვნებად, ჩვევებად, ურთიერთობებად — ახლად იბადება, ბევრად ძლიერი. პლუტონის ძალა ყველაზე ღრმა ფენებს ეხება. ყველა ბრმა ადგილი ახლა ნათელდება." },
-  "14": { name:"ზომიერება",        en:"Temperance",        color:"#00695c",
-    desc:"ზომიერება — ეს სიბრძნის ყველაზე პრაქტიკული ფორმა. ამ ასაკში ყველაზე ძლიერი ქმედება ბალანსის შენარჩუნებაა: ორი სხვადასხვა სამყაროს, ორი ძალის, ორი ოცნების ჰარმონიული სინთეზი. ჩქარობა კი არ ემსახურება ამ ენერგიას — ემსახურება ნელი, განზრახი, ბრძნული მოქმედება. ამ პერიოდში ანგელოზი, რომელიც ორ ჭიქას შორის წყალს ასხამს, ასწავლის: ყოველი კომბინაცია სრულყოფილი გახდება, თუ ოსტატურად მოვუდეგებით." },
-  "15": { name:"ეშმაკი",           en:"The Devil",         color:"#5d4037",
-    desc:"15 ასწავლის ყველაზე ღრმა გაკვეთილს: ის, რასაც შეკრული ვარ — ჩემი შეხედულებებია, ჩვევებია, არარეალური შიშებია. ეს ილუზიების გამოვლენისა და ნამდვილი ძალის პოვნის პერიოდია. სატურნი ასწავლის სწორ სტრუქტურებს — ის, რაც ახლა ჩნდება, ამ სიმართლის გასაღებია. ამ ასაკში ადამიანი სრულად ხვდება, რა ჭეშმარიტად სურს და რა — ძველი პროგრამებიდანაა ნასესხები. გათავისუფლება ამ ენერგიის ყველაზე ძვირფასი საჩუქარია." },
-  "16": { name:"კოშკი",            en:"The Tower",         color:"#b71c1c",
-    desc:"კოშკი — ეს გარდატეხის, მოულოდნელი ცვლილების და ჭეშმარიტი გამოვლენის ენერგიაა. ყველაფერი, რაც ამ პერიოდში ირყევა, ისეა ჩაშენებული, რომ ძლიერ საძირკველს ადგილი გაუთავისუფლოს. ამ ენერგიის ადამიანს ეძლევა შანსი: გადაარჩინოს ის, რაც ჭეშმარიტია, გაათავისუფლოს ის, რაც მოძველდა. ცეცხლი, რომელიც კოშკს ეხება, წმენდს — არ ანადგურებს. ეს ყველაზე ძლიერი განახლების ენერგია." },
-  "17": { name:"ვარსკვლავი",       en:"The Star",          color:"#1565c0",
-    desc:"ვარსკვლავი — ღამის ბნელ ცაში ყველაზე ნათელი სიმბოლო. ეს პერიოდი განახლების, იმედის, სულიერი განკურნებისა და ჭეშმარიტი ოცნებებისკენ ნაბიჯის გადადგმის დროა. ახლა სამყარო მზადაა მოისმინოს — ის, ვინც ახლა თავის ყველაზე ნამდვილ სურვილებს ამჟღავნებს, პასუხს ღებულობს. ეს შეხვედრაა იმ ვარსკვლავთან, რომელმაც ყოველთვის შენი სახელი იცოდა. გახსენი გული სრულიად." },
-  "18": { name:"მთვარე",           en:"The Moon",          color:"#4527a0",
-    desc:"მთვარის ენერგია ქვეცნობიერის სამყაროში ყვავის — სიზმრები, ინტუიცია, ფარული პატერნები, ძველი მეხსიერება ამ პერიოდში ამოდის ზედაპირზე. ეს ყოველთვის ადვილი არ არის, მაგრამ ის, ვინც ამ ენერგიასთან მეგობრობს, უღრმეს ცოდნას იღებს საკუთარ თავზე. ინტუიცია ახლა ზედმეტად ზუსტია — ენდე. ეს სამკურნალო პერიოდია, სადაც ფარული ჭრილობები ბოლოს ნათელდება და შეხორცდება." },
-  "19": { name:"მზე",              en:"The Sun",           color:"#e65100",
-    desc:"მზე — ეს ყველაზე ნათელი, ყველაზე სასიხარულო ენერგია. ამ პერიოდში ყველაფერი ნათელია, ყველაფერი შესაძლებელია, ყველაფერი ყვავის. ეს ბავშვური სიხარულის, ნამდვილი გამოხატვის, სრული თვითიდენტობის დრო. ის, ვინც ამ ასაკში ბრწყინვის შიშს გვერდზე გადადებს — ყველა მის გარშემო ათბობს. წარმატება ახლა ბუნებრივი მდინარეა, მხოლოდ გახსენი კარი." },
-  "20": { name:"განსჯა",           en:"Judgement",         color:"#c62828",
-    desc:"ეს გამოღვიძების, ახალი მოწოდების, სულის ახალი ფაზის ენერგიაა. ყველა ის, ვინც ამ ენერგიას ატარებს, გარკვეულ მომენტში ისმენს ხმას — გამოღვიძების, ცვლილების, სიმაღლის. ამ ასაკში ის, ვინც ძველ პირადობას გამოეთხოვება, ახალ, ბევრად სრულყოფილ ვერსიად იბადება. ახალი ასისტენტი — ახალი სამყარო. სულის მოწოდება ახლა ყველაზე ხმამაღლა ჟღერს — ისმინე." },
-  "21": { name:"სამყარო",          en:"The World",         color:"#2e7d32",
-    desc:"21 — ყველა ციკლის ბრწყინვალე დასასრული. ეს სრულყოფილების, ინტეგრაციისა და ყოვლისმომცველი ჰარმონიის ენერგიაა. ამ პერიოდში ადამიანი ხვდება, რამდენი გზა გაიარა, რამდენი ისწავლა, რამდენ ადამიანზე იმოქმედა. ახლა ზეიმი გვხვდება — ღირსი, ნამდვილი, ყველა სფეროში. ახალი ციკლი ახლოს არის, მაგრამ ჯერ ამ მიღწევის სიმდიდრე გაიცნო." },
-  "22": { name:"სულელი",           en:"The Fool",          color:"#6a1b9a",
-    desc:"22 — ეს ნული, სუფთა ფურცელი, გამოუყენებელი პოტენციალია. სულელი ის კი არ არის, ვინც არ იცის — ის ის არის, ვინც ყველა ძველი ცოდნა ჩამოახია და ახლის მიღებისთვის ცარიელი ხელებით დგას. ეს ყველაზე გათავისუფლებული ენერგია — სადაც ახალი სამყარო სრული გახსნილობით ელოდება. ეს პერიოდი გიწოდებს: ნუ ეკითხები, უბრალოდ გადადგი ნაბიჯი. სიახლე — ეს შენი ბუნებრივი მდგომარეობაა." }
+  "1":  { name:"მაგი",             en:"The Magician",      color:"#c0392b", desc:"ნება-ძალის, ოსტატობისა და შეგნებული ქმნადობის პერიოდი. შენ ფლობ ყველა საჭირო ინსტრუმენტს — საჭიროა მხოლოდ გადაწყვეტა." },
+  "2":  { name:"მღვდელმთავარი",    en:"High Priestess",    color:"#8e44ad", desc:"სიბრძნე სიჩუმეში ცხოვრობს. ინტუიცია გამახვილებულია — ენდე პირველ შეგრძნებებს." },
+  "3":  { name:"იმპერატრიცა",      en:"The Empress",       color:"#27ae60", desc:"ნაყოფიერების, შემოქმედების და სიყვარულის პერიოდი. ყველაფერი, რასაც ქმნი, ბუნებრივად იზრდება." },
+  "4":  { name:"იმპერატორი",       en:"The Emperor",       color:"#d35400", desc:"სტრუქტურის, წესრიგისა და სტაბილური საფუძვლის შექმნის დრო. გახდი ლიდერი საკუთარ ცხოვრებაში." },
+  "5":  { name:"იერარქი",          en:"The Hierophant",    color:"#2471a3", desc:"სულიერი ჭეშმარიტება და ტრადიცია. სწავლება და ცოდნის გაზიარება — შენი მისიაა." },
+  "6":  { name:"შეყვარებულები",    en:"The Lovers",        color:"#c0392b", desc:"მნიშვნელოვანი არჩევანების პერიოდი — გულისა და გონების, ურთიერთობისა და ღირებულებების." },
+  "7":  { name:"ეტლი",             en:"The Chariot",       color:"#1565c0", desc:"გამარჯვება შესაძლებელია ორი საპირისპირო ძალის ოსტატური მართვით. ფოკუსი — მთავარი ინსტრუმენტი." },
+  "8":  { name:"სამართლიანობა",    en:"Justice",           color:"#7d3c98", desc:"კარმული წონასწორობის დრო. ის, რაც ნამდვილად შენია, დარჩება; დანარჩენი გაივლის." },
+  "9":  { name:"განდეგილი",        en:"The Hermit",        color:"#546e7a", desc:"ვინც სიჩუმეს ეძებს, სიბრძნეს პოვებს. ინსაიტი და ღრმა გაგება ფიზიკურ ქმედებაზე ძლიერია." },
+  "10": { name:"ბედის ბორბალი",    en:"Wheel of Fortune",  color:"#e67e22", desc:"ახალი ციკლის, შესაძლებლობებისა და ბედისწერის ნიშანი. ცვლილება შენი სასარგებლოდ მუშაობს." },
+  "11": { name:"სიძლიერე",         en:"Strength",          color:"#f39c12", desc:"ჭეშმარიტი სიძლიერე ნაზობაში ცხოვრობს. გამძლეობა, მოთმინება, სიმამაცე — შენი სამი სვეტი." },
+  "12": { name:"ჩამოხრჩობილი",     en:"The Hanged Man",    color:"#00838f", desc:"ნებაყოფლობითი პაუზის და ახალი კუთხიდან ხედვის დრო. გაჩერება ზოგჯერ ყველაზე სწრაფი გზაა." },
+  "13": { name:"ტრანსფორმაცია",    en:"Death / Transform", color:"#2d3436", desc:"სიმბოლური გარდასახვა: ძველი ფორმა ქრება, ახალი იბადება. ყველაზე ძლიერი ტრანსფორმაცია." },
+  "14": { name:"ზომიერება",        en:"Temperance",        color:"#00695c", desc:"ბალანსის ხელოვნება — ორი ძალის ჰარმონიული სინთეზი. ნელი, განზრახი, ბრძნული მოქმედება." },
+  "15": { name:"ეშმაკი",           en:"The Devil",         color:"#5d4037", desc:"ილუზიების გამოვლენისა და ნამდვილი ძალის პოვნის პერიოდი. გათავისუფლება — ყველაზე ძვირფასი საჩუქარი." },
+  "16": { name:"კოშკი",            en:"The Tower",         color:"#b71c1c", desc:"გარდატეხის და ჭეშმარიტი გამოვლენის ენერგია. ცეცხლი წმენდს — არ ანადგურებს." },
+  "17": { name:"ვარსკვლავი",       en:"The Star",          color:"#1565c0", desc:"განახლების, იმედის და სულიერი განკურნების დრო. გახსენი გული სრულიად." },
+  "18": { name:"მთვარე",           en:"The Moon",          color:"#4527a0", desc:"ქვეცნობიერის სამყარო — სიზმრები, ინტუიცია, ფარული პატერნები. სამკურნალო პერიოდი." },
+  "19": { name:"მზე",              en:"The Sun",           color:"#e65100", desc:"ყველაზე ნათელი, სასიხარულო ენერგია. წარმატება ბუნებრივი მდინარეა — გახსენი კარი." },
+  "20": { name:"განსჯა",           en:"Judgement",         color:"#c62828", desc:"გამოღვიძების და სულის ახალი ფაზის ენერგია. სულის მოწოდება ხმამაღლა ჟღერს — ისმინე." },
+  "21": { name:"სამყარო",          en:"The World",         color:"#2e7d32", desc:"ყველა ციკლის ბრწყინვალე დასასრული. სრულყოფილების და ინტეგრაციის ენერგია." },
+  "22": { name:"სულელი",           en:"The Fool",          color:"#6a1b9a", desc:"ნული, სუფთა ფურცელი, გამოუყენებელი პოტენციალი. ყველაზე გათავისუფლებული ენერგია." }
 };
-
-function getE(n){ return ENERGIES[String(n)] || {name:`ენ.${n}`,en:'',color:'#444',desc:''}; }
-
+function getE(n){ return ENERGIES[String(n)] || {name:"ენ."+n,en:'',color:'#444',desc:''}; }
 
 // ── Single-row energy reveal (click an age point on the diagram) ──
 function showAgeRow(ageLabel, energy){
@@ -325,18 +272,17 @@ function showAgeRow(ageLabel, energy){
   const body=document.getElementById('age-row-body');
   if(!panel||!body)return;
   const en=getE(energy);
-  body.innerHTML=`
-    <tr class="anchor">
-      <td class="tc-age" style="text-align:center;">${ageLabel} <span style="font-size:9px;opacity:.6">წელი</span></td>
-      <td class="tc-num">${energy}</td>
-      <td class="tc-arch"><span class="e-badge" style="background:${en.color}">${en.name}<span class="e-en">${en.en}</span></span></td>
-      <td class="tc-desc">${en.desc}</td>
-    </tr>`;
+  body.innerHTML=
+    '<tr class="anchor">'+
+      '<td class="tc-age">'+ageLabel+' <span style="font-size:9px;opacity:.6">წელი</span></td>'+
+      '<td class="tc-num">'+energy+'</td>'+
+      '<td class="tc-arch"><span class="e-badge" style="background:'+en.color+'">'+en.name+'<span class="e-en">'+en.en+'</span></span></td>'+
+      '<td class="tc-desc">'+en.desc+'</td>'+
+    '</tr>';
   panel.style.display='block';
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-// ── Numerology ────────────────────────────────────────────────────────────
+// ── Numerology ──
 function r22(n){while(n>22)n=String(n).split('').reduce((a,d)=>a+parseInt(d),0);return n;}
 const GEO={'ა':1,'ბ':2,'გ':3,'დ':4,'ე':5,'ვ':6,'ზ':7,'ჱ':8,'თ':9,'ი':1,'კ':2,'ლ':3,'მ':4,'ნ':5,'ჲ':6,'ო':7,'პ':8,'ჟ':9,'რ':1,'ს':2,'ტ':3,'უ':4,'ფ':5,'ქ':6,'ღ':7,'ყ':8,'შ':9,'ჩ':1,'ც':2,'ძ':3,'წ':4,'ჭ':5,'ხ':6,'ჯ':7,'ჰ':8};
 function geoNum(s){if(!s)return 0;return r22([...s].reduce((a,c)=>a+(GEO[c]||0),0));}
@@ -352,13 +298,12 @@ function setMethod(m){
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
   {const ap=document.getElementById('age-row-panel');if(ap)ap.style.display='none';}
-  const mb=document.getElementById('matrix-boxes');if(mb)mb.style.display='none';
-  const arp=document.getElementById('age-row-panel');if(arp)arp.style.display='none';
+  {const mb=document.getElementById('matrix-boxes');if(mb)mb.style.display='none';}
 }
 
 function m3Preview(){
   const v=[['გვარი',geoNum(document.getElementById('m3-gvari').value)],['სახელი',geoNum(document.getElementById('m3-saxeli').value)],['მამის',geoNum(document.getElementById('m3-mamis').value)],['დედის',geoNum(document.getElementById('m3-dedis').value)]];
-  document.getElementById('m3-preview').innerHTML=v.map(([l,n])=>`<span>${l}: <b style="color:white">${n||'-'}</b></span>`).join(' · ');
+  document.getElementById('m3-preview').innerHTML=v.map(([l,n])=>'<span>'+l+': <b style="color:white">'+(n||'-')+'</b></span>').join(' · ');
 }
 
 function calculate(){
@@ -367,6 +312,9 @@ function calculate(){
   const yyyy=parseInt(document.querySelector('[name=yyyy]').value)||2000;
   const L3=r22(dd),T3=r22(mm),R3=r22(yyyy);
   const B3=r22(L3+T3+R3),Cv=r22(L3+T3+R3+B3);
+  // person's current age
+  let _age=null;
+  {const t=new Date();_age=t.getFullYear()-yyyy;const md=(t.getMonth()+1)-mm||(t.getDate()-dd);if(md<0)_age--;}
   let TL3=r22(L3+T3),TR3=r22(T3+R3),BR3=r22(R3+B3),BL3=r22(B3+L3);
   let m3Cv2=0;
   if(CUR===3){
@@ -380,9 +328,13 @@ function calculate(){
   const dCv=CUR===1?RC1:CUR===2?Cv:m3Cv2;
   const TL1=r22(TL3+dCv),TL2=r22(TL1+TL3),TR1=r22(TR3+dCv),TR2=r22(TR1+TR3),BR1=r22(BR3+dCv),BR2=r22(BR1+BR3),BL1=r22(BL3+dCv),BL2=r22(BL1+BL3);
   const W2=r22(B1+R1),W1=r22(B1+W2),W3=r22(R1+W2);
-  // person's current age from birth date
-  const _today=new Date();let _age=_today.getFullYear()-yyyy;const _bd=new Date(yyyy,mm-1,dd);const _anniv=new Date(_today.getFullYear(),mm-1,dd);if(_today<_anniv)_age--;
   draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1,TL2,TR1,TR2,BR1,BR2,BL1,BL2,W1,W2,W3,showRC:CUR!==2,m3Cv2,compat:false,age:_age});
+  if(typeof buildMatrixBoxes==='function'){
+    buildMatrixBoxes({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TL2,TL1,TR3,TR2,TR1,BR3,BR2,BR1,BL3,BL2,BL1,W1,W2,W3},CUR);
+  }else{
+    const mb=document.getElementById('matrix-boxes');
+    if(mb){mb.style.display='flex';mb.innerHTML='<div style="padding:14px;border:1px solid rgba(255,120,120,.5);border-radius:10px;color:#ffb0b0;font-size:12px;">⚠ matrix_boxes_addon.js ვერ ჩაიტვირთა — შეამოწმეთ ფაილი იმავე საქაღალდეშია matrix.html-თან.</div>';}
+  }
   document.getElementById('extra-panels').style.display='block';
   document.getElementById('chakra-panel').style.display='block';
   const sc=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
@@ -396,81 +348,6 @@ function calculate(){
   sc('c-t3',T3);sc('c-l3',L3);sc('c-s1',r22(T3+L3));sc('c-t2',T2);sc('c-l2',L2);sc('c-s2',r22(T2+L2));sc('c-t1',T1);sc('c-l1',L1);sc('c-s3',r22(T1+L1));sc('c-g2',G2);sc('c-g1',G1);sc('c-s4',r22(G2+G1));sc('c-cv',Cv);sc('c-cv2',Cv);sc('c-s5',r22(Cv+Cv));sc('c-b1',B1);sc('c-r1',R1);sc('c-s6',r22(B1+R1));sc('c-b3',B3);sc('c-r3',R3);sc('c-s7',r22(B3+R3));
   const eV=[T3,T2,T1,G2,Cv,B1,B3],lV=[L3,L2,L1,G1,Cv,R1,R3],sV=[r22(T3+L3),r22(T2+L2),r22(T1+L1),r22(G2+G1),r22(Cv+Cv),r22(B1+R1),r22(B3+R3)];
   sc('c-sum-e',r22(eV.reduce((a,b)=>a+b,0)));sc('c-sum-l',r22(lV.reduce((a,b)=>a+b,0)));sc('c-sum-s',r22(sV.reduce((a,b)=>a+b,0)));
-  if(typeof buildMatrixBoxes==='function'){
-    buildMatrixBoxes({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TL2,TL1,TR3,TR2,TR1,BR3,BR2,BR1,BL3,BL2,BL1,W1,W2,W3},CUR);
-  }else{
-    const mb=document.getElementById('matrix-boxes');
-    if(mb){mb.style.display='flex';mb.innerHTML='<div style="padding:14px;border:1px solid rgba(255,120,120,.5);border-radius:10px;color:#ffb0b0;font-size:12px;">⚠ matrix_boxes_addon.js ვერ ჩაიტვირთა — შეამოწმეთ ფაილი იმავე საქაღალდეშია matrix.html-თან.</div>';}
-  }
-}
-
-// ── Single-row energy reveal (replaces previous on each click) ──
-function showAgeRow(ageLabel, energy){
-  const panel=document.getElementById('age-row-panel');
-  const body=document.getElementById('age-row-body');
-  if(!panel||!body)return;
-  const e=getE(energy);
-  body.innerHTML=`
-    <tr class="anchor">
-      <td class="tc-age" style="width:90px;">${ageLabel} წ.</td>
-      <td class="tc-num" style="width:50px;">${energy}</td>
-      <td class="tc-arch" style="width:160px;">
-        <span class="e-badge" style="background:${e.color}">${e.name}<span class="e-en">${e.en}</span></span>
-      </td>
-      <td class="tc-desc">${e.desc}</td>
-    </tr>`;
-  panel.style.display='block';
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-// ── Age Table (legacy, unused) ──────────────────────────────────────────────
-function buildAgeTable(L3,T3,R3,B3,TL3,TR3,BR3,BL3){
-  const anchors=[{age:'0',v:L3,lbl:'· დაბადება'},{age:'10',v:TL3,lbl:''},{age:'20',v:T3,lbl:''},{age:'30',v:TR3,lbl:''},{age:'40',v:R3,lbl:''},{age:'50',v:BR3,lbl:''},{age:'60',v:B3,lbl:''},{age:'70',v:BL3,lbl:''}];
-  const secs=[[L3,TL3],[TL3,T3],[T3,TR3],[TR3,R3],[R3,BR3],[BR3,B3],[B3,BL3],[BL3,L3]];
-  const starts=[1,11,21,31,41,51,61,71];
-  const secNames=['ბავშვობა','ყმაწვილობა','ახალგაზრდობა','სიმწიფე','სრული სიმწიფე','სიბრძნე','ოქროს ასაკი','დასრულება'];
-
-  function subEn(A,B){const d4=r22(A+B),d2=r22(A+d4),d1=r22(A+d2),d3=r22(d2+d4),d6=r22(d4+B),d5=r22(d4+d6),d7=r22(d6+B);return[d1,d2,d3,d4,d5,d6,d7];}
-  function ageLabel(s,i){
-    const f=n=>Number.isInteger(n)?String(n):n.toFixed(1).replace('.',',');
-    const steps=[[s,s+1.5],[s+1.5,s+2.5],[s+2.5,s+3],[s+4,s+4],[s+5,s+6.5],[s+6.5,s+7.5],[s+7.5,s+8]];
-    const[a,b]=steps[i]; return a===b?`${f(a)}`:`${f(a)}–${f(b)}`;
-  }
-
-  function badge(en){
-    return `<span class="e-badge" style="background:${en.color}">${en.name}<span class="e-en">${en.en}</span></span>`;
-  }
-
-  const tb=document.getElementById('age-table-body'); tb.innerHTML='';
-
-  for(let sec=0;sec<8;sec++){
-    const sh=document.createElement('tr');sh.className='sec-hdr';
-    sh.innerHTML=`<td colspan="4">${secNames[sec]} &nbsp;·&nbsp; ${starts[sec]}–${starts[sec]+9} წელი</td>`;
-    tb.appendChild(sh);
-
-    const a=anchors[sec], ae=getE(a.v);
-    const ar=document.createElement('tr'); ar.className='anchor';
-    ar.innerHTML=`
-      <td class="tc-age">${a.age} ${a.lbl}</td>
-      <td class="tc-num">${a.v}</td>
-      <td class="tc-arch">${badge(ae)}</td>
-      <td class="tc-desc">${ae.desc}</td>`;
-    tb.appendChild(ar);
-
-    const ens=subEn(secs[sec][0],secs[sec][1]);
-    for(let d=0;d<7;d++){
-      const en=ens[d], info=getE(en), isMid=d===3;
-      const al=ageLabel(starts[sec],d);
-      const tr=document.createElement('tr');
-      if(isMid)tr.className='mid';
-      tr.innerHTML=`
-        <td class="tc-age" style="color:${isMid?'#FFD700':'rgba(130,200,255,0.65)'};font-size:${isMid?'12px':'10.5px'};font-weight:${isMid?700:500}">${al}</td>
-        <td class="tc-num" style="font-size:${isMid?'18px':'14px'}">${en}</td>
-        <td class="tc-arch">${badge(info)}</td>
-        <td class="tc-desc" style="font-size:${isMid?'12.5px':'11.5px'};color:${isMid?'rgba(215,235,255,0.88)':'rgba(190,215,255,0.68)'}">${info.desc}</td>`;
-      tb.appendChild(tr);
-    }
-  }
 }
 
 function calculateCompat(){
@@ -480,34 +357,16 @@ function calculateCompat(){
   const L3=r22(v1.L3+v2.L3),T3=r22(v1.T3+v2.T3),R3=r22(v1.R3+v2.R3),B3=r22(v1.B3+v2.B3),Cv=r22(L3+T3+R3+B3);
   const TL3=r22(r22(v1.T3+v1.L3)+r22(v2.T3+v2.L3)),TR3=r22(r22(v1.T3+v1.R3)+r22(v2.T3+v2.R3)),BR3=r22(r22(v1.B3+v1.R3)+r22(v2.B3+v2.R3)),BL3=r22(r22(v1.B3+v1.L3)+r22(v2.B3+v2.L3));
   const RC1=r22(TL3+TR3+BR3+BL3),RC2=r22(RC1+Cv),B1=r22(Cv+B3),B2=r22(B1+B3),R1=r22(Cv+R3),R2=r22(R1+R3),L1=r22(Cv+L3),L2=r22(L1+L3),T1=r22(Cv+T3),T2=r22(T1+T3),G1=r22(L1+Cv),G2=r22(T1+Cv),W2=r22(B1+R1),W1=r22(B1+W2),W3=r22(R1+W2);
-  draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1:0,TL2:0,TR1:0,TR2:0,BR1:0,BR2:0,BL1:0,BL2:0,W1,W2,W3,showRC:false,m3Cv2:0,compat:true});
+  draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1:0,TL2:0,TR1:0,TR2:0,BR1:0,BR2:0,BL1:0,BL2:0,W1,W2,W3,showRC:false,m3Cv2:0,compat:true,age:null});
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
   {const ap=document.getElementById('age-row-panel');if(ap)ap.style.display='none';}
-  const mb=document.getElementById('matrix-boxes');if(mb)mb.style.display='none';
-  const arp=document.getElementById('age-row-panel');if(arp)arp.style.display='none';
+  {const mb=document.getElementById('matrix-boxes');if(mb)mb.style.display='none';}
 }
 
 function base(p){const L3=r22(p.dd),T3=r22(p.mm),R3=r22(p.yyyy),B3=r22(L3+T3+R3);return{L3,T3,R3,B3};}
 
-// ── Single-row age/energy reveal ──
-function showAgeRow(ageLabel, energy){
-  const panel=document.getElementById('age-row-panel');
-  const body=document.getElementById('age-row-body');
-  if(!panel||!body)return;
-  const e=getE(energy);
-  body.innerHTML=`
-    <tr class="anchor">
-      <td class="tc-age" style="font-size:13px;">${ageLabel} \u10ec.</td>
-      <td class="tc-num">${energy}</td>
-      <td class="tc-arch"><span class="e-badge" style="background:${e.color}">${e.name}<span class="e-en">${e.en}</span></span></td>
-      <td class="tc-desc">${e.desc}</td>
-    </tr>`;
-  panel.style.display='block';
-  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-// ── Draw ─────────────────────────────────────────────────────
+// ── Draw ──
 function draw(v){
   const svg=document.getElementById('diagram');svg.innerHTML='';
   const cx=600,cy=600,rc_r=60,r1_r=25,r2_r=40,r3_r=64,gap=180;
@@ -517,16 +376,16 @@ function draw(v){
   const outerR=d3+r3_r;
   function el(tag,attrs,txt){const e=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,vl]of Object.entries(attrs))e.setAttribute(k,vl);if(txt!==undefined)e.textContent=txt;svg.appendChild(e);return e;}
   function circ(x,y,r,fill,stroke,sw,lbl,darkFont){el('circle',{cx:x,cy:y,r,fill,stroke,'stroke-width':sw||1});if(lbl!==undefined&&lbl!==0&&lbl!==''){const fs=Math.max(20,Math.round(r*1.3));el('text',{x,y,'font-size':fs,'font-weight':700,fill:darkFont?'#1a0a00':'white','font-family':'Cinzel,serif','text-anchor':'middle','dominant-baseline':'central'},lbl);}}
-  function icon(x,y,type){const e=document.createElementNS('http://www.w3.org/2000/svg','text');e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size','16');e.setAttribute('text-anchor','middle');e.setAttribute('dominant-baseline','central');e.textContent=type==='heart'?'♥':'₾';e.setAttribute('fill',type==='heart'?'#ff6b8a':'#7ec850');e.setAttribute('transform',`rotate(-45,${x},${y})`);svg.appendChild(e);}
+  function icon(x,y,type){const e=document.createElementNS('http://www.w3.org/2000/svg','text');e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('font-size','16');e.setAttribute('text-anchor','middle');e.setAttribute('dominant-baseline','central');e.textContent=type==='heart'?'♥':'₾';e.setAttribute('fill',type==='heart'?'#ff6b8a':'#7ec850');e.setAttribute('transform','rotate(-45,'+x+','+y+')');svg.appendChild(e);}
   const dkFill='rgba(20,14,50,0.92)',dkStr='rgba(180,160,255,0.75)';
   const isCompat=v.compat===true,isM3=!!v.m3Cv2;
-  el('polygon',{points:`${cx},${cy-2*dd1} ${cx+2*dd1},${cy} ${cx},${cy+2*dd1} ${cx-2*dd1},${cy}`,fill:'none',stroke:'rgba(127,119,221,0.9)','stroke-width':'1.5'});
+  el('polygon',{points:cx+','+(cy-2*dd1)+' '+(cx+2*dd1)+','+cy+' '+cx+','+(cy+2*dd1)+' '+(cx-2*dd1)+','+cy,fill:'none',stroke:'rgba(127,119,221,0.9)','stroke-width':'1.5'});
   el('rect',{x:cx-d1,y:cy-d1,width:d1*2,height:d1*2,fill:'none',stroke:'rgba(220,200,255,0.9)','stroke-width':'1.5'});
   const lc='rgba(220,200,255,0.75)',xExt=d3+r3_r;
   function skipLine(x1,y1,x2,y2,gaps,col){let cur=x1===x2?(y1<y2?y1:y2):(x1<x2?x1:x2);const end=x1===x2?(y1<y2?y2:y1):(x1<x2?x2:x1);const isV=x1===x2;for(const g of gaps){if(cur<g.lo)el('line',{x1:isV?x1:cur,y1:isV?cur:y1,x2:isV?x1:g.lo,y2:isV?g.lo:y1,stroke:col,'stroke-width':'0.8'});cur=Math.max(cur,g.hi);}if(cur<end)el('line',{x1:isV?x1:cur,y1:isV?cur:y1,x2:isV?x1:end,y2:isV?end:y1,stroke:col,'stroke-width':'0.8'});}
-  const hGaps=[cx-d3-r3_r,cx-d2-r2_r,cx-d1-r1_r,cx-rc_r,cx+rc_r,cx+d1+r1_r,cx+d2+r2_r,cx+d3+r3_r].reduce((a,v,i,ar)=>i%2===0?[...a,{lo:ar[i],hi:ar[i+1]}]:a,[]);
+  const hGaps=[cx-d3-r3_r,cx-d2-r2_r,cx-d1-r1_r,cx-rc_r,cx+rc_r,cx+d1+r1_r,cx+d2+r2_r,cx+d3+r3_r].reduce((a,vv,i,ar)=>i%2===0?[...a,{lo:ar[i],hi:ar[i+1]}]:a,[]);
   skipLine(cx-xExt,cy,cx+xExt,cy,hGaps,lc);
-  const vGaps=[cy-d3-r3_r,cy-d2-r2_r,cy-d1-r1_r,cy-rc_r,cy+rc_r,cy+d1+r1_r,cy+d2+r2_r,cy+d3+r3_r].reduce((a,v,i,ar)=>i%2===0?[...a,{lo:ar[i],hi:ar[i+1]}]:a,[]);
+  const vGaps=[cy-d3-r3_r,cy-d2-r2_r,cy-d1-r1_r,cy-rc_r,cy+rc_r,cy+d1+r1_r,cy+d2+r2_r,cy+d3+r3_r].reduce((a,vv,i,ar)=>i%2===0?[...a,{lo:ar[i],hi:ar[i+1]}]:a,[]);
   skipLine(cx,cy-xExt,cx,cy+xExt,vGaps,lc);
   el('line',{x1:cx,y1:cy+d1,x2:cx+d1,y2:cy,stroke:lc,'stroke-width':'0.8'});
   el('line',{x1:cx-d1+r1_r,y1:cy,x2:cx+d1-r1_r,y2:cy,stroke:lc,'stroke-width':'0.8'});
@@ -555,19 +414,19 @@ function draw(v){
   const W1x=Math.round(Bx+0.25*(Rx-Bx)),W1y=Math.round(By+0.25*(Ry-By)),W2x=Math.round(Bx+0.5*(Rx-Bx)),W2y=Math.round(By+0.5*(Ry-By)),W3x=Math.round(Bx+0.75*(Rx-Bx)),W3y=Math.round(By+0.75*(Ry-By));
   dc(W1x,W1y,r1_r,v.W1);dc(W2x,W2y,r1_r,v.W2);dc(W3x,W3y,r1_r,v.W3);
   icon(W1x,W1y-r1_r-16,'heart');icon(W3x,W3y-r1_r-16,'gel');
-  const aAngles=[180,225,270,315,0,45,90,135],sEnAnch=[[v.L3,v.TL3],[v.TL3,v.T3],[v.T3,v.TR3],[v.TR3,v.R3],[v.R3,v.BR3],[v.BR3,v.B3],[v.B3,v.BL3],[v.BL3,v.L3]],sStarts=[1,11,21,31,41,51,61,71];
-  function sEn(A,B){const d4=r22(A+B),d2=r22(A+d4),d1b=r22(A+d2),d3b=r22(d2+d4),d6=r22(d4+B),d5=r22(d4+d6),d7=r22(d6+B);return[d1b,d2,d3b,d4,d5,d6,d7];}
-  function sAg(s){const f=n=>n===Math.floor(n)?String(n):String(n.toFixed(1)).replace('.',',');return[`${f(s)}-${f(s+1.5)}`,`${f(s+1.5)}-${f(s+2.5)}`,`${f(s+2.5)}-${f(s+3)}`,`${f(s+4)}`,`${f(s+5)}-${f(s+6.5)}`,`${f(s+6.5)}-${f(s+7.5)}`,`${f(s+7.5)}-${f(s+8)}`];}
-  // anchor ages for each section start (the big corner circles): 0,10,20,30,40,50,60,70
+
+  // ── AGE POINTS (dots only; decade anchors dots-only, sub-points labeled) ──
+  const agePoints=[];
   const anchorAges=[0,10,20,30,40,50,60,70];
-  // collect all age points for glow + click
-  const agePoints=[]; // {ageNum, energy, px, py, rad, isMid}
+  const aAngles=[180,225,270,315,0,45,90,135];
+  const sEnAnch=[[v.L3,v.TL3],[v.TL3,v.T3],[v.T3,v.TR3],[v.TR3,v.R3],[v.R3,v.BR3],[v.BR3,v.B3],[v.B3,v.BL3],[v.BL3,v.L3]];
+  const sStarts=[1,11,21,31,41,51,61,71];
+  function sEn(A,B){const d4=r22(A+B),d2=r22(A+d4),d1b=r22(A+d2),d3b=r22(d2+d4),d6=r22(d4+B),d5=r22(d4+d6),d7=r22(d6+B);return[d1b,d2,d3b,d4,d5,d6,d7];}
+  function sAg(s){const f=n=>n===Math.floor(n)?String(n):String(n.toFixed(1)).replace('.',',');return[f(s)+'-'+f(s+1.5),f(s+1.5)+'-'+f(s+2.5),f(s+2.5)+'-'+f(s+3),f(s+4),f(s+5)+'-'+f(s+6.5),f(s+6.5)+'-'+f(s+7.5),f(s+7.5)+'-'+f(s+8)];}
+  const subMidAges=d=>[0.75,2,2.75,4,5.75,7,7.75][d];
   for(let sec=0;sec<8;sec++){
     const sa=aAngles[sec],ea=aAngles[(sec+1)%8];let diff=ea-sa;if(diff<=0)diff+=360;
     const ages=sAg(sStarts[sec]),ens=sEn(sEnAnch[sec][0],sEnAnch[sec][1]);
-    // sub-period mid-ages (numeric) for matching to person's age:
-    const baseAge=sStarts[sec]-1; // section starts at this age
-    const subMidAges=[0.75,2,2.75,4,5.75,7,7.75].map(o=>baseAge+o);
     for(let d=0;d<7;d++){
       const t=(d+1)/8,ang=sa+diff*t,rad=ang*Math.PI/180;
       const px=Math.round(cx+outerR*Math.cos(rad)),py=Math.round(cy+outerR*Math.sin(rad));
@@ -579,109 +438,81 @@ function draw(v){
       el('text',{x:ax,y:ay,'font-size':isMid?8:7,'font-weight':isMid?700:400,fill:isMid?'#FFD700':'rgba(200,180,255,0.85)','text-anchor':'middle','dominant-baseline':'central','font-family':'sans-serif'},ages[d]);
       // energy number outside ring
       if(!isCompat){const out=outerR+38,ex=Math.round(cx+out*Math.cos(rad)),ey=Math.round(cy+out*Math.sin(rad));el('text',{x:ex,y:ey,'font-size':isMid?17:15,'font-weight':isMid?700:600,fill:isMid?'#FFD700':'rgba(167,139,250,0.95)','text-anchor':'middle','dominant-baseline':'central','font-family':'Cinzel,serif'},ens[d]);}
-      agePoints.push({ageNum:subMidAges[d], ageLabel:ages[d], energy:ens[d], px, py, rad, isMid, anchor:false});
+      const subAge=sStarts[sec]-1+subMidAges(d);
+      agePoints.push({ageNum:subAge,ageLabel:ages[d],energy:ens[d],px,py,rad,isMid});
     }
   }
-  // anchor (corner) age points — placed on the outer ring, visible gold dots, same size as sub-points
-  const anchorAngles=[180,225,270,315,0,45,90,135]; // L3,TL3,T3,TR3,R3,BR3,B3,BL3 directions
+  // decade anchor dots (dots only, pushed clear of big circles)
   const cornerEnergy=[v.L3,v.TL3,v.T3,v.TR3,v.R3,v.BR3,v.B3,v.BL3];
   for(let i=0;i<8;i++){
-    const rad=anchorAngles[i]*Math.PI/180;
-    const aR2=outerR+24; // push decade anchor dots clear of the big circles for easy clicking
+    const rad=aAngles[i]*Math.PI/180;
+    const aR2=outerR+24;
     const px=Math.round(cx+aR2*Math.cos(rad)),py=Math.round(cy+aR2*Math.sin(rad));
-    // visible gold dot ONLY (no label on decade anchors 10,20,30...)
     el('circle',{cx:px,cy:py,r:7,fill:'#FFD700',stroke:'#a87f00','stroke-width':1});
-    agePoints.push({ageNum:anchorAges[i], ageLabel:String(anchorAges[i]), energy:cornerEnergy[i], px, py, rad, isMid:false, anchor:true});
+    agePoints.push({ageNum:anchorAges[i],ageLabel:String(anchorAges[i]),energy:cornerEnergy[i],px,py,rad,isMid:false,anchor:true});
   }
 
-  // ── GLOW the age point nearest to person's current age ──
+  // ── GLOW the age point nearest the person's current age + auto-reveal row ──
   if(!isCompat && v.age!=null && v.age>=0){
     let best=null,bestDiff=1e9;
-    for(const ap of agePoints){
-      const dd=Math.abs(ap.ageNum-v.age);
-      if(dd<bestDiff){bestDiff=dd;best=ap;}
-    }
+    for(const ap of agePoints){const dd=Math.abs(ap.ageNum-v.age);if(dd<bestDiff){bestDiff=dd;best=ap;}}
     if(best){
-      // glowing halo around that age point
-      const glow=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      glow.setAttribute('cx',best.px);glow.setAttribute('cy',best.py);
-      glow.setAttribute('r',16);
-      glow.setAttribute('fill','none');
-      glow.setAttribute('stroke','#FFD700');
-      glow.setAttribute('stroke-width','3');
-      glow.setAttribute('opacity','0.9');
-      const an=document.createElementNS('http://www.w3.org/2000/svg','animate');
-      an.setAttribute('attributeName','r');an.setAttribute('values','13;19;13');an.setAttribute('dur','1.8s');an.setAttribute('repeatCount','indefinite');
-      glow.appendChild(an);
-      const an2=document.createElementNS('http://www.w3.org/2000/svg','animate');
-      an2.setAttribute('attributeName','opacity');an2.setAttribute('values','0.9;0.35;0.9');an2.setAttribute('dur','1.8s');an2.setAttribute('repeatCount','indefinite');
-      glow.appendChild(an2);
-      svg.appendChild(glow);
-      // small "თქვენ" marker
-      const yr=document.createElementNS('http://www.w3.org/2000/svg','text');
-      const lblOut=outerR+62;const lr=best.rad;
-      yr.setAttribute('x',Math.round(cx+lblOut*Math.cos(lr)));
-      yr.setAttribute('y',Math.round(cy+lblOut*Math.sin(lr)));
-      yr.setAttribute('font-size','11');yr.setAttribute('font-weight','700');
-      yr.setAttribute('fill','#FFD700');yr.setAttribute('text-anchor','middle');yr.setAttribute('dominant-baseline','central');
-      yr.setAttribute('font-family','Noto Sans Georgian,sans-serif');
-      yr.textContent=v.age+' წ.';
-      svg.appendChild(yr);
-      // auto-reveal the current-age energy row under the diagram
-      if(typeof showAgeRow==='function') showAgeRow(best.ageLabel, best.energy);
+      const halo=document.createElementNS('http://www.w3.org/2000/svg','circle');
+      halo.setAttribute('cx',best.px);halo.setAttribute('cy',best.py);halo.setAttribute('r',16);
+      halo.setAttribute('fill','none');halo.setAttribute('stroke','#FFD700');halo.setAttribute('stroke-width','3');halo.setAttribute('opacity','0.9');
+      const a1=document.createElementNS('http://www.w3.org/2000/svg','animate');a1.setAttribute('attributeName','r');a1.setAttribute('values','13;19;13');a1.setAttribute('dur','1.8s');a1.setAttribute('repeatCount','indefinite');halo.appendChild(a1);
+      const a2=document.createElementNS('http://www.w3.org/2000/svg','animate');a2.setAttribute('attributeName','opacity');a2.setAttribute('values','0.9;0.35;0.9');a2.setAttribute('dur','1.8s');a2.setAttribute('repeatCount','indefinite');halo.appendChild(a2);
+      svg.appendChild(halo);
+      const out2=outerR+62,ex2=Math.round(cx+out2*Math.cos(best.rad)),ey2=Math.round(cy+out2*Math.sin(best.rad));
+      el('text',{x:ex2,y:ey2,'font-size':14,'font-weight':700,fill:'#FFD700','text-anchor':'middle','dominant-baseline':'central','font-family':'Cinzel,serif'},v.age+' წ.');
+      if(typeof showAgeRow==='function') showAgeRow(best.ageLabel,best.energy);
     }
   }
 
-
-  // ▼▼ CLICKABLE CIRCLES → open matching interpretation box (methods 1-3 only) ▼▼
+  // ── CLICKABLE CIRCLES → open matching interpretation box (methods 1-3) ──
   if(!isCompat && typeof openBoxById==='function'){
-    // map: [x, y, hit-radius, box-id]
-    const CIRCLE_BOXES = [
-      [cx,            cy,            rc_r,  'comfort'], // yellow center → comfort zone
-      [cx-d3,         cy,            r3_r,  'l3'],     // L3 visit card / persona
-      [cx,            cy-d3,         r3_r,  't3'],     // T3 talents
-      [cx+d3,         cy,            r3_r,  'r3'],     // R3 material karma combo
-      [cx,            cy+d3,         r3_r,  'b3'],     // B3 karmic tail combo
-      [cx-d2,         cy,            r2_r,  'l2'],     // L2 childhood (same as persona pos; persona wins—use L2 below)
-      [cx,            cy-d2,         r2_r,  't2'],     // T2 unique vision
-      [cx-d1,         cy,            r1_r,  'l1'],     // L1 parents/children
-      [cx,            cy-d1,         r1_r,  't1'],     // T1 transmission gift
-      [cx-rc_r-gap/2, cy,            r1_r,  'g1'],     // green-left physical desires
-      [cx,            cy-rc_r-gap/2, r1_r,  'g2'],     // green-top social desires
-      [cx,            cy+d1,         r1_r,  'b1'],     // B1 how we enter relationships
-      [cx+d1,         cy,            r1_r,  'r1'],     // R1 work environment
-      [cx-dd3,        cy-dd3,        r3_r,  'tl'],     // TL3 male ancestors talents
-      [cx+dd3,        cy-dd3,        r3_r,  'tr'],     // TR3 female ancestors talents
-      [cx+dd3,        cy+dd3,        r3_r,  'br'],     // BR3 male ancestors karma
-      [cx-dd3,        cy+dd3,        r3_r,  'bl'],     // BL3 female ancestors karma
-      [W1x,           W1y,           r1_r,  'love'],   // ♥ heart circle → relationships line
-      [W3x,           W3y,           r1_r,  'money'],  // ₾ money circle → money line
+    const CIRCLE_BOXES=[
+      [cx,cy,rc_r,'comfort'],
+      [cx-d3,cy,r3_r,'l3'],
+      [cx,cy-d3,r3_r,'t3'],
+      [cx+d3,cy,r3_r,'r3'],
+      [cx,cy+d3,r3_r,'b3'],
+      [cx-d2,cy,r2_r,'l2'],
+      [cx,cy-d2,r2_r,'t2'],
+      [cx-d1,cy,r1_r,'l1'],
+      [cx,cy-d1,r1_r,'t1'],
+      [cx-rc_r-gap/2,cy,r1_r,'g1'],
+      [cx,cy-rc_r-gap/2,r1_r,'g2'],
+      [cx,cy+d1,r1_r,'b1'],
+      [cx+d1,cy,r1_r,'r1'],
+      [cx-dd3,cy-dd3,r3_r,'tl'],
+      [cx+dd3,cy-dd3,r3_r,'tr'],
+      [cx+dd3,cy+dd3,r3_r,'br'],
+      [cx-dd3,cy+dd3,r3_r,'bl'],
+      [W1x,W1y,r1_r,'love'],
+      [W3x,W3y,r1_r,'money'],
     ];
-    for(const [hx,hy,hr,bid] of CIRCLE_BOXES){
+    for(const[hx,hy,hr,bid] of CIRCLE_BOXES){
       const hit=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      hit.setAttribute('cx',hx); hit.setAttribute('cy',hy);
-      hit.setAttribute('r',hr+4);
-      hit.setAttribute('fill','rgba(0,0,0,0.01)');
-      hit.style.cursor='pointer';
+      hit.setAttribute('cx',hx);hit.setAttribute('cy',hy);hit.setAttribute('r',hr+4);
+      hit.setAttribute('fill','rgba(0,0,0,0.01)');hit.style.cursor='pointer';
       hit.addEventListener('click',()=>openBoxById(bid));
       svg.appendChild(hit);
     }
   }
-  // ▲▲ END CIRCLE CLICKS ▲▲
 
-  // ── CLICKABLE age points → reveal single energy row ──
-  if(!isCompat && typeof showAgeRow==='function'){
+  // ── CLICKABLE age points → reveal single energy row (appended last = on top) ──
+  if(!isCompat){
     for(const ap of agePoints){
       const hit=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      hit.setAttribute('cx',ap.px);hit.setAttribute('cy',ap.py);
-      hit.setAttribute('r',12);
-      hit.setAttribute('fill','rgba(0,0,0,0.01)');
-      hit.style.cursor='pointer';
-      hit.addEventListener('click',()=>showAgeRow(ap.ageLabel, ap.energy));
+      hit.setAttribute('cx',ap.px);hit.setAttribute('cy',ap.py);hit.setAttribute('r',14);
+      hit.setAttribute('fill','rgba(0,0,0,0.01)');hit.style.cursor='pointer';
+      hit.addEventListener('click',()=>showAgeRow(ap.ageLabel,ap.energy));
       svg.appendChild(hit);
     }
   }
 }
+
 </script>
 </body>
 </html>
