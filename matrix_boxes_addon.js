@@ -26,17 +26,19 @@
 
 const BOXES = [
   /* ───── COMBOS (three numbers) ───── */
-  { id:'persona',        title:'პერსონა',                          keys:[],                 color:'#a78bfa', todo:true },
+  { id:'persona',        title:'პერსონა',                          keys:['L3','L2','L1'],   color:'#a78bfa' },
   { id:'karmic_tail',    title:'კარმული კუდი',                     keys:['B3','B2','B1'],   color:'#8e44ad' },
-  { id:'material_karma', title:'მატერიალური კარმა',                keys:[],                 color:'#d35400', todo:true },
-  { id:'sex',            title:'სექსუალურობა',                     keys:['G1','Cv','RC1'],  color:'#d4a017', m1only:true },
+  { id:'material_karma', title:'მატერიალური კარმა',                keys:['R3','R2','R1'],   color:'#d35400' },
+  { id:'sex',            title:'სექსუალურობა',                     keys:['Cv','RC1','RC2'], color:'#d4a017', m1only:true },
   { id:'talent_zone',    title:'ტალანტების ზონა',                  keys:['T3','T2','T1'],   color:'#2471a3', display:'sum' },
   { id:'tl',             title:'ნიჭები კაცი წინაპრების ხაზით',     keys:['TL3','TL2','TL1'], color:'#d28aff' },
   { id:'tr',             title:'ნიჭები ქალი წინაპრების ხაზით',     keys:['TR3','TR2','TR1'], color:'#ff8c8c' },
   { id:'br',             title:'კაცი წინაპრების კარმა',            keys:['BR3','BR2','BR1'], color:'#b06bd0' },
   { id:'bl',             title:'ქალი წინაპრების კარმა',            keys:['BL3','BL2','BL1'], color:'#e06b6b' },
   { id:'love',           title:'პირადი ურთიერთობების ხაზი',       keys:['B1','W1','W2'],   color:'#ff6b8a', flag:true },
-  { id:'money',          title:'ფულის ხაზი',                       keys:['W2','W3','R1'],   color:'#7ec850', flag:true },
+  { id:'money',          title:'ფულის ხაზი',                       keys:['R1','W3','S6'],   color:'#7ec850' },
+  { id:'heart',          title:'როგორი პარტნიორი შეგვეფერება',     keys:['W1'],             color:'#ff6b8a' },
+  { id:'gel',            title:'როგორი სამსახური შეგვეფერება',      keys:['W3'],             color:'#7ec850' },
 
   /* ───── SINGLE NUMBERS ───── */
   { id:'b3',      title:'მთავარი ცხოვრებისეული გაკვეთილი',             keys:['B3'], color:'#e24b4a' },
