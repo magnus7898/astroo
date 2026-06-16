@@ -494,6 +494,8 @@ function draw(v){
       [cx-dd3,cy+dd3,r3_r,'bl'],
       [W1x,W1y,r1_r,'love'],
       [W3x,W3y,r1_r,'money'],
+      [W1x,W1y-r1_r-16,13,'heart'],
+      [W3x,W3y-r1_r-16,13,'gel'],
     ];
     for(const[hx,hy,hr,bid] of CIRCLE_BOXES){
       const hit=document.createElementNS('http://www.w3.org/2000/svg','circle');
