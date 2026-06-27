@@ -243,28 +243,7 @@ input::placeholder{color:rgba(155,168,184,.35)}
 
   <div class="moon-card">
     <div class="moon-emoji-big" id="moonEmoji">🌕</div>
-    <div class="moon-age-num" id="moonAge">—</div>
-    <div class="moon-age-unit">დღე ახალმთვარიდან</div>
     <div class="moon-phase-name" id="moonPhase">—</div>
-    <div class="moon-bar-wrap">
-      <div class="moon-bar-labels"><span>ახალმთვარე</span><span>სავსემთვარე</span><span>ახალმთვარე</span></div>
-      <div class="moon-bar-bg"><div class="moon-bar-fill" id="barFill" style="width:0%"></div></div>
-    </div>
-  </div>
-
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-lbl">განათება</div>
-      <div class="stat-val" id="statIllum">—<span class="stat-unit">%</span></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-lbl">ელონგაცია</div>
-      <div class="stat-val" id="statElong">—<span class="stat-unit">°</span></div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-lbl">UTC სხვაობა</div>
-      <div class="stat-val" id="statOffset" style="font-size:16px">—</div>
-    </div>
   </div>
 
   <div class="sec-title">მთვარის დღე</div>
@@ -274,16 +253,9 @@ input::placeholder{color:rgba(155,168,184,.35)}
     <div class="lunar-day-info">
       <div class="lunar-day-label">მთვარის დღე · Lunar Day</div>
       <div class="lunar-day-phase" id="lunarDayPhase">—</div>
-      <!-- ZET-style tithi: number + percent complete (added) -->
       <div class="lunar-day-zet" id="lunarDayZet"><span class="glyph">☽</span><span id="lunarDayZetTxt">—</span></div>
       <div class="lunar-day-progress"><div class="lunar-day-progress-fill" id="lunarDayProgFill"></div></div>
-      <div class="lunar-next" id="lunarNext">—</div>
     </div>
-  </div>
-
-  <div class="dst-note">
-    <strong>სასაათო სარტყელი და DST:</strong> ფიქსირებული UTC±N არ ითვალისწინებს ზამთარ-ზაფხულის ისტორიას.
-    ქალაქის სახელი IANA მონაცემთა ბაზის საფუძველზე განსაზღვრავს ზუსტ UTC-ს ნებისმიერი თარიღისთვის.
   </div>
 </div>
 
@@ -380,14 +352,7 @@ async function calculate() {
     if (d.error) { alert('შეცდომა: ' + d.error); return; }
 
     document.getElementById('moonEmoji').textContent   = d.emoji;
-    document.getElementById('moonAge').textContent     = d.age_days;
     document.getElementById('moonPhase').textContent   = PHASES_KA[d.phase] || d.phase;
-    document.getElementById('statIllum').innerHTML     = `${d.illumination}<span class="stat-unit">%</span>`;
-    document.getElementById('statElong').innerHTML     = `${d.elongation}<span class="stat-unit">°</span>`;
-    document.getElementById('statOffset').textContent  = d.input?.utc_offset || tz;
-
-    const pct = ((d.age_days / 29.53059) * 100).toFixed(1);
-    document.getElementById('barFill').style.width = pct + '%';
 
     // Lunar day — ZET convention = tithi (elongation / 12°). Fallback to synodic.
     const ld = (d.tithi != null) ? d.tithi : d.lunar_day;
@@ -400,13 +365,6 @@ async function calculate() {
       document.getElementById('lunarDayProgFill').style.width = d.tithi_pct + '%';
     } else {
       document.getElementById('lunarDayZet').style.display = 'none';
-    }
-
-    if (d.hours_to_next_nm !== undefined) {
-      const h = Math.floor(d.hours_to_next_nm);
-      const m = Math.round((d.hours_to_next_nm - h) * 60);
-      document.getElementById('lunarNext').textContent =
-        `შემდეგი ახალმთვარე: ${h} სთ ${m} წთ-ში`;
     }
 
     // UTC bar
