@@ -308,10 +308,24 @@ function m3Preview(){
   document.getElementById('m3-preview').innerHTML=v.map(([l,n])=>'<span>'+l+': <b style="color:white">'+(n||'-')+'</b></span>').join(' · ');
 }
 
+function daysInMonth(mm,yyyy){
+  const dim=[31,(yyyy%4===0&&(yyyy%100!==0||yyyy%400===0))?29:28,31,30,31,30,31,31,30,31,30,31];
+  return dim[mm-1];
+}
+function validateDate(dd,mm,yyyy){
+  if(!Number.isFinite(yyyy)||yyyy<1000||yyyy>2100) return 'წელი უნდა იყოს 1000–2100';
+  if(!Number.isFinite(mm)||mm<1||mm>12)            return 'თვე უნდა იყოს 1–12';
+  const dim=daysInMonth(mm,yyyy);
+  if(!Number.isFinite(dd)||dd<1||dd>dim)           return 'დღე უნდა იყოს 1–'+dim+' ('+mm+' თვისთვის)';
+  return null;
+}
+
 function calculate(){
-  const dd=parseInt(document.querySelector('[name=dd]').value)||1;
-  const mm=parseInt(document.querySelector('[name=mm]').value)||1;
-  const yyyy=parseInt(document.querySelector('[name=yyyy]').value)||2000;
+  const dd=parseInt(document.querySelector('[name=dd]').value,10);
+  const mm=parseInt(document.querySelector('[name=mm]').value,10);
+  const yyyy=parseInt(document.querySelector('[name=yyyy]').value,10);
+  const _err=validateDate(dd,mm,yyyy);
+  if(_err){alert('თარიღი არასწორია: '+_err);return;}
   const L3=r22(dd),T3=r22(mm),R3=r22(yyyy);
   const B3=r22(L3+T3+R3),Cv=r22(L3+T3+R3+B3);
   // person's current age
@@ -355,6 +369,8 @@ function calculate(){
 function calculateCompat(){
   const g=id=>parseInt(document.getElementById(id).value)||1;
   const p1={dd:g('c1-dd'),mm:g('c1-mm'),yyyy:g('c1-yyyy')},p2={dd:g('c2-dd'),mm:g('c2-mm'),yyyy:g('c2-yyyy')};
+  const e1=validateDate(p1.dd,p1.mm,p1.yyyy); if(e1){alert('პირველი პიროვნების თარიღი არასწორია: '+e1);return;}
+  const e2=validateDate(p2.dd,p2.mm,p2.yyyy); if(e2){alert('მეორე პიროვნების თარიღი არასწორია: '+e2);return;}
   const v1=base(p1),v2=base(p2);
   const cv1=r22(v1.L3+v1.T3+v1.R3+v1.B3),cv2=r22(v2.L3+v2.T3+v2.R3+v2.B3);
   const L3=r22(v1.L3+v2.L3),T3=r22(v1.T3+v2.T3),R3=r22(v1.R3+v2.R3),B3=r22(v1.B3+v2.B3),Cv=r22(cv1+cv2);
@@ -455,10 +471,18 @@ function draw(v){
     agePoints.push({ageNum:anchorAges[i],ageLabel:String(anchorAges[i]),energy:cornerEnergy[i],px,py,rad,isMid:false,anchor:true});
   }
 
-  // ── GLOW the age point nearest the person's current age + auto-reveal row ──
+  // ── GLOW the age point for the person's CURRENT age interval + auto-reveal ──
+  // Each point owns [its own age .. the next point's age); ages over 80 recycle.
   if(!isCompat && v.age!=null && v.age>=0){
-    let best=null,bestDiff=1e9;
-    for(const ap of agePoints){const dd=Math.abs(ap.ageNum-v.age);if(dd<bestDiff){bestDiff=dd;best=ap;}}
+    let a=v.age%80; if(a<0)a+=80;
+    const loOf=ap=>parseFloat(String(ap.ageLabel).split('-')[0].replace(',','.'));
+    const pts=agePoints.slice().sort((p,q)=>loOf(p)-loOf(q));
+    let best=null;
+    for(let i=0;i<pts.length;i++){
+      const start=loOf(pts[i]), end=(i+1<pts.length)?loOf(pts[i+1]):80;
+      if(a>=start && a<end){best=pts[i];break;}
+    }
+    if(!best) best=pts[pts.length-1];
     if(best){
       const halo=document.createElementNS('http://www.w3.org/2000/svg','circle');
       halo.setAttribute('cx',best.px);halo.setAttribute('cy',best.py);halo.setAttribute('r',16);
