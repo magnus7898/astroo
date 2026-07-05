@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ბედის ბარათები · Destiny Cards</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&family=Cinzel:wght@300;400;600&family=IM+Fell+English:ital@0;1&family=Noto+Sans+Georgian:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#04030a;--gold:#c9a84c;--gold-l:#f0d080;--gold-d:#8a6a20;
+  --purple:#a78bfa;--txt:#e0d8ff;--dim:rgba(155,168,184,.6);
+  --red:#e05252;--black-suit:#c8d0e8;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--void);color:var(--txt);font-family:'Noto Sans Georgian',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  padding:0 0 80px;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:
+  radial-gradient(1px 1px at 8% 12%,rgba(255,255,255,.55) 0,transparent 100%),
+  radial-gradient(1px 1px at 23% 35%,rgba(255,255,255,.35) 0,transparent 100%),
+  radial-gradient(1px 1px at 41% 8%,rgba(255,255,255,.45) 0,transparent 100%),
+  radial-gradient(1px 1px at 77% 13%,rgba(255,255,255,.5) 0,transparent 100%),
+  radial-gradient(1px 1px at 60% 62%,rgba(255,255,255,.3) 0,transparent 100%),
+  radial-gradient(1.5px 1.5px at 34% 51%,rgba(167,139,250,.25) 0,transparent 100%),
+  radial-gradient(1.5px 1.5px at 66% 44%,rgba(201,168,76,.18) 0,transparent 100%);}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:
+  radial-gradient(ellipse 600px 400px at 20% 20%,rgba(100,40,200,.08) 0,transparent 70%),
+  radial-gradient(ellipse 500px 500px at 80% 70%,rgba(40,80,200,.06) 0,transparent 70%);}
+
+.hero{position:relative;z-index:1;text-align:center;padding:48px 24px 28px;width:100%}
+.hero-eyebrow{font-size:9px;letter-spacing:7px;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:12px;font-family:'Cinzel',serif}
+.hero-title{font-family:'Cinzel Decorative',serif;font-size:clamp(20px,3.6vw,36px);font-weight:400;letter-spacing:3px;
+  background:linear-gradient(160deg,#f5e8ba 0%,var(--gold) 35%,#9a7028 60%,#e8d5a0 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 0 28px rgba(201,168,76,.22));}
+.hero-sub{font-family:'IM Fell English',serif;font-style:italic;font-size:12px;color:var(--dim);margin-top:8px}
+.hero-divider{display:flex;align-items:center;gap:14px;margin:18px auto 0;max-width:300px}
+.hero-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.35),transparent)}
+.hero-gem{width:5px;height:5px;background:var(--gold);transform:rotate(45deg);opacity:.5;flex-shrink:0}
+
+.form-card{position:relative;z-index:1;background:rgba(8,6,20,.75);border:1px solid rgba(45,31,110,.6);
+  border-radius:16px;padding:24px;width:100%;max-width:480px;margin:14px auto 24px;backdrop-filter:blur(12px);
+  box-shadow:0 8px 40px rgba(0,0,0,.5);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);opacity:.7;font-family:'Cinzel',serif}
+input{background:rgba(10,8,30,.7);border:1px solid rgba(61,42,138,.6);border-radius:8px;
+  color:var(--txt);padding:9px 12px;font-size:13px;font-family:'Noto Sans Georgian',sans-serif;
+  width:100%;transition:border-color .2s;}
+input:focus{outline:none;border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.15)}
+.gen-btn{width:100%;background:linear-gradient(135deg,#6d28d9,#4c1d95);color:#fff;
+  border:1px solid rgba(124,58,237,.4);border-radius:10px;padding:13px;font-size:13px;
+  cursor:pointer;letter-spacing:2px;font-family:'Cinzel',serif;transition:all .3s;
+  box-shadow:0 4px 20px rgba(109,40,217,.3);}
+.gen-btn:hover{background:linear-gradient(135deg,#7c3aed,#5b21b6);transform:translateY(-1px)}
+.err{font-size:12px;color:#f87171;text-align:center;margin-top:8px;min-height:16px}
+
+#results{position:relative;z-index:1;width:100%;max-width:860px;padding:0 16px;display:none}
+.sec-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:4px;color:var(--gold);
+  text-transform:uppercase;text-align:center;margin:28px 0 16px;display:flex;align-items:center;gap:14px;}
+.sec-title::before,.sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.3),transparent)}
+
+/* ── PLAYING CARD ── */
+.pcard{display:inline-flex;flex-direction:column;justify-content:space-between;
+  width:120px;height:172px;border-radius:12px;padding:10px;position:relative;
+  background:linear-gradient(155deg,#f5f0e2 0%,#e8e0cc 55%,#ded2b8 100%);
+  border:1px solid rgba(201,168,76,.9);
+  box-shadow:0 0 0 3px rgba(4,3,10,1),0 0 0 4px rgba(201,168,76,.45),
+    0 10px 34px rgba(0,0,0,.65),0 0 24px rgba(201,168,76,.18);}
+.pcard.sm{width:74px;height:106px;border-radius:8px;padding:6px;}
+.pcard .corner{font-family:'Cinzel',serif;font-weight:600;line-height:1;text-align:center;}
+.pcard .corner .rk{font-size:22px}
+.pcard.sm .corner .rk{font-size:14px}
+.pcard .corner .st{font-size:18px}
+.pcard.sm .corner .st{font-size:12px}
+.pcard .corner.bot{align-self:flex-end;transform:rotate(180deg)}
+.pcard .big-suit{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:52px;opacity:.9;line-height:1}
+.pcard.sm .big-suit{font-size:30px}
+.pcard.red{color:#b3202a}
+.pcard.blk{color:#1a1a2e}
+.pcard.joker{color:#6d28d9}
+.pcard.joker .big-suit{font-size:40px}
+
+.birth-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
+.card-name{font-family:'Cinzel',serif;font-size:15px;letter-spacing:2px;color:var(--gold-l);text-align:center}
+.card-sub{font-size:11px;color:var(--dim);text-align:center;line-height:1.7}
+.zodiac-chip{display:inline-block;background:rgba(45,31,110,.5);border:1px solid rgba(100,70,200,.4);
+  border-radius:14px;padding:4px 14px;font-size:11px;color:var(--purple);font-family:'Cinzel',serif;letter-spacing:1px;margin:2px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.data-card{background:rgba(8,6,20,.75);border:1px solid rgba(45,31,110,.5);border-radius:12px;overflow:hidden;}
+.data-card-title{background:rgba(167,139,250,.07);padding:9px 14px;font-family:'Cinzel',serif;font-size:10px;
+  letter-spacing:3px;color:var(--purple);text-transform:uppercase;border-bottom:1px solid rgba(45,31,110,.5);}
+.dc-body{padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;justify-content:center}
+.mini-slot{display:flex;flex-direction:column;align-items:center;gap:6px}
+.mini-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.75}
+.mini-dates{font-size:9px;color:var(--dim)}
+
+.pending{padding:18px 16px;text-align:center;font-size:11px;color:var(--dim);line-height:1.8}
+.pending b{color:var(--gold-l);font-weight:500}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+td{padding:6px 14px;border-bottom:1px solid rgba(15,13,40,.8)}
+tr:last-child td{border-bottom:none}
+td.k{color:var(--dim);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-family:'Cinzel',serif;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="hero">
+  <svg width="48" height="48" viewBox="0 0 56 56" fill="none" style="margin:0 auto 16px;display:block;opacity:.7">
+    <circle cx="28" cy="28" r="26.5" stroke="rgba(201,168,76,.25)" stroke-width=".5"/>
+    <circle cx="28" cy="28" r="17" stroke="rgba(201,168,76,.18)" stroke-width=".5"/>
+    <rect x="19" y="14" width="18" height="28" rx="2.5" stroke="rgba(201,168,76,.4)" stroke-width=".6" fill="none" transform="rotate(-8 28 28)"/>
+    <rect x="19" y="14" width="18" height="28" rx="2.5" stroke="rgba(201,168,76,.32)" stroke-width=".6" fill="none" transform="rotate(8 28 28)"/>
+    <circle cx="28" cy="28" r="2" fill="rgba(201,168,76,.7)"/>
+  </svg>
+  <div class="hero-eyebrow">უძველესთა ორდენი · 52 ბარათი · კვადრაცია</div>
+  <h1 class="hero-title">ბედის ბარათები</h1>
+  <p class="hero-sub">Destiny Cards · The Order of the Ancients · Robert Camp System</p>
+  <div class="hero-divider"><div class="hero-line"></div><div class="hero-gem"></div><div class="hero-line"></div></div>
+</div>
+
+<div class="form-card">
+  <div class="form-grid">
+    <div class="field"><label>დღე</label><input type="number" id="day" value="30" min="1" max="31"></div>
+    <div class="field"><label>თვე</label><input type="number" id="month" value="3" min="1" max="12"></div>
+    <div class="field"><label>წელი</label><input type="number" id="year" value="1990" min="1" max="3000"></div>
+  </div>
+  <button class="gen-btn" onclick="generate()">✦ ბარათების გამოთვლა ✦</button>
+  <div class="err" id="err"></div>
+</div>
+
+<div id="results">
+  <div class="sec-title">დაბადების ბარათი · Birth Card</div>
+  <div class="birth-wrap">
+    <div id="birth-card"></div>
+    <div class="card-name" id="birth-name"></div>
+    <div class="card-sub" id="birth-sub"></div>
+    <div id="zodiac-row" style="text-align:center"></div>
+  </div>
+
+  <div class="sec-title">მმართველი ბარათი · კარმა · Planetary Ruling &amp; Karma</div>
+  <div class="grid2">
+    <div class="data-card">
+      <div class="data-card-title">☉ პლანეტური მმართველი ბარათი</div>
+      <div id="prc-body"></div>
+    </div>
+    <div class="data-card">
+      <div class="data-card-title">♾ კარმული ბარათები</div>
+      <div id="karma-body"></div>
+    </div>
+  </div>
+
+  <div class="sec-title">52-დღიანი პერიოდები · Planetary Periods</div>
+  <div class="data-card">
+    <div class="data-card-title">🪐 პლანეტური პერიოდები დაბადების დღიდან</div>
+    <div class="dc-body" id="periods-body"></div>
+  </div>
+
+  <div class="sec-title">დეტალები</div>
+  <div class="data-card" style="margin-bottom:8px">
+    <table><tbody id="meta-tbody"></tbody></table>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   SPREAD DATA
+   Positions are indexed 0..51 in reading order (right→left, top→down,
+   crown line first — Camp chart convention).
+
+   SPIRITUAL_SPREAD is the natural order A♥ → K♠ (canonical).
+   LIFE_SPREAD (Grand Solar Spread, age 0) must be entered from
+   Robert Camp's chart in the SAME positional convention.
+   Card codes: rank A,2..10,J,Q,K + suit H,C,D,S  (e.g. "QS","6C","10D")
+
+   Once LIFE_SPREAD is filled, the following light up automatically:
+   Planetary Ruling Card, Karma Cards (displacement), Moon Card,
+   and the 7 lifetime planetary period cards.
+   ════════════════════════════════════════════════════════════════ */
+const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS=['H','C','D','S'];
+const SPIRITUAL_SPREAD=(()=>{const a=[];for(const s of SUITS)for(const r of RANKS)a.push(r+s);return a;})();
+
+const LIFE_SPREAD=null; /* ← paste 52 codes here, e.g.:
+const LIFE_SPREAD=["KS","...", ...52 items in reading order...];  */
+
+/* ── CONSTANTS ── */
+const SUIT_SYM={H:'♥',C:'♣',D:'♦',S:'♠'};
+const SUIT_KA={H:'გული',C:'ჯვარი',D:'აგური',S:'ყვავი'};
+const RANK_KA={A:'ტუზი','2':'ორიანი','3':'სამიანი','4':'ოთხიანი','5':'ხუთიანი','6':'ექვსიანი','7':'შვიდიანი','8':'რვიანი','9':'ცხრიანი','10':'ათიანი',J:'ვალეტი',Q:'დამა',K:'მეფე'};
+const SUIT_MEANING={H:'გრძნობები · სიყვარული · ბავშვობა',C:'ცოდნა · კომუნიკაცია · გონება',D:'ღირებულებები · ფინანსები · სიმწიფე',S:'შრომა · ჯანმრთელობა · სულიერება'};
+const PLANETS_KA=['მერკური','ვენერა','მარსი','იუპიტერი','სატურნი','ურანი','ნეპტუნი'];
+const PLANET_GLYPH=['☿','♀','♂','♃','♄','♅','♆'];
+
+const ZODIAC=[ // [endMonth,endDay] boundaries, tropical
+  {name:'თხის რქა',en:'Capricorn',to:[1,19],planet:'სატურნი',pIdx:4},
+  {name:'მერწყული',en:'Aquarius',to:[2,18],planet:'ურანი',pIdx:5},
+  {name:'თევზები',en:'Pisces',to:[3,20],planet:'ნეპტუნი',pIdx:6},
+  {name:'ვერძი',en:'Aries',to:[4,19],planet:'მარსი',pIdx:2},
+  {name:'კურო',en:'Taurus',to:[5,20],planet:'ვენერა',pIdx:1},
+  {name:'ტყუპები',en:'Gemini',to:[6,20],planet:'მერკური',pIdx:0},
+  {name:'კირჩხიბი',en:'Cancer',to:[7,22],planet:'მთვარე',pIdx:'moon'},
+  {name:'ლომი',en:'Leo',to:[8,22],planet:'მზე',pIdx:'sun'},
+  {name:'ქალწული',en:'Virgo',to:[9,22],planet:'მერკური',pIdx:0},
+  {name:'სასწორი',en:'Libra',to:[10,22],planet:'ვენერა',pIdx:1},
+  {name:'მორიელი',en:'Scorpio',to:[11,21],planet:'მარსი · პლუტონი',pIdx:2,second:'pluto'},
+  {name:'მშვილდოსანი',en:'Sagittarius',to:[12,21],planet:'იუპიტერი',pIdx:3},
+  {name:'თხის რქა',en:'Capricorn',to:[12,31],planet:'სატურნი',pIdx:4},
+];
+
+/* ── CORE: BIRTH CARD ── */
+function birthCardValue(month,day){ return 55-(2*month+day); } // 0 → Joker
+function valueToCard(v){
+  if(v<=0||v>52)return null; // Joker (Dec 31)
+  const suitIdx=Math.floor((v-1)/13), rank=RANKS[(v-1)%13];
+  return rank+SUITS[suitIdx];
+}
+function zodiacFor(month,day){
+  for(const z of ZODIAC){ if(month<z.to[0]||(month===z.to[0]&&day<=z.to[1]))return z; }
+  return ZODIAC[ZODIAC.length-1];
+}
+
+/* ── SPREAD DERIVATIONS (need LIFE_SPREAD) ── */
+function posOf(spread,code){return spread.indexOf(code);}
+function cardAt(spread,idx){return spread[((idx%52)+52)%52];}
+function lifeDerivations(code){
+  if(!LIFE_SPREAD||LIFE_SPREAD.length!==52)return null;
+  const pL=posOf(LIFE_SPREAD,code), pS=posOf(SPIRITUAL_SPREAD,code);
+  if(pL<0)return null;
+  const FIXED=new Set(['KS','JH','8C']);
+  const SEMI={'AC':'2H','2H':'AC','7D':'9H','9H':'7D'};
+  let karma=null;
+  if(FIXED.has(code)) karma={type:'fixed'};
+  else if(SEMI[code]) karma={type:'semi',pair:SEMI[code]};
+  else karma={type:'normal',
+    k1:SPIRITUAL_SPREAD[pL],   // card whose spiritual seat you occupy (you owe)
+    k2:LIFE_SPREAD[pS]};       // card occupying your spiritual seat (owes you)
+  return{
+    moon:cardAt(LIFE_SPREAD,pL-1),
+    planetary:[1,2,3,4,5,6,7].map(i=>cardAt(LIFE_SPREAD,pL+i)), // Mercury..Neptune
+    karma
+  };
+}
+
+/* ── RENDER HELPERS ── */
+function cardHTML(code,small){
+  if(code==='JOKER')return `<div class="pcard joker${small?' sm':''}"><div class="corner"><div class="rk">J</div></div><div class="big-suit">🃏</div><div class="corner bot"><div class="rk">J</div></div></div>`;
+  const rank=code.slice(0,-1), suit=code.slice(-1);
+  const red=(suit==='H'||suit==='D');
+  return `<div class="pcard ${red?'red':'blk'}${small?' sm':''}">
+    <div class="corner"><div class="rk">${rank}</div><div class="st">${SUIT_SYM[suit]}</div></div>
+    <div class="big-suit">${SUIT_SYM[suit]}</div>
+    <div class="corner bot"><div class="rk">${rank}</div><div class="st">${SUIT_SYM[suit]}</div></div>
+  </div>`;
+}
+function cardNameKa(code){
+  if(code==='JOKER')return 'ჯოკერი';
+  const rank=code.slice(0,-1),suit=code.slice(-1);
+  return `${SUIT_KA[suit]}ს ${RANK_KA[rank]}`;
+}
+const KA_MONTHS=['იანვარი','თებერვალი','მარტი','აპრილი','მაისი','ივნისი','ივლისი','აგვისტო','სექტემბერი','ოქტომბერი','ნოემბერი','დეკემბერი'];
+function fmtDate(d){return `${d.getDate()} ${KA_MONTHS[d.getMonth()]}`;}
+
+/* ── MAIN ── */
+function generate(){
+  const err=document.getElementById('err');err.textContent='';
+  const day=+document.getElementById('day').value;
+  const month=+document.getElementById('month').value;
+  const year=+document.getElementById('year').value;
+  const dt=new Date(year,month-1,day);
+  if(dt.getFullYear()!==year||dt.getMonth()!==month-1||dt.getDate()!==day){
+    err.textContent='⚠ არასწორი თარიღი';return;
+  }
+
+  const v=birthCardValue(month,day);
+  const code=(v===0)?'JOKER':valueToCard(v);
+  const z=zodiacFor(month,day);
+
+  // Birth card
+  document.getElementById('birth-card').innerHTML=cardHTML(code,false);
+  document.getElementById('birth-name').textContent=cardNameKa(code)+(code!=='JOKER'?`  ·  ${code.slice(0,-1)}${SUIT_SYM[code.slice(-1)]}`:'');
+  document.getElementById('birth-sub').innerHTML=code==='JOKER'
+    ?'31 დეკემბერი — ერთადერთი დღე ბარათის გარეშე.<br>ჯოკერს არ აქვს ფიქსირებული ბედი: მას შეუძლია ნებისმიერი ბარათის ენერგიის მორგება.'
+    :SUIT_MEANING[code.slice(-1)];
+  document.getElementById('zodiac-row').innerHTML=
+    `<span class="zodiac-chip">☉ ${z.name} · ${z.en}</span><span class="zodiac-chip">მმართველი: ${z.planet}</span>`;
+
+  // PRC + Karma
+  const prcBody=document.getElementById('prc-body');
+  const karmaBody=document.getElementById('karma-body');
+
+  if(code==='JOKER'){
+    prcBody.innerHTML='<div class="pending">ჯოკერს არ აქვს პლანეტური მმართველი ბარათი</div>';
+    karmaBody.innerHTML='<div class="pending">ჯოკერს არ აქვს კარმული ბარათები</div>';
+  }else{
+    const der=lifeDerivations(code);
+    if(!der){
+      const need='<div class="pending">საჭიროა <b>Life Spread</b> მონაცემები —<br>ჩასვით 52-ბარათიანი მასივი <b>LIFE_SPREAD</b> ცვლადში კოდში</div>';
+      prcBody.innerHTML=need;karmaBody.innerHTML=need;
+    }else{
+      // PRC
+      let prcHTML='<div class="dc-body">';
+      if(z.pIdx==='sun'){
+        prcHTML+=`<div class="mini-slot">${cardHTML(code,true)}<div class="mini-label">ლომი → მზე = დაბ. ბარათი</div></div>`;
+      }else if(z.pIdx==='moon'){
+        prcHTML+=`<div class="mini-slot">${cardHTML(der.moon,true)}<div class="mini-label">მთვარის ბარათი</div><div class="mini-dates">${cardNameKa(der.moon)}</div></div>`;
+      }else{
+        const prc=der.planetary[z.pIdx];
+        prcHTML+=`<div class="mini-slot">${cardHTML(prc,true)}<div class="mini-label">${z.planet}</div><div class="mini-dates">${cardNameKa(prc)}</div></div>`;
+        if(z.second==='pluto'){
+          // Scorpio second PRC: Pluto = higher octave beyond Neptune (pL+8)
+          const pl=cardAt(LIFE_SPREAD,posOf(LIFE_SPREAD,code)+8);
+          prcHTML+=`<div class="mini-slot">${cardHTML(pl,true)}<div class="mini-label">პლუტონი</div><div class="mini-dates">${cardNameKa(pl)}</div></div>`;
+        }
+      }
+      prcHTML+='</div>';
+      prcBody.innerHTML=prcHTML;
+      // Karma
+      const k=der.karma;
+      if(k.type==='fixed'){
+        karmaBody.innerHTML='<div class="pending"><b>ფიქსირებული ბარათი</b> — უცვლელი პოზიცია, კარმული ბარათები არ გააჩნია</div>';
+      }else if(k.type==='semi'){
+        karmaBody.innerHTML=`<div class="dc-body"><div class="mini-slot">${cardHTML(k.pair,true)}<div class="mini-label">ნახევრად-ფიქსირებული წყვილი</div><div class="mini-dates">${cardNameKa(k.pair)}</div></div></div>`;
+      }else{
+        karmaBody.innerHTML=`<div class="dc-body">
+          <div class="mini-slot">${cardHTML(k.k1,true)}<div class="mini-label">I კარმული — ვალი</div><div class="mini-dates">${cardNameKa(k.k1)}</div></div>
+          <div class="mini-slot">${cardHTML(k.k2,true)}<div class="mini-label">II კარმული — მოგება</div><div class="mini-dates">${cardNameKa(k.k2)}</div></div>
+        </div>`;
+      }
+    }
+  }
+
+  // 52-day periods — dates always computable; cards need spread
+  const periods=document.getElementById('periods-body');
+  let ph='';
+  const der2=(code!=='JOKER')?lifeDerivations(code):null;
+  const now=new Date();
+  let bday=new Date(now.getFullYear(),month-1,day);
+  if(bday>now)bday=new Date(now.getFullYear()-1,month-1,day);
+  for(let i=0;i<7;i++){
+    const start=new Date(bday);start.setDate(start.getDate()+i*52);
+    const end=new Date(bday);end.setDate(end.getDate()+(i+1)*52-1);
+    const cardPart=der2?cardHTML(der2.planetary[i],true):`<div class="pcard sm blk" style="opacity:.25"><div class="big-suit">?</div></div>`;
+    ph+=`<div class="mini-slot">${cardPart}
+      <div class="mini-label">${PLANET_GLYPH[i]} ${PLANETS_KA[i]}</div>
+      <div class="mini-dates">${fmtDate(start)} — ${fmtDate(end)}</div></div>`;
+  }
+  periods.innerHTML=ph;
+
+  // Meta
+  const rows=[
+    ['თარიღი',`${day} ${KA_MONTHS[month-1]}, ${year}`],
+    ['ფორმულა',code==='JOKER'?'55 − (2×12 + 31) = 0 → ჯოკერი':`55 − (2×${month} + ${day}) = ${v}`],
+    ['ზოდიაქო',`${z.name} (${z.en}) — ${z.planet}`],
+  ];
+  if(code!=='JOKER'){
+    rows.push(['სულიერი პოზიცია',`#${posOf(SPIRITUAL_SPREAD,code)+1} / 52`]);
+    if(LIFE_SPREAD)rows.push(['Life Spread პოზიცია',`#${posOf(LIFE_SPREAD,code)+1} / 52`]);
+  }
+  document.getElementById('meta-tbody').innerHTML=
+    rows.map(([k,vv])=>`<tr><td class="k">${k}</td><td>${vv}</td></tr>`).join('');
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
+</body>
+</html>
