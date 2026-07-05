@@ -247,74 +247,69 @@ const VARGAS=[
 ];
 
 // ── VARGA CALCULATION ──
+// ── VARGA CALCULATION ──
+// 16 Parashara (Shodasha)vargas per BPHS; all other D-numbers use the
+// cyclic-from-Aries scheme (same as JHora's default for non-classical vargas).
 function calcVargaSign(sidDeg, N) {
   const si = Math.floor(sidDeg / 30) % 12;
   const pos = sidDeg % 30;
   const part = Math.floor(pos * N / 30);
-  let start;
+  const odd = si % 2 === 0;               // Aries=0 → odd sign
   switch(N) {
     case 1: return si;
-    case 2: // Hora
-      return si%2===0 ? (part===0?4:3) : (part===0?3:4);
-    case 3: // Drekkana - same triplicity
-      return (si + part*4) % 12;
-    case 4: // Chaturthamsha
-      return (si + part*3) % 12;
-    case 7: // Saptamsha
-      start = si%2===0 ? 0 : 6;
-      return (start + part) % 12;
+    case 2: // Hora — Leo/Cancer only
+      return odd ? (part === 0 ? 4 : 3) : (part === 0 ? 3 : 4);
+    case 3: // Drekkana — si, si+4, si+8
+      return (si + part * 4) % 12;
+    case 4: // Chaturthamsha — si, si+3, si+6, si+9
+      return (si + part * 3) % 12;
+    case 7: // Saptamsha — from sign itself (odd) / 7th from it (even)
+      return (si + (odd ? 0 : 6) + part) % 12;
     case 9: // Navamsha
-      start = [0,9,6,3][si%4];
-      return (start + part) % 12;
-    case 10: // Dashamsha
-      start = si%2===0 ? 0 : 9;
-      return (start + part) % 12;
-    case 12: // Dvadashamsha
+      return (si * 9 + part) % 12;
+    case 10: // Dashamsha — from sign itself (odd) / 9th from it (even)
+      return (si + (odd ? 0 : 8) + part) % 12;
+    case 12: // Dvadashamsha — from sign itself
       return (si + part) % 12;
-    case 16: // Shodashamsha
-      start = [0,3,6,9][si%4];
-      return (start + part) % 12;
-    case 20: // Vimshamsha
-      start = [0,8,4][si%3];
-      return (start + part) % 12;
-    case 24: // Chaturvimshamsha
-      start = si%2===0 ? 4 : 3;
-      return (start + part) % 12;
-    case 27: // Nakshatramsha
-      start = [0,9,6,3][si%4];
-      return (start + part) % 12;
-    case 30: // Trimshamsha - unequal parts
-      if(si%2===0){ // odd signs
-        if(pos<5)return 0; if(pos<10)return 10; if(pos<18)return 8; if(pos<25)return 2; return 6;
-      }else{
-        if(pos<5)return 6; if(pos<12)return 2; if(pos<20)return 8; if(pos<25)return 10; return 0;
+    case 16: // Shodashamsha — movable→Ar, fixed→Le, dual→Sg
+      return ([0,4,8][si % 3] + part) % 12;
+    case 20: // Vimshamsha — movable→Ar, fixed→Sg, dual→Le
+      return ([0,8,4][si % 3] + part) % 12;
+    case 24: // Chaturvimshamsha — odd→Le, even→Cn
+      return ((odd ? 4 : 3) + part) % 12;
+    case 27: // Bhamsha — fire→Ar, earth→Cn, air→Li, water→Cp
+      return ([0,3,6,9][si % 4] + part) % 12;
+    case 30: // Trimshamsha — unequal
+      if (odd) { // Ar5, Aq5, Sg8, Ge7, Li5
+        if (pos < 5) return 0; if (pos < 10) return 10;
+        if (pos < 18) return 8; if (pos < 25) return 2; return 6;
+      } else {   // Ta5, Vi7, Pi8, Cp5, Sc5
+        if (pos < 5) return 1; if (pos < 12) return 5;
+        if (pos < 20) return 11; if (pos < 25) return 9; return 7;
       }
-    case 40: // Khavedamsha
-      start = si%2===0 ? 0 : 6;
-      return (start + part) % 12;
-    case 45: // Akshavedamsha
-      start = [0,4,8][si%3];
-      return (start + part) % 12;
-    case 60: // Shashtiamsha
-      start = si%2===0 ? 0 : 6;
-      return (start + part) % 12;
-    default:
-      // Generic formula for other vargas
+    case 40: // Khavedamsha — odd→Ar, even→Li
+      return ((odd ? 0 : 6) + part) % 12;
+    case 45: // Akshavedamsha — movable→Ar, fixed→Le, dual→Sg
+      return ([0,4,8][si % 3] + part) % 12;
+    case 60: // Shashtiamsha — from the sign itself
+      return (si + part) % 12;
+    default: // non-Parashari vargas: cyclic from Aries
       return Math.floor(sidDeg * N / 30) % 12;
   }
 }
 
 function getVargaData(data, N) {
-  if(N===1) return data;
-  const planets={};
-  for(const [name,p] of Object.entries(data.planets)){
-    const newSi = calcVargaSign(p.sidereal, N);
-    const newSid = newSi*30 + (p.sidereal%30);
-    planets[name]={...p, sidereal:newSid, sign_idx:newSi, dms: fmtDegVarga(newSid)};
-  }
+  if (N === 1) return data;
   const ascNewSi = calcVargaSign(data.asc, N);
-  const ascNew = ascNewSi*30 + (data.asc%30);
-  return{...data, planets, asc:ascNew, asc_sign_idx:ascNewSi};
+  const planets = {};
+  for (const [name, p] of Object.entries(data.planets)) {
+    const newSi = calcVargaSign(p.sidereal, N);
+    const newSid = newSi * 30 + (p.sidereal % 30);
+    planets[name] = {...p, sidereal: newSid, sign_idx: newSi,
+      dms: fmtDegVarga(newSid),
+      house: ((newSi - ascNewSi + 12) % 12) + 1};
+  }
+  return {...data, planets, asc: ascNewSi * 30 + (data.asc % 30), asc_sign_idx: ascNewSi};
 }
 
 function fmtDegVarga(sid){
