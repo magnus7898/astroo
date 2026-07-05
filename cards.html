@@ -184,8 +184,19 @@ const RANKS=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const SUITS=['H','C','D','S'];
 const SPIRITUAL_SPREAD=(()=>{const a=[];for(const s of SUITS)for(const r of RANKS)a.push(r+s);return a;})();
 
-const LIFE_SPREAD=null; /* ← paste 52 codes here, e.g.:
-const LIFE_SPREAD=["KS","...", ...52 items in reading order...];  */
+/* Verified against: fixed-card invariants (K♠#52, J♥#11, 8♣#21),
+   semi-fixed swaps (A♣↔2♥, 7♦↔9♥), and 88 cells of the KYDC
+   Birth Card / PRC chart (Jan–Apr d1–18, Oct Scorpio incl. Pluto). */
+const LIFE_SPREAD=[
+  "3H","AC","QC","10S","5C","3D","AS",   // Mercury row
+  "7H","7D","5S","JH","9C","9S","2H",    // Venus row
+  "KH","KD","6H","4C","2D","JS","8C",    // Mars row
+  "6D","4S","10H","10D","8S","AH","AD",  // Jupiter row
+  "QD","5H","3C","3S","9H","7C","5D",    // Saturn row
+  "QS","JC","9D","7S","2C","KC","JD",    // Uranus row
+  "4H","4D","2S","8H","6C","6S","QH",    // Neptune row
+  "10C","8D","KS"                        // Crown line
+];
 
 /* ── CONSTANTS ── */
 const SUIT_SYM={H:'♥',C:'♣',D:'♦',S:'♠'};
@@ -195,13 +206,13 @@ const SUIT_MEANING={H:'გრძნობები · სიყვარულ�
 const PLANETS_KA=['მერკური','ვენერა','მარსი','იუპიტერი','სატურნი','ურანი','ნეპტუნი'];
 const PLANET_GLYPH=['☿','♀','♂','♃','♄','♅','♆'];
 
-const ZODIAC=[ // [endMonth,endDay] boundaries, tropical
-  {name:'თხის რქა',en:'Capricorn',to:[1,19],planet:'სატურნი',pIdx:4},
-  {name:'მერწყული',en:'Aquarius',to:[2,18],planet:'ურანი',pIdx:5},
+const ZODIAC=[ // [endMonth,endDay] boundaries — Camp/KYDC chart cusps
+  {name:'თხის რქა',en:'Capricorn',to:[1,20],planet:'სატურნი',pIdx:4},
+  {name:'მერწყული',en:'Aquarius',to:[2,19],planet:'ურანი',pIdx:5},
   {name:'თევზები',en:'Pisces',to:[3,20],planet:'ნეპტუნი',pIdx:6},
-  {name:'ვერძი',en:'Aries',to:[4,19],planet:'მარსი',pIdx:2},
-  {name:'კურო',en:'Taurus',to:[5,20],planet:'ვენერა',pIdx:1},
-  {name:'ტყუპები',en:'Gemini',to:[6,20],planet:'მერკური',pIdx:0},
+  {name:'ვერძი',en:'Aries',to:[4,20],planet:'მარსი',pIdx:2},
+  {name:'კურო',en:'Taurus',to:[5,21],planet:'ვენერა',pIdx:1},
+  {name:'ტყუპები',en:'Gemini',to:[6,21],planet:'მერკური',pIdx:0},
   {name:'კირჩხიბი',en:'Cancer',to:[7,22],planet:'მთვარე',pIdx:'moon'},
   {name:'ლომი',en:'Leo',to:[8,22],planet:'მზე',pIdx:'sun'},
   {name:'ქალწული',en:'Virgo',to:[9,22],planet:'მერკური',pIdx:0},
