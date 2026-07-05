@@ -350,19 +350,12 @@ function t2a(trop_deg, ref=ARIES_START){
   return toRad(-((trop_deg - ref + 360) % 360)) + Math.PI;
 }
 function ascConStart(asc_trop){
-  // Find the IAU constellation containing asc, return its start degree
-  // Use hardcoded boundaries (same as backend)
-  const BOUNDS=[
-    [29.0,53.5],[53.5,90.0],[90.0,118.5],[118.5,138.5],[138.5,174.0],
-    [174.0,217.5],[217.5,241.0],[241.0,247.5],[247.5,266.5],[266.5,302.0],
-    [302.0,327.0],[327.0,351.5],[351.5,389.0]
-  ];
   const d=((asc_trop%360)+360)%360;
-  for(const [s,e] of BOUNDS){
-    const ss=s%360, ee=e%360;
-    if(ss<ee?ss<=d&&d<ee:d>=ss||d<ee) return ss;
+  for(const con of CONS){
+    const ss=con.start%360, ee=con.end%360;
+    if(ss<ee ? (ss<=d&&d<ee) : (d>=ss||d<ee)) return ss;
   }
-  return ARIES_START;
+  return CONS.length?CONS[0].start%360:29.0;
 }
 function pxy(a,r){return{x:CX+Math.cos(a)*r,y:CY+Math.sin(a)*r};}
 
