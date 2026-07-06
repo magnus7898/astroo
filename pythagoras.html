@@ -3,694 +3,552 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>სიხშირეების გენერატორი</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@100;300;400&display=swap" rel="stylesheet">
+<title>პითაგორას კვადრატი</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Cinzel:wght@400;500&family=Noto+Sans+Georgian:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #04060f;
-    --surface: rgba(255,255,255,0.03);
-    --border: rgba(255,255,255,0.07);
-    --text: #e8e4f0;
-    --muted: rgba(232,228,240,0.4);
-    --accent: #c8b4ff;
-  }
+:root{--bg:#06050f;--surface:rgba(255,255,255,0.035);--border:rgba(255,255,255,0.07);--gold:#c8a96e;--gold-dim:rgba(200,169,110,0.3);--text:#e8e2d5;--muted:rgba(232,226,213,0.38);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans Georgian',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 50% at 15% 20%,rgba(60,35,120,0.28) 0%,transparent 60%),radial-gradient(ellipse 50% 60% at 85% 75%,rgba(20,55,80,0.22) 0%,transparent 60%),radial-gradient(ellipse 40% 40% at 55% 45%,rgba(70,20,50,0.15) 0%,transparent 55%);}
+.page{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:60px 24px 100px;}
+.page-header{text-align:center;margin-bottom:52px;}
+.eyebrow{font-family:'Cinzel',serif;font-size:10px;letter-spacing:6px;color:var(--gold);text-transform:uppercase;margin-bottom:14px;opacity:.8;}
+.page-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(36px,7vw,58px);line-height:1;color:var(--text);letter-spacing:1px;}
+.page-title em{font-style:italic;color:rgba(232,226,213,.5);}
+.ornament{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;}
+.ornament-line{height:1px;width:70px;background:linear-gradient(90deg,transparent,var(--gold-dim));}
+.ornament-line.r{background:linear-gradient(90deg,var(--gold-dim),transparent);}
+.ornament-dot{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);opacity:.6;}
+.input-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+.input-field{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Cinzel',serif;font-size:18px;letter-spacing:3px;padding:12px 20px;outline:none;width:200px;text-align:center;transition:border-color .3s;}
+.input-field:focus{border-color:rgba(200,169,110,.35);}
+.input-field::placeholder{color:var(--muted);font-size:13px;letter-spacing:2px;}
+.calc-btn{padding:12px 28px;background:linear-gradient(135deg,rgba(155,127,232,.2),rgba(120,100,200,.1));border:1px solid rgba(155,127,232,.3);border-radius:8px;color:var(--text);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
+.calc-btn:hover{border-color:rgba(155,127,232,.6);box-shadow:0 0 24px rgba(155,127,232,.2);}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* mode toggle */
+.mode-wrap{display:none;flex-direction:column;align-items:center;gap:10px;margin-bottom:36px;}
+.mode-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.mode-pill{padding:8px 20px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;}
+.mode-pill:hover{color:var(--text);border-color:rgba(200,169,110,.3);}
+.mode-pill.active{color:var(--gold);border-color:rgba(200,169,110,.5);background:rgba(200,169,110,.07);box-shadow:0 0 16px rgba(200,169,110,.1);}
+.mode-desc{font-size:11px;color:var(--muted);text-align:center;letter-spacing:.5px;max-width:520px;line-height:1.7;min-height:16px;}
+.mode-desc b{color:rgba(200,169,110,.85);font-weight:500;}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Josefin Sans', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 48px 20px 80px;
-    position: relative;
-    overflow-x: hidden;
-  }
+.summary{display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 28px;margin-bottom:44px;text-align:center;}
+.summary-row{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;}
+.summary-item{display:flex;flex-direction:column;gap:4px;}
+.summary-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+.summary-value{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--gold);}
+.summary-value.corr{color:rgba(155,127,232,.95);}
+.grid-section{display:none;margin-bottom:52px;}
+.grid-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:24px;}
+.pyth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:400px;margin:0 auto;}
+.cell{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:100px;position:relative;overflow:hidden;}
+.cell::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.015),transparent);}
+.cell-label{font-size:9px;letter-spacing:1.5px;color:var(--muted);text-align:center;}
+.cell-digits{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;letter-spacing:4px;min-height:36px;display:flex;align-items:center;}
+.cell-digits.empty{font-size:18px;color:rgba(232,226,213,.2);}
+#results{display:none;}
+.section{margin-bottom:0;opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease;}
+.section.visible{opacity:1;transform:none;}
+.section-header{display:flex;align-items:baseline;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
+.section-num{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;color:var(--muted);flex-shrink:0;padding-top:2px;}
+.section-title{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(20px,4vw,26px);color:var(--text);line-height:1;}
+.section-title em{font-style:italic;color:var(--muted);font-size:.75em;margin-left:8px;}
+.digit-display{display:flex;gap:3px;flex-shrink:0;}
+.digit-pip{width:9px;height:9px;border-radius:50%;background:var(--gold);opacity:.7;box-shadow:0 0 6px rgba(200,169,110,.5);}
+.section-body{font-family:'Noto Sans Georgian',sans-serif;font-size:14px;font-weight:300;line-height:1.8;color:rgba(232,226,213,.72);}
+.section-body strong{color:var(--text);font-weight:500;}
+.divider{display:flex;align-items:center;gap:16px;padding:32px 0;}
+.divider-line{flex:1;height:1px;background:var(--border);}
+.divider-gem{width:5px;height:5px;background:var(--gold-dim);transform:rotate(45deg);flex-shrink:0;}
+.group-separator{display:flex;align-items:center;gap:20px;padding:48px 0 16px;}
+.group-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);}
+.group-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;opacity:.6;flex-shrink:0;}
+.compound-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:0;}
+.compound-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 18px;position:relative;overflow:hidden;}
+.compound-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);}
+.compound-name{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;opacity:.8;}
+.compound-digits-label{font-size:10px;color:var(--muted);margin-bottom:10px;}
+.compound-body{font-size:12px;line-height:1.7;color:rgba(232,226,213,.6);}
+@media(max-width:600px){.compound-row{grid-template-columns:1fr;}.page{padding:40px 16px 80px;}}
 
-  /* Ambient background orbs */
-  body::before {
-    content: '';
-    position: fixed;
-    width: 700px; height: 700px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(100,60,200,0.12) 0%, transparent 70%);
-    top: -200px; left: -200px;
-    pointer-events: none;
-  }
-  body::after {
-    content: '';
-    position: fixed;
-    width: 500px; height: 500px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(40,120,180,0.1) 0%, transparent 70%);
-    bottom: -100px; right: -100px;
-    pointer-events: none;
-  }
+/* ── ENERGY CURVES ── */
+.curves-section{display:none;margin-top:56px;}
+.curve-legend{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}
+.cleg{display:flex;align-items:center;gap:7px;padding:6px 16px;border-radius:18px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;user-select:none;}
+.cleg .sw{width:16px;height:3px;border-radius:2px;}
+.cleg.on{color:var(--text);border-color:rgba(200,169,110,.35);}
+.cleg.off{opacity:.4;}
+.curve-svg-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 10px 10px;overflow-x:auto;}
+.curve-svg-wrap svg{width:100%;height:auto;display:block;min-width:560px;}
+.curve-formulas{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:14px;
+  font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--muted);font-style:italic;}
+.curve-formulas b{font-style:normal;font-weight:400;}
+.curve-note{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.7;max-width:560px;margin-left:auto;margin-right:auto;}
 
-  /* Visualizer canvas */
-  #visualizer {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none;
-    opacity: 0.18;
-    z-index: 0;
-  }
-
-  .wrap {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: 560px;
-  }
-
-  /* Header */
-  header {
-    text-align: center;
-    margin-bottom: 52px;
-  }
-  .eyebrow {
-    font-family: 'Josefin Sans', sans-serif;
-    font-weight: 100;
-    font-size: 10px;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-  h1 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 300;
-    font-size: clamp(32px, 6vw, 52px);
-    letter-spacing: 1px;
-    line-height: 1;
-    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, #8ad4ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .tagline {
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--muted);
-    margin-top: 10px;
-    font-weight: 100;
-  }
-
-  /* Frequency display */
-  .freq-display {
-    text-align: center;
-    margin-bottom: 44px;
-    position: relative;
-  }
-  .freq-number {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(64px, 15vw, 110px);
-    font-weight: 300;
-    font-style: italic;
-    line-height: 1;
-    color: white;
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-    position: relative;
-  }
-  .freq-number.pulse {
-    animation: freqPulse 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-  @keyframes freqPulse {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.04); }
-    100% { transform: scale(1); }
-  }
-  .freq-unit {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 100;
-    letter-spacing: 4px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-  .freq-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px;
-    font-style: italic;
-    color: var(--accent);
-    margin-top: 6px;
-    min-height: 20px;
-    transition: opacity 0.3s;
-  }
-  /* Ring around frequency */
-  .freq-ring {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 160px; height: 160px;
-    border-radius: 50%;
-    border: 1px solid rgba(200,180,255,0.08);
-    pointer-events: none;
-    transition: all 0.6s ease;
-  }
-  .freq-ring.active {
-    border-color: rgba(200,180,255,0.25);
-    box-shadow: 0 0 40px rgba(180,140,255,0.15), inset 0 0 40px rgba(180,140,255,0.05);
-    animation: ringPulse 2s ease-in-out infinite;
-  }
-  @keyframes ringPulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    50% { transform: translate(-50%, -50%) scale(1.06); opacity: 0.7; }
-  }
-
-  /* Section label */
-  .section-label {
-    font-size: 9px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 16px;
-    padding-left: 2px;
-  }
-
-  /* Chakra buttons */
-  .chakra-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 40px;
-  }
-  .chakra-btn {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    text-align: left;
-  }
-  .chakra-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.02));
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .chakra-btn:hover::before { opacity: 1; }
-  .chakra-btn:hover {
-    border-color: rgba(255,255,255,0.15);
-    transform: translateX(4px);
-  }
-  .chakra-btn.active {
-    border-color: rgba(255,255,255,0.2);
-    transform: translateX(6px);
-  }
-  .chakra-btn.active::after {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    border-radius: 0 2px 2px 0;
-    transition: background 0.3s;
-  }
-  .dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    transition: all 0.3s;
-  }
-  .chakra-btn.active .dot {
-    box-shadow: 0 0 12px currentColor;
-  }
-  .chakra-info { flex: 1; }
-  .chakra-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
-    font-weight: 400;
-    color: var(--text);
-    line-height: 1;
-  }
-  .chakra-desc {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--muted);
-    margin-top: 3px;
-    font-weight: 100;
-  }
-  .chakra-hz {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 300;
-    letter-spacing: 1px;
-    color: rgba(255,255,255,0.5);
-    transition: color 0.3s;
-  }
-  .chakra-btn.active .chakra-hz { color: white; }
-
-  /* Neutral freqs */
-  .neutral-grid {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 40px;
-  }
-  .neutral-btn {
-    flex: 1;
-    padding: 12px 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.25s;
-    color: var(--text);
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 300;
-    letter-spacing: 1px;
-  }
-  .neutral-btn:hover, .neutral-btn.active {
-    border-color: rgba(255,255,255,0.2);
-    background: rgba(255,255,255,0.06);
-  }
-  .neutral-label {
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--muted);
-    display: block;
-    margin-top: 3px;
-    font-weight: 100;
-  }
-
-  /* Controls */
-  .controls-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 32px;
-  }
-  .control-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 22px;
-  }
-  .control-row:last-child { margin-bottom: 0; }
-  .control-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 300;
-  }
-  .control-value {
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 11px;
-    color: var(--accent);
-    float: right;
-  }
-  input[type="number"] {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: white;
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 18px;
-    font-weight: 300;
-    letter-spacing: 2px;
-    padding: 12px 16px;
-    width: 100%;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input[type="number"]:focus { border-color: rgba(200,180,255,0.3); }
-  input[type="number"]::-webkit-inner-spin-button { opacity: 0.3; }
-  select {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: white;
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 100;
-    letter-spacing: 2px;
-    padding: 10px 16px;
-    width: 100%;
-    outline: none;
-    cursor: pointer;
-    -webkit-appearance: none;
-    transition: border-color 0.2s;
-  }
-  select:focus { border-color: rgba(200,180,255,0.3); }
-  select option { background: #0d0f1e; }
-
-  /* Volume slider */
-  input[type="range"] {
-    -webkit-appearance: none;
-    width: 100%;
-    height: 2px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 2px;
-    outline: none;
-    cursor: pointer;
-    margin-top: 8px;
-  }
-  input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    background: white;
-    box-shadow: 0 0 10px rgba(200,180,255,0.5);
-    cursor: pointer;
-    transition: box-shadow 0.2s;
-  }
-  input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 0 18px rgba(200,180,255,0.8);
-  }
-
-  /* Play / stop buttons */
-  .action-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
-  }
-  .btn-play {
-    padding: 16px 32px;
-    background: linear-gradient(135deg, rgba(180,140,255,0.2), rgba(100,160,255,0.15));
-    border: 1px solid rgba(200,180,255,0.3);
-    border-radius: 12px;
-    color: white;
-    font-family: 'Josefin Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 300;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-  .btn-play::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(200,180,255,0.1), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .btn-play:hover::after { opacity: 1; }
-  .btn-play:hover {
-    border-color: rgba(200,180,255,0.5);
-    box-shadow: 0 0 30px rgba(180,140,255,0.2);
-    transform: translateY(-1px);
-  }
-  .btn-play.playing {
-    border-color: rgba(200,180,255,0.4);
-    box-shadow: 0 0 40px rgba(180,140,255,0.3);
-    animation: playingGlow 2s ease-in-out infinite;
-  }
-  @keyframes playingGlow {
-    0%, 100% { box-shadow: 0 0 30px rgba(180,140,255,0.2); }
-    50% { box-shadow: 0 0 50px rgba(180,140,255,0.4); }
-  }
-  .btn-stop {
-    padding: 16px 20px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--muted);
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.25s;
-  }
-  .btn-stop:hover {
-    border-color: rgba(255,100,100,0.3);
-    color: rgba(255,150,150,0.8);
-  }
-
-  /* Status bar */
-  .status {
-    text-align: center;
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--muted);
-    font-weight: 100;
-    height: 16px;
-    transition: all 0.3s;
-  }
-  .status.on { color: var(--accent); }
-
-  /* Divider */
-  hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 32px 0;
-  }
+/* ── VEDIC SQUARE ── */
+.vsq-section{display:none;margin-top:56px;}
+.vsq-howto{font-size:12px;color:var(--muted);text-align:center;line-height:1.9;max-width:560px;margin:0 auto 22px;}
+.vsq-howto b{color:var(--gold);font-weight:500;}
+.digit-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;}
+.dchip{width:56px;padding:8px 0 7px;border-radius:10px;text-align:center;cursor:pointer;
+  border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;user-select:none;position:relative;}
+.dchip .dn{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--text);line-height:1;}
+.dchip .dg{font-size:8px;letter-spacing:.5px;color:var(--muted);margin-top:3px;font-family:'Cinzel',serif;text-transform:uppercase;}
+.dchip:hover{border-color:rgba(200,169,110,.35);}
+.dchip.active{border-color:rgba(200,169,110,.6);background:rgba(200,169,110,.09);}
+.dchip.active .dn{color:var(--gold);}
+.dchip.mine::after{content:'●';position:absolute;top:3px;right:6px;font-size:7px;color:rgba(155,127,232,.9);}
+.vsq-mine-note{text-align:center;font-size:10.5px;color:rgba(155,127,232,.75);margin-bottom:8px;letter-spacing:.5px;}
+.mirror-toggle{display:flex;justify-content:center;margin-bottom:22px;}
+.mt-btn{padding:7px 20px;border-radius:18px;font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;user-select:none;}
+.mt-btn.on{color:rgba(155,127,232,.95);border-color:rgba(155,127,232,.45);background:rgba(155,127,232,.07);}
+.sq-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:520px;margin:0 auto 16px;}
+.sq-wrap svg{width:100%;height:auto;display:block;}
+.pattern-info{text-align:center;font-size:12px;color:var(--muted);line-height:1.8;min-height:20px;}
+.pattern-info b{color:var(--gold);font-weight:500;}
+.pattern-info i{color:rgba(155,127,232,.95);font-style:normal;}
 </style>
 </head>
 <body>
-
-<canvas id="visualizer"></canvas>
-
-<div class="wrap">
-  <header>
-    <div class="eyebrow">სიხშირეების გენერატორი</div>
-    <h1>ხმოვანი<br>სიხშირეები</h1>
-    <div class="tagline">Sound · Frequency · Healing</div>
-  </header>
-
-  <!-- Big frequency display -->
-  <div class="freq-display">
-    <div class="freq-ring" id="freqRing"></div>
-    <div class="freq-number" id="freqDisplay">432</div>
-    <div class="freq-unit">H E R T Z</div>
-    <div class="freq-name" id="freqName">—</div>
-  </div>
-
-  <!-- Chakra frequencies -->
-  <div class="section-label">ჩაკრების სიხშირეები</div>
-  <div class="chakra-grid" id="chakraGrid"></div>
-
-  <!-- Other frequencies -->
-  <div class="section-label">სხვა სიხშირეები</div>
-  <div class="neutral-grid" id="neutralGrid"></div>
-
-  <hr>
-
-  <!-- Controls -->
-  <div class="controls-panel">
-    <div class="control-row">
-      <div class="control-label">სიხშირე <span class="control-value" id="freqVal">432 Hz</span></div>
-      <input type="number" id="freqInput" value="432" min="1" max="20000">
-    </div>
-    <div class="control-row">
-      <div class="control-label">ტალღის ფორმა</div>
-      <select id="waveType">
-        <option value="sine">Sine — სინუსი</option>
-        <option value="triangle">Triangle — სამკუთხა</option>
-        <option value="square">Square — კვადრატი</option>
-        <option value="sawtooth">Sawtooth — ხერხი</option>
-      </select>
-    </div>
-    <div class="control-row">
-      <div class="control-label">ხმის დონე <span class="control-value" id="volVal">20%</span></div>
-      <input type="range" id="volume" min="0" max="1" step="0.01" value="0.2">
-    </div>
-  </div>
-
-  <div class="action-row">
-    <button class="btn-play" id="btnPlay" onclick="toggleTone()">▶ &nbsp; დ ა წ ყ ე ბ ა</button>
-    <button class="btn-stop" onclick="stopTone()">■</button>
-  </div>
-
-  <div class="status" id="status">— გათიშულია —</div>
+<div class="page">
+<header class="page-header">
+  <div class="eyebrow">ნუმეროლოგია</div>
+  <h1 class="page-title">პითაგორას <em>კვადრატი</em></h1>
+  <div class="ornament"><div class="ornament-line"></div><div class="ornament-dot"></div><div class="ornament-line r"></div></div>
+</header>
+<div class="input-wrap">
+  <input class="input-field" type="text" id="birth" placeholder="DD/MM/YYYY" maxlength="10">
+  <button class="calc-btn" onclick="calculate()">გამოთვლა</button>
 </div>
 
-<script>
-// ── Data ──────────────────────────────────────────────────────────────────
-const CHAKRAS = [
-  { hz: 396, name: 'მულადჰარა',   desc: 'Root · განთავისუფლება',       color: '#e05252', dot: '#e05252' },
-  { hz: 417, name: 'სვადჰისტანა', desc: 'Sacral · ცვლილება',           color: '#f0873a', dot: '#f0873a' },
-  { hz: 528, name: 'მანიპურა',    desc: 'Solar · გარდაქმნა',            color: '#e8d44d', dot: '#d4b800' },
-  { hz: 639, name: 'ანაჰატა',     desc: 'Heart · კავშირი',             color: '#4caf7d', dot: '#4caf7d' },
-  { hz: 741, name: 'ვიშუდჰა',    desc: 'Throat · გამოხატვა',          color: '#4fc3f7', dot: '#4fc3f7' },
-  { hz: 852, name: 'აჯნა',        desc: 'Third Eye · ინტუიცია',        color: '#5c8ce8', dot: '#5c8ce8' },
-  { hz: 963, name: 'საჰასრარა',   desc: 'Crown · გამოღვიძება',         color: '#b07ee8', dot: '#b07ee8' },
-];
+<div class="mode-wrap" id="modeWrap">
+  <div class="mode-pills">
+    <div class="mode-pill active" id="mp-classic" onclick="setMode('classic')">კლასიკური</div>
+    <div class="mode-pill" id="mp-corrected" onclick="setMode('corrected')">კორექტირებული</div>
+    <div class="mode-pill" id="mp-crisis" onclick="setMode('crisis')">კრიზისული</div>
+  </div>
+  <div class="mode-desc" id="modeDesc"></div>
+</div>
 
-const NEUTRALS = [
-  { hz: 174,  label: 'ტკივილი' },
-  { hz: 285,  label: 'ქსოვილი' },
-  { hz: 432,  label: 'ბუნება'  },
-];
+<div class="summary" id="summary">
+  <div class="summary-row" id="summaryRow"></div>
+</div>
+<div class="grid-section" id="grid-section">
+  <div class="grid-title" id="gridTitle">ციფრების კვადრატი</div>
+  <div class="pyth-grid" id="grid"></div>
+</div>
+<div id="results"></div>
 
-// ── Build UI ──────────────────────────────────────────────────────────────
-const chakraGrid = document.getElementById('chakraGrid');
-CHAKRAS.forEach(c => {
-  const btn = document.createElement('button');
-  btn.className = 'chakra-btn';
-  btn.dataset.hz = c.hz;
-  btn.innerHTML = `
-    <div class="dot" style="background:${c.dot};color:${c.dot}"></div>
-    <div class="chakra-info">
-      <div class="chakra-name">${c.name}</div>
-      <div class="chakra-desc">${c.desc}</div>
+<div class="curves-section" id="curvesSection">
+  <div class="group-separator">
+    <div class="group-line"></div><div class="group-label">ენერგიის გრაფიკები</div><div class="group-line"></div>
+  </div>
+  <div class="curve-legend" id="curveLegend"></div>
+  <div class="curve-svg-wrap"><svg id="curveSvg" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="curve-formulas" id="curveFormulas"></div>
+  <div class="curve-note">წერტილები 12-წლიანი ინტერვალებით · 0–9 — ენერგიის დონე · ვერტიკალური ხაზი — მიმდინარე ასაკი.<br>ნების გრაფიკში ყველა ნული იცვლება ერთიანით (0→1). თუ თარიღში ნულები არ არის — სიცოცხლისა და ნების გრაფიკები ემთხვევა.</div>
+</div>
+
+<div class="vsq-section" id="vsqSection">
+  <div class="group-separator">
+    <div class="group-line"></div><div class="group-label">ვედური კვადრატი</div><div class="group-line"></div>
+  </div>
+  <div class="vsq-howto">
+    8×8 ცხრილი — გამრავლების ტაბულა, სადაც ყველა რიცხვი ციფრულ ფესვამდეა დაყვანილი (მაგ. 4×5=20 → 2+0 = <b>2</b>).<br>
+    <b>როგორ გამოვიყენო:</b> დააჭირე ციფრს ქვემოთ — ოქროსფერი ხაზები შეაერთებს ყველა უჯრას, სადაც ეს ციფრი ზის. ეს არის ამ ციფრის გეომეტრიული ნიმუში — მისი „იანტრა". ვიოლეტისფერი წერტილით ● მონიშნულია <b>შენი პირადი ციფრები</b> თარიღიდან — დღის ფსიქიკური რიცხვი და ბედისწერის რიცხვი.
+  </div>
+  <div class="vsq-mine-note" id="vsqMine"></div>
+  <div class="digit-row" id="digitRow"></div>
+  <div class="mirror-toggle"><div class="mt-btn" id="mtBtn" onclick="toggleMirror()">სარკე · 9−n</div></div>
+  <div class="sq-wrap"><svg id="sq" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="pattern-info" id="patternInfo"></div>
+</div>
+
+<div class="vsq-section" id="elemSection">
+  <div class="group-separator">
+    <div class="group-line"></div><div class="group-label">ქიმიური ელემენტი</div><div class="group-line"></div>
+  </div>
+  <div class="vsq-howto">
+    „ქიმოლოგიის" ფორმულა: <b>N = (1200·დღე + 10·დღე·თვე·z + 120·u) / 400 + 1</b>,<br>
+    სადაც z — წლის ბოლოსწინა ციფრი, u — ბოლო ციფრი. შედეგი მრგვალდება.
+  </div>
+  <div style="display:flex;justify-content:center;gap:16px;flex-wrap:wrap;align-items:stretch">
+    <div style="background:var(--surface);border:1px solid rgba(200,169,110,.35);border-radius:14px;padding:26px 34px;text-align:center;min-width:220px">
+      <div id="elemNum" style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:3px;color:var(--muted)"></div>
+      <div id="elemSym" style="font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:300;color:var(--gold);line-height:1.1;text-shadow:0 0 40px rgba(200,169,110,.3)"></div>
+      <div id="elemName" style="font-size:15px;color:var(--text);letter-spacing:1px"></div>
+      <div id="elemRadio" style="font-size:10px;letter-spacing:2px;margin-top:8px;font-family:'Cinzel',serif"></div>
     </div>
-    <div class="chakra-hz">${c.hz} Hz</div>
-  `;
-  btn.style.setProperty('--chakra-color', c.color);
-  btn.addEventListener('click', () => setFreq(c.hz, c.name, btn));
-  chakraGrid.appendChild(btn);
+    <div id="elemAlt" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px 28px;text-align:center;min-width:200px;opacity:.85">
+      <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px">კლასიკური წესი (107 ელემ.)<br>N&gt;107 → ციფრთა ჯამი</div>
+      <div id="elemAltSym" style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:rgba(155,127,232,.9);line-height:1.1"></div>
+      <div id="elemAltName" style="font-size:13px;color:var(--muted)"></div>
+    </div>
+  </div>
+  <div class="vsq-howto" id="elemCalc" style="margin-top:16px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px"></div>
+</div>
+</div>
+<script>
+const LABELS={1:"პიროვნება",2:"ენერგია",3:"ინტერესი",4:"ჯანმრთელობა",5:"ლოგიკა",6:"შრომა",7:"იღბალი",8:"პასუხისმგებლობა",9:"მეხსიერება"};
+const COLORS={1:"rgba(155,127,232,.9)",2:"rgba(232,127,127,.9)",3:"rgba(127,207,232,.9)",4:"rgba(127,207,127,.9)",5:"rgba(200,169,110,.9)",6:"rgba(232,160,127,.9)",7:"rgba(210,210,90,.9)",8:"rgba(160,127,232,.9)",9:"rgba(127,180,232,.9)"};
+const GRID_ORDER=[1,4,7,2,5,8,3,6,9];
+
+const MODE_META={
+  classic:{title:"ციფრების კვადრატი · კლასიკური",
+    desc:"სტანდარტული გამოთვლა: I — თარიღის ციფრთა ჯამი, II — I-ის ციფრთა ჯამი, III — I − 2×(დღის პირველი ციფრი), IV — III-ის ციფრთა ჯამი.",
+    labels:["I · ჯამი","II · მისია","III","IV"]},
+  corrected:{title:"ციფრების კვადრატი · კორექტირებული",
+    desc:"საუკუნის შესწორება: <b>XX საუკუნე (19xx) → −2</b> — ორიანი ემატება კვადრატს, რადგან 19xx თარიღები მას არ იძლევა. <b>XXI საუკუნე (20xx) → +19</b> — ერთიანი და ცხრიანი ემატება, რადგან 20xx თარიღებს ისინი აკლია. III = I ± კორექცია.",
+    labels:["I · ჯამი","კორექცია","III","IV"]},
+  crisis:{title:"ციფრების კვადრატი · კრიზისული",
+    desc:"როგორ იქცევა ადამიანი <b>კრიზისულ სიტუაციაში</b>: პირველ სამუშაო რიცხვს აკლდება 9 (I − 9), დანარჩენი გამოთვლა იგივეა. კვადრატი აჩვენებს ენერგიების განაწილებას სტრესის დროს.",
+    labels:["I − 9","II","III","IV"]}
+};
+
+document.getElementById("birth").addEventListener("input",function(e){
+  let v=e.target.value.replace(/\D/g,"");
+  if(v.length>2)v=v.slice(0,2)+"/"+v.slice(2);
+  if(v.length>5)v=v.slice(0,5)+"/"+v.slice(5,9);
+  e.target.value=v;
 });
+document.getElementById("birth").addEventListener("keydown",function(e){if(e.key==="Enter")calculate();});
 
-const neutralGrid = document.getElementById('neutralGrid');
-NEUTRALS.forEach(n => {
-  const btn = document.createElement('button');
-  btn.className = 'neutral-btn';
-  btn.dataset.hz = n.hz;
-  btn.innerHTML = `${n.hz}<span class="neutral-label">${n.label}</span>`;
-  btn.addEventListener('click', () => setFreq(n.hz, n.label + ' · ' + n.hz + ' Hz', btn));
-  neutralGrid.appendChild(btn);
-});
+function sumDigits(n){return Math.abs(n).toString().split("").reduce((a,b)=>a+Number(b),0);}
+function digitsOf(n){return Math.abs(n).toString().split("").map(Number);}
 
-// ── State ─────────────────────────────────────────────────────────────────
-let audioCtx = null, oscillator = null, gainNode = null;
-let currentBtn = null;
-let isPlaying = false;
-
-// ── Freq select ───────────────────────────────────────────────────────────
-function setFreq(hz, name, btn) {
-  document.getElementById('freqInput').value = hz;
-  document.getElementById('freqVal').textContent = hz + ' Hz';
-  // Animate number
-  const disp = document.getElementById('freqDisplay');
-  disp.textContent = hz;
-  disp.classList.remove('pulse');
-  void disp.offsetWidth;
-  disp.classList.add('pulse');
-  // Name
-  document.getElementById('freqName').textContent = name || '—';
-  // Active button
-  document.querySelectorAll('.chakra-btn, .neutral-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  currentBtn = btn;
-  // Live update if playing
-  if (oscillator && audioCtx) {
-    oscillator.frequency.setValueAtTime(hz, audioCtx.currentTime);
-  }
+function getDesc(n,count){
+  const d={
+    1:{0:"პიროვნული «მე» სუსტია. ადამიანს უჭირს საკუთარი თავის გამოხატვა, ყველას ემორჩილება. შინაგანი ძლიერების განვითარება საჭიროა.",1:"ძლიერი, მაგრამ მოქნილი პიროვნება. ადამიანი იცის ვინ არის, მაგრამ სხვებთან ეგუება. ლიდერობის კარგი პოტენციალი.",2:"ორი 1 — ძლიერი ხასიათი. თვითდაჯერებულია, ლიდერია, ზოგჯერ სიჯიუტე ხელს უშლის. მასზე ნდობა შეიძლება.",3:"სამი 1 — ენერგიული, ნება-სურვილი ძნელად შეიძლება ეჭვქვეშ დადგეს. ლიდერი ბუნებით — მაგრამ სხვების მოსმენა სჭირდება.",4:"ოთხი 1 — ძალიან დომინანტი. ამ ადამიანის ნება ძლიერია, მთელ გარემოს მოიცავს. ჰარმონიისთვის სხვებზე ზეწოლა შემცირება სჭირდება."},
+    2:{0:"ინტუიცია სუსტია. ადამიანი ხშირად ვერ ხვდება სიტუაციის ემოციურ ტონს. ენერგეტიკული მგრძნობელობა განვითარებას ელოდება.",1:"ერთი 2 — კარგი ინტუიცია. სხვებს კარგად გრძნობს, ჰარმონიისკენ მიისწრაფვის. ემოციური სიბრძნე ურთიერთობებში ეხმარება.",2:"ორი 2 — ძლიერი ემოციური ინტელექტი. ძალიან მგრძნობიარეა. ზოგჯერ ემოციები გადალახავს გონებას.",3:"სამი 2 — განსაკუთრებული ენერგეტიკული ნიჭი. სხვების განწყობის «კითხვა» ბუნებრივია. ინტუიცია ახლოს არის ექსტრასენსობასთან.",4:"ოთხი 2 — ჭარბი მგრძნობელობა ზოგჯერ ხელს უშლის. ენერგეტიკული დაცვა და სიმშვიდე სჭირდება."},
+    3:{0:"კრეატიულობა ჯერ განვითარების სტადიაშია. ახალი სფეროების შესწავლა ეხმარება.",1:"ერთი 3 — შემოქმედებითი ნიჭი არსებობს. ადამიანი გრძნობს ლამაზს, ჯერ ვერ ანვითარებს მთლიანად.",2:"ორი 3 — კარგი კრეატიული პოტენციალი. ხელოვნება, მუსიკა, ლიტერატურა — ბუნებრივად გამოხატავს.",3:"სამი 3 — ძლიერი შემოქმედებითი ენერგია. ხელოვნება ამ ადამიანის ბუნებაა. ნიჭი პროფესიად შეიძლება გადაიქცეს.",4:"ოთხი 3 — ნიჭი გამოირჩევა, მაგრამ ენერგია გაიფანტება. ერთ სფეროზე კონცენტრაცია ადამიანს შეუცვლელს გახდის."},
+    4:{0:"ჯანმრთელობის ენერგეტიკა სუსტია. კვება, ძილი, ცხოვრების წესი განსაკუთრებულ ყურადღებას საჭიროებს.",1:"ერთი 4 — კარგი ვიტალური ენერგია. ძირითადად ჯანმრთელია, ყოველდღიური მოვლა მნიშვნელოვანია.",2:"ორი 4 — კარგი ფიზიკური ენერგია. ჯანმრთელობა სტაბილურია. მოძრაობა და სპორტი ბუნებრივია.",3:"სამი 4 — ძლიერი ვიტალური ენერგია. ბუნებრივი ჯანმრთელობა კარგია. ფიზიკური ნიჭი გამოირჩევა.",4:"ოთხი 4 — ძალიან ძლიერი ფიზიკური ენერგია. ბუნებრივი ატლეტი. ჭარბი ენერგია ზოგჯერ სიჩქარეში იკარგება."},
+    5:{0:"ლოგიკური აზროვნება ჯერ არ გამოვლენილა. ემოციებით მოქმედება ჭარბობს. ანალიზი განვითარებადია.",1:"ერთი 5 — კარგი ლოგიკა. გონიერია, ფიქრობს სანამ გადაწყვეტილებას მიიღებს. კარგი ანალიტიკოსი.",2:"ორი 5 — ძლიერი ანალიტიკური გონება. სწრაფი, ლოგიკური ჯაჭვებით ფიქრობს. ტექნიკურ სფეროში გამოირჩევა.",3:"სამი 5 — ბრწყინვალე ლოგიკა. ნებისმიერი პრობლემა ადვილია. ინტელექტი გამოვლენილია, სწავლა სიამოვნებაა.",4:"ოთხი 5 — ძალიან მაღალი ინტელექტი. ლოგიკა მთავარი ინსტრუმენტია. ემოციური მხარე ყურადღებას საჭიროებს."},
+    6:{0:"შრომის სტიმული სუსტია. პასივობა ჭარბობს. მიზნის შეგრძნება ეხმარება.",1:"ერთი 6 — ნორმალური შრომისმოყვარეობა. მუშაობს კარგად, ბალანსი სჭირდება.",2:"ორი 6 — კარგი შრომის ეთიკა. ბუნებრივად მოყვარობს მუშაობას. ოჯახი და კარიერა ბალანსირებულია.",3:"სამი 6 — ძლიერი შრომის ეთიკა. ყველაფერს ამ სამსახურში სდებს. პროფესიული წარმატება გარდაუვალია.",4:"ოთხი 6 — სამსახური ცხოვრების ცენტრია. ოჯახი ან ჯანმრთელობა ზოგჯერ ელოდება. ბალანსი ყურადღებას საჭიროებს."},
+    7:{0:"იღბალი გამოსავლის ეძებს. მეტი რწმენა სჭირდება. ეჭვები გზას ართულებს.",1:"ერთი 7 — კარგი იღბალი. ბუნებრივ მხარდაჭერას გრძნობს, კარგ დროს ხვდება.",2:"ორი 7 — ძლიერი იღბალი. სამყარო ხშირად ეხმარება, სწორ ადამიანებს ხვდება.",3:"სამი 7 — განსაკუთრებული ბედი. ქაოსიდანაც გამოდის გამოსავალი. ბუნებრივი სინქრონია სამყაროსთან.",4:"ოთხი 7 — ბედი ყოველ ნაბიჯზე. სამყარო ბუნებრივად «მართავს». ეს ძლიერება სულიერ გზასაც შეიძლება მიუთითებდეს."},
+    8:{0:"პასუხისმგებლობა სუსტია. ვალდებულებები სხვებზე გადადის. პატარა პირობებიდან ვითარდება.",1:"ერთი 8 — კარგი პასუხისმგებლობა. მუშაობს პირობებზე. სტაბილური, საიმედო.",2:"ორი 8 — ძლიერი პასუხისმგებლობა. ოჯახი, სამსახური — ყველაფრის პასუხს ნებაყოფლობით იღებს.",3:"სამი 8 — ძლიერი ლიდერი. ოჯახი ამ ადამიანის ირგვლივ ბრუნავს. ნდობა ყველა სფეროში.",4:"ოთხი 8 — სხვათა ტვირთს ნებაყოფლობით ეხმება. საკუთარ მოთხოვნილებებს ივიწყებს — ეს ყურადღებას საჭიროებს."},
+    9:{0:"მეხსიერება სუსტია, ან მოკლევადიანი. მნემოტექნიკა ან განმეორება ეხმარება.",1:"ერთი 9 — კარგი მეხსიერება. ახალ ინფორმაციას ითვისებს. ისტორია და კულტურა ინტერესს ბადებს.",2:"ორი 9 — ძლიერი მეხსიერება. ფაქტები ადვილად ინახება. სწავლა სიამოვნებაა.",3:"სამი 9 — განსაკუთრებული მეხსიერება. გონება ენციკლოპედიასავით მუშაობს. ინფორმაცია ძალისხმევის გარეშე ინახება.",4:"ოთხი 9 — ფენომენალური მეხსიერება. ეიდეტიკური ნიჭის ახლოს. სიბრძნის განვითარებისთვის გამოიყენება."}
+  };
+  return d[n]?.[Math.min(count,4)]||d[n]?.[4]||"";
 }
 
-// ── Audio ─────────────────────────────────────────────────────────────────
-function toggleTone() {
-  if (isPlaying) stopTone(); else startTone();
-}
+const COMPOUND={
+  ambition:    {name:"ამბიცია",           label:"1+2+3", keys:[1,2,3]},
+  money:       {name:"ფული",             label:"4+5+6", keys:[4,5,6]},
+  talent:      {name:"ნიჭი",             label:"7+8+9", keys:[7,8,9]},
+  purpose:     {name:"მიზანდასახულობა",    label:"1+4+7", keys:[1,4,7]},
+  family:      {name:"ოჯახზე ორიენტირება",label:"2+5+8", keys:[2,5,8]},
+  stability:   {name:"სტაბილურობა",       label:"3+6+9", keys:[3,6,9]},
+  temperament: {name:"ტემპერამენტი",      label:"3+5+7", keys:[3,5,7]},
+  spirit:      {name:"სულიერება",         label:"1+5+9", keys:[1,5,9]}
+};
 
-function startTone() {
-  if (isPlaying) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  oscillator = audioCtx.createOscillator();
-  gainNode   = audioCtx.createGain();
-  const analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 256;
-  waveData = new Uint8Array(analyser.frequencyBinCount);
-  window._analyser = analyser;
+/* ── THREE VARIANTS ──
+   classic:   I=Σთარიღი, II=Σ(I), III=|I−2×დღის პირვ.ციფრი|, IV=Σ(III)
+   corrected: XX(19xx): II→−2 (ციფრი 2 ითვლება), III=I−2
+              XXI(20xx): II→+19 (ციფრები 1,9 ითვლება), III=I+19; IV=Σ(III)
+   crisis:    I'=I−9, შემდეგ კლასიკურივით                              */
+function computeModes(day,month,year){
+  const birthDigits=(day+month+year).split("").map(Number);
+  const A=birthDigits.reduce((a,b)=>a+b,0);
+  const fd=(day[0]!=="0")?Number(day[0]):Number(day[1]);
 
-  oscillator.type = document.getElementById('waveType').value;
-  oscillator.frequency.setValueAtTime(+document.getElementById('freqInput').value, audioCtx.currentTime);
-  gainNode.gain.value = +document.getElementById('volume').value;
+  const cB=sumDigits(A), cC=Math.abs(A-2*fd), cD=sumDigits(cC);
+  const classic={disp:[String(A),String(cB),String(cC),String(cD)],
+    extra:[...digitsOf(A),...digitsOf(cB),...digitsOf(cC),...digitsOf(cD)],note:""};
 
-  oscillator.connect(gainNode);
-  gainNode.connect(analyser);
-  analyser.connect(audioCtx.destination);
-  oscillator.start();
-  isPlaying = true;
-
-  document.getElementById('btnPlay').textContent = '⏸  გ ა ჩ ე რ ე ბ ა';
-  document.getElementById('btnPlay').classList.add('playing');
-  document.getElementById('freqRing').classList.add('active');
-  document.getElementById('status').textContent = '— გამოსხივება —';
-  document.getElementById('status').classList.add('on');
-}
-
-function stopTone() {
-  if (!isPlaying) return;
-  oscillator.stop();
-  audioCtx.close();
-  oscillator = null; audioCtx = null; gainNode = null;
-  window._analyser = null;
-  isPlaying = false;
-
-  document.getElementById('btnPlay').innerHTML = '▶ &nbsp; დ ა წ ყ ე ბ ა';
-  document.getElementById('btnPlay').classList.remove('playing');
-  document.getElementById('freqRing').classList.remove('active');
-  document.getElementById('status').textContent = '— გათიშულია —';
-  document.getElementById('status').classList.remove('on');
-}
-
-// ── Live control updates ──────────────────────────────────────────────────
-document.getElementById('volume').addEventListener('input', function() {
-  document.getElementById('volVal').textContent = Math.round(this.value * 100) + '%';
-  if (gainNode && audioCtx) gainNode.gain.setValueAtTime(+this.value, audioCtx.currentTime);
-});
-document.getElementById('freqInput').addEventListener('input', function() {
-  document.getElementById('freqVal').textContent = this.value + ' Hz';
-  document.getElementById('freqDisplay').textContent = this.value;
-  document.getElementById('freqName').textContent = '—';
-  document.querySelectorAll('.chakra-btn, .neutral-btn').forEach(b => b.classList.remove('active'));
-  if (oscillator && audioCtx) oscillator.frequency.setValueAtTime(+this.value, audioCtx.currentTime);
-});
-document.getElementById('waveType').addEventListener('change', function() {
-  if (oscillator) oscillator.type = this.value;
-});
-
-// ── Canvas visualizer ─────────────────────────────────────────────────────
-const canvas = document.getElementById('visualizer');
-const ctx2 = canvas.getContext('2d');
-let waveData = null;
-
-function resizeCanvas() {
-  canvas.width  = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-function drawVis() {
-  requestAnimationFrame(drawVis);
-  ctx2.clearRect(0, 0, canvas.width, canvas.height);
-  const analyser = window._analyser;
-  if (!analyser) return;
-  analyser.getByteFrequencyData(waveData);
-
-  const cx = canvas.width / 2, cy = canvas.height / 2;
-  const bars = waveData.length;
-  const radius = Math.min(cx, cy) * 0.55;
-
-  ctx2.save();
-  ctx2.translate(cx, cy);
-
-  for (let i = 0; i < bars; i++) {
-    const val    = waveData[i] / 255;
-    const angle  = (i / bars) * Math.PI * 2 - Math.PI / 2;
-    const inner  = radius;
-    const outer  = radius + val * 90;
-    const hue    = 240 + i * 0.6;
-    ctx2.beginPath();
-    ctx2.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
-    ctx2.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
-    ctx2.strokeStyle = `hsla(${hue},80%,75%,${0.3 + val * 0.7})`;
-    ctx2.lineWidth   = 2;
-    ctx2.stroke();
+  const isXXI=Number(year)>=2000;
+  let corrected;
+  if(isXXI){
+    const C=A+19,D=sumDigits(C);
+    corrected={disp:[String(A),"+19",String(C),String(D)],
+      extra:[...digitsOf(A),1,9,...digitsOf(C),...digitsOf(D)],note:"XXI საუკუნე · +19"};
+  }else{
+    const C=A-2,D=sumDigits(C);
+    corrected={disp:[String(A),"−2",String(C),String(D)],
+      extra:[...digitsOf(A),2,...digitsOf(C),...digitsOf(D)],note:"XX საუკუნე · −2"};
   }
 
-  ctx2.restore();
+  const kA=A-9,kB=sumDigits(kA),kC=Math.abs(kA-2*fd),kD=sumDigits(kC);
+  const crisis={disp:[String(kA),String(kB),String(kC),String(kD)],
+    extra:[...digitsOf(kA),...digitsOf(kB),...digitsOf(kC),...digitsOf(kD)],note:"I − 9"};
+
+  const mk=extra=>{
+    const count={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+    [...birthDigits,...extra].forEach(d=>{if(count[d]!==undefined)count[d]++;});
+    return count;
+  };
+  classic.count=mk(classic.extra);
+  corrected.count=mk(corrected.extra);
+  crisis.count=mk(crisis.extra);
+  return {classic,corrected,crisis};
 }
-drawVis();
+
+let MODES=null, activeMode='classic';
+
+function calculate(){
+  const val=document.getElementById("birth").value;
+  if(!/^\d{2}\/\d{2}\/\d{4}$/.test(val)){alert("შეიყვანე თარიღი ფორმატით: DD/MM/YYYY");return;}
+  const[day,month,year]=val.split("/");
+  MODES=computeModes(day,month,year);
+  document.getElementById("modeWrap").style.display="flex";
+  setMode(activeMode,true);
+  renderCurves(day,month,year);
+  renderVedic(day,month,year);
+  setTimeout(()=>document.getElementById("summary").scrollIntoView({behavior:"smooth",block:"start"}),100);
+}
+
+/* ── VEDIC SQUARE (8×8 digit roots of multiplication table) ── */
+const VN=8, VCELL=64, VPAD=24;
+const vroot=n=>((n-1)%9)+1;
+const GRAHA={1:"მზე",2:"მთვარე",3:"იუპიტ.",4:"რაჰუ",5:"მერკ.",6:"ვენერა",7:"კეტუ",8:"სატ.",9:"მარსი"};
+const GRAHA_FULL={1:"მზე · Surya",2:"მთვარე · Chandra",3:"იუპიტერი · Guru",4:"რაჰუ · Rahu",5:"მერკური · Budha",6:"ვენერა · Shukra",7:"კეტუ · Ketu",8:"სატურნი · Shani",9:"მარსი · Mangala"};
+const VT=[];for(let i=1;i<=VN;i++){VT[i]=[];for(let j=1;j<=VN;j++)VT[i][j]=vroot(i*j);}
+let vSelected=1, vMirror=false, vMine=new Set();
+
+function vCells(k){const a=[];for(let i=1;i<=VN;i++)for(let j=1;j<=VN;j++)if(VT[i][j]===k)a.push([i,j]);return a;}
+function vCenter([i,j]){return [VPAD+(j-0.5)*VCELL, VPAD+(i-0.5)*VCELL];}
+function vLoop(cells){
+  const pts=cells.map(vCenter);
+  const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length, cy=pts.reduce((s,p)=>s+p[1],0)/pts.length;
+  const sorted=pts.map(p=>({p,a:Math.atan2(p[1]-cy,p[0]-cx)})).sort((u,v)=>u.a-v.a).map(o=>o.p);
+  return sorted.map((p,i)=>(i?"L":"M")+p[0]+","+p[1]).join(" ")+" Z";
+}
+function vDraw(){
+  const svg=document.getElementById("sq");
+  let s="";
+  const mk=9-vSelected;
+  const selCells=vCells(vSelected);
+  const mirCells=(vMirror&&mk!==vSelected&&mk>=1)?vCells(mk):[];
+  const selSet=new Set(selCells.map(c=>c.join(",")));
+  const mirSet=new Set(mirCells.map(c=>c.join(",")));
+  for(let i=1;i<=VN;i++)for(let j=1;j<=VN;j++){
+    const x=VPAD+(j-1)*VCELL, y=VPAD+(i-1)*VCELL, key=i+","+j;
+    const isSel=selSet.has(key), isMir=mirSet.has(key);
+    const fill=isSel?"rgba(200,169,110,.13)":isMir?"rgba(155,127,232,.11)":"rgba(255,255,255,.015)";
+    const stroke=isSel?"rgba(200,169,110,.45)":isMir?"rgba(155,127,232,.4)":"rgba(255,255,255,.06)";
+    s+=`<rect x="${x}" y="${y}" width="${VCELL}" height="${VCELL}" rx="7" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
+    const col=isSel?"#c8a96e":isMir?"#9b7fe8":"rgba(232,226,213,.3)";
+    s+=`<text x="${x+VCELL/2}" y="${y+VCELL/2+1}" text-anchor="middle" dominant-baseline="central" font-family="Cormorant Garamond,serif" font-size="${isSel||isMir?23:17}" fill="${col}">${VT[i][j]}</text>`;
+  }
+  if(mirCells.length>1)s+=`<path d="${vLoop(mirCells)}" fill="rgba(155,127,232,.05)" stroke="#9b7fe8" stroke-width="1.4" opacity=".7" stroke-linejoin="round"/>`;
+  if(selCells.length>1)s+=`<path d="${vLoop(selCells)}" fill="rgba(200,169,110,.06)" stroke="#c8a96e" stroke-width="1.9" opacity=".95" stroke-linejoin="round"/>`;
+  for(const c of mirCells){const[px,py]=vCenter(c);s+=`<circle cx="${px}" cy="${py}" r="3.4" fill="#06050f" stroke="#9b7fe8" stroke-width="1.5"/>`;}
+  for(const c of selCells){const[px,py]=vCenter(c);s+=`<circle cx="${px}" cy="${py}" r="3.8" fill="#06050f" stroke="#c8a96e" stroke-width="1.8"/>`;}
+  svg.innerHTML=s;
+  let info=`<b>${vSelected} — ${GRAHA_FULL[vSelected]}</b> · ${selCells.length} უჯრა`;
+  if(vMirror&&mk!==vSelected&&mk>=1)info+=` &nbsp;·&nbsp; <i>სარკე: ${mk} — ${GRAHA_FULL[mk]}</i>`;
+  if(vSelected===9)info+=`<br>9 ცხრილში მხოლოდ 4 უჯრაა — კვადრატი კვადრატში (ამიტომ მე-9 ხაზი ცხრილს გარეთ რჩება)`;
+  if(vSelected===3||vSelected===6)info+=`<br>3 და 6 — ყველაზე მკვრივი ნიმუშები (12 უჯრა)`;
+  document.getElementById("patternInfo").innerHTML=info;
+}
+function vSelect(k){
+  vSelected=k;
+  document.querySelectorAll(".dchip").forEach(e=>e.classList.toggle("active",Number(e.dataset.d)===k));
+  vDraw();
+}
+function toggleMirror(){
+  vMirror=!vMirror;
+  document.getElementById("mtBtn").classList.toggle("on",vMirror);
+  vDraw();
+}
+const vdsum=s=>{let n=[...s].reduce((a,c)=>a+ +c,0);while(n>9)n=[...String(n)].reduce((a,c)=>a+ +c,0);return n;};
+function renderVedic(dd,mm,yy){
+  const psychic=vdsum(dd), destiny=vdsum(dd+mm+yy);
+  vMine=new Set([psychic,destiny]);
+  document.getElementById("digitRow").innerHTML=[1,2,3,4,5,6,7,8,9].map(d=>
+    `<div class="dchip${vMine.has(d)?' mine':''}" data-d="${d}" onclick="vSelect(${d})"><div class="dn">${d}</div><div class="dg">${GRAHA[d]}</div></div>`).join("");
+  document.getElementById("vsqMine").textContent=
+    `● შენი ციფრები: ფსიქიკური (დღე) = ${psychic} · ბედისწერა (მთელი თარიღი) = ${destiny}`;
+  document.getElementById("vsqSection").style.display="block";
+  vSelect(psychic);
+}
+
+/* ── ENERGY CURVES ──
+   I  სიცოცხლე: ddmm × yyyy
+   II ნება:     იგივე, ყველა 0 → 1  (3003→3113, 1990→1991)
+   III ბედი:    dd × mm × yyyy ცალ-ცალკე
+   ციფრები იშლება 12-წლიან წერტილებად; <7 ციფრი → მეორდება თავიდან */
+const CURVE_DEFS=[
+  {id:"life",name:"სიცოცხლე",color:"#c8a96e"},
+  {id:"will",name:"ნება",color:"#9b7fe8"},
+  {id:"fate",name:"ბედი",color:"#3aada4"}
+];
+let curveState={life:true,will:true,fate:false};
+let curveData=null;
+
+function pad7(ds){const o=[...ds];let i=0;while(o.length<7){o.push(ds[i%ds.length]);i++;}return o;}
+function computeCurves(dd,mm,yyyy){
+  const z=s=>s.replace(/0/g,"1");
+  const lifeN=parseInt(dd+mm,10)*parseInt(yyyy,10);
+  const willN=parseInt(z(dd+mm),10)*parseInt(z(yyyy),10);
+  const fateN=parseInt(dd,10)*parseInt(mm,10)*parseInt(yyyy,10);
+  const dig=n=>pad7(String(n).split("").map(Number));
+  return{
+    life:{n:lifeN,f:`${dd+mm} × ${yyyy}`,d:dig(lifeN)},
+    will:{n:willN,f:`${z(dd+mm)} × ${z(yyyy)}`,d:dig(willN)},
+    fate:{n:fateN,f:`${+dd} × ${+mm} × ${yyyy}`,d:dig(fateN)},
+    year0:Number(yyyy)
+  };
+}
+
+function renderCurves(dd,mm,yyyy){
+  curveData=computeCurves(dd,mm,yyyy);
+  // legend chips
+  document.getElementById("curveLegend").innerHTML=CURVE_DEFS.map(c=>
+    `<div class="cleg ${curveState[c.id]?'on':'off'}" id="cl-${c.id}" onclick="toggleCurve('${c.id}')">
+      <span class="sw" style="background:${c.color}"></span>${c.name}</div>`).join("");
+  document.getElementById("curveFormulas").innerHTML=CURVE_DEFS.map(c=>
+    `<span style="color:${c.color}"><b>${curveData[c.id].f}</b> = ${curveData[c.id].n}</span>`).join("");
+  drawCurveSvg();
+  document.getElementById("curvesSection").style.display="block";
+}
+function toggleCurve(id){
+  curveState[id]=!curveState[id];
+  document.getElementById("cl-"+id).className="cleg "+(curveState[id]?"on":"off");
+  drawCurveSvg();
+}
+function drawCurveSvg(){
+  const svg=document.getElementById("curveSvg");
+  const W=720,H=300,L=34,R=14,T=16,B=40;
+  const iw=W-L-R,ih=H-T-B;
+  const nPts=Math.max(...CURVE_DEFS.map(c=>curveData[c.id].d.length));
+  const x=i=>L+iw*i/(nPts-1);
+  const y=v=>T+ih*(1-v/9);
+  let s="";
+  // grid
+  for(let v=0;v<=9;v++){
+    s+=`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" stroke="rgba(255,255,255,${v%3?0.03:0.07})" stroke-width="1"/>`;
+    s+=`<text x="${L-8}" y="${y(v)+3}" text-anchor="end" font-size="9" fill="rgba(232,226,213,.35)" font-family="Cinzel,serif">${v}</text>`;
+  }
+  for(let i=0;i<nPts;i++){
+    s+=`<line x1="${x(i)}" y1="${T}" x2="${x(i)}" y2="${T+ih}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`;
+    const yr=curveData.year0+i*12;
+    s+=`<text x="${x(i)}" y="${H-B+16}" text-anchor="middle" font-size="9.5" fill="rgba(232,226,213,.45)" font-family="Cinzel,serif">${yr}</text>`;
+    s+=`<text x="${x(i)}" y="${H-B+28}" text-anchor="middle" font-size="8" fill="rgba(232,226,213,.25)">${i*12} წ.</text>`;
+  }
+  // current age marker
+  const now=new Date();
+  const age=now.getFullYear()+now.getMonth()/12-curveData.year0;
+  if(age>0&&age<(nPts-1)*12){
+    const ax=L+iw*age/((nPts-1)*12);
+    s+=`<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ih}" stroke="rgba(232,127,127,.55)" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+    s+=`<text x="${ax}" y="${T-4}" text-anchor="middle" font-size="8.5" fill="rgba(232,127,127,.8)" font-family="Cinzel,serif">დღეს</text>`;
+  }
+  // curves
+  for(const c of CURVE_DEFS){
+    if(!curveState[c.id])continue;
+    const d=curveData[c.id].d;
+    const pts=d.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+    s+=`<polyline points="${pts}" fill="none" stroke="${c.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
+    d.forEach((v,i)=>{
+      s+=`<circle cx="${x(i)}" cy="${y(v)}" r="3.4" fill="#06050f" stroke="${c.color}" stroke-width="1.6"/>`;
+      s+=`<text x="${x(i)}" y="${y(v)-8}" text-anchor="middle" font-size="9.5" fill="${c.color}" font-family="Cormorant Garamond,serif">${v}</text>`;
+    });
+  }
+  svg.innerHTML=s;
+}
+
+function setMode(mode,force){
+  if(!MODES)return;
+  if(mode===activeMode&&!force&&document.getElementById("summary").style.display==="block")return;
+  activeMode=mode;
+  ["classic","corrected","crisis"].forEach(m=>
+    document.getElementById("mp-"+m).classList.toggle("active",m===mode));
+  const meta=MODE_META[mode], data=MODES[mode];
+  document.getElementById("modeDesc").innerHTML=meta.desc+(data.note?` <b>· ${data.note}</b>`:"");
+  // summary
+  const row=document.getElementById("summaryRow");
+  row.innerHTML=meta.labels.map((lab,i)=>{
+    const isCorr=(mode==="corrected"&&i===1);
+    return `<div class="summary-item"><span class="summary-label">${lab}</span><span class="summary-value${isCorr?" corr":""}">${data.disp[i]}</span></div>`;
+  }).join("");
+  document.getElementById("summary").style.display="block";
+  document.getElementById("gridTitle").textContent=meta.title;
+  renderGrid(data.count);
+  document.getElementById("grid-section").style.display="block";
+  renderResults(data.count);
+  document.getElementById("results").style.display="block";
+}
+
+function renderGrid(count){
+  const grid=document.getElementById("grid");
+  grid.innerHTML="";
+  GRID_ORDER.forEach(n=>{
+    let text="";for(let i=0;i<count[n];i++)text+=n;
+    const div=document.createElement("div");
+    div.className="cell";
+    div.innerHTML=`<div class="cell-label">${LABELS[n]}</div><div class="cell-digits${count[n]===0?" empty":""}" style="color:${count[n]>0?COLORS[n]:"inherit"}">${text||"—"}</div>`;
+    grid.appendChild(div);
+  });
+}
+
+function makePips(n){let h="";for(let i=0;i<n;i++)h+=`<span class="digit-pip"></span>`;return `<div class="digit-display">${h}</div>`;}
+
+function renderResults(count){
+  const wrap=document.getElementById("results");
+  wrap.innerHTML="";
+
+  const gs1=document.createElement("div");
+  gs1.className="group-separator";
+  gs1.innerHTML=`<div class="group-line"></div><div class="group-label">ინდივიდუალური ციფრები</div><div class="group-line"></div>`;
+  wrap.appendChild(gs1);
+
+  [1,2,3,4,5,6,7,8,9].forEach((n,idx)=>{
+    const sec=document.createElement("div");sec.className="section";
+    const c=count[n];
+    let pips=makePips(Math.min(c,4));
+    if(c>4)pips+=`<span style="font-size:11px;color:var(--muted);margin-left:4px;">+${c-4}</span>`;
+    sec.innerHTML=`<div class="section-header"><span class="section-num">${String(n).padStart(2,"0")}</span><span class="section-title">${LABELS[n]} <em>${n}</em></span>${pips}</div><div class="section-body">${getDesc(n,c)}</div>`;
+    wrap.appendChild(sec);
+    if(idx<8){const dv=document.createElement("div");dv.className="divider";dv.innerHTML=`<div class="divider-line"></div><div class="divider-gem"></div><div class="divider-line"></div>`;wrap.appendChild(dv);}
+  });
+
+  const gs2=document.createElement("div");gs2.className="group-separator";
+  gs2.innerHTML=`<div class="group-line"></div><div class="group-label">კომბინირებული ანალიზი</div><div class="group-line"></div>`;
+  wrap.appendChild(gs2);
+
+  function makeCompoundCard(key, count){
+    const d=COMPOUND[key];
+    const total=d.keys.reduce((s,k)=>s+count[k],0);
+    const card=document.createElement("div");
+    card.className="compound-card section";
+    const breakdown=d.keys.map(k=>`${k}×${count[k]}`).join("  ");
+    const totalHtml = total===0
+      ? `<span style="color:var(--muted);font-size:20px;font-family:'Cormorant Garamond',serif">—</span>`
+      : `<span style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);font-weight:300">${total}</span><span style="font-size:10px;color:var(--muted);margin-left:4px;letter-spacing:1px;">ქულა</span>`;
+    card.innerHTML=`
+      <div class="compound-name">${d.name}</div>
+      <div class="compound-digits-label" style="margin-bottom:10px;">${breakdown}</div>
+      <div style="margin-bottom:12px;">${totalHtml}</div>
+      <div class="compound-body" id="cp-${key}"></div>
+    `;
+    return card;
+  }
+
+  [["ambition","money","talent"],["purpose","family","stability"]].forEach((row,ri)=>{
+    const r=document.createElement("div");r.className="compound-row";
+    row.forEach(key=>r.appendChild(makeCompoundCard(key,count)));
+    wrap.appendChild(r);
+    if(ri<1){const dv=document.createElement("div");dv.className="divider";dv.innerHTML=`<div class="divider-line"></div><div class="divider-gem"></div><div class="divider-line"></div>`;wrap.appendChild(dv);}
+  });
+
+  const dv2=document.createElement("div");dv2.className="divider";
+  dv2.innerHTML=`<div class="divider-line"></div><div class="divider-gem"></div><div class="divider-line"></div>`;
+  wrap.appendChild(dv2);
+
+  const row3=document.createElement("div");row3.className="compound-row";row3.style.gridTemplateColumns="1fr 1fr";
+  ["temperament","spirit"].forEach(key=>row3.appendChild(makeCompoundCard(key,count)));
+  wrap.appendChild(row3);
+
+  setTimeout(()=>{document.querySelectorAll(".section").forEach((el,i)=>setTimeout(()=>el.classList.add("visible"),i*55));},50);
+}
 </script>
 </body>
 </html>
