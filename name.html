@@ -123,14 +123,14 @@ body::before {
   <header class="page-header">
     <div class="eyebrow">ნუმეროლოგია</div>
     <h1 class="page-title">სახელის <em>ნუმეროლოგია</em></h1>
-    <div class="lang-note">ქართული · English · Русский — ენა ავტომატურად ამოიცნობა</div>
+    <div class="lang-note">ქართული · English · Español · Italiano · Français · Deutsch · Русский — ავტომატურად ამოიცნობა</div>
     <div class="ornament">
       <div class="ornament-line"></div><div class="ornament-dot"></div><div class="ornament-line r"></div>
     </div>
   </header>
 
   <div class="input-wrap">
-    <input class="input-field" type="text" id="nameInput" placeholder="სახელი · Name · Имя">
+    <input class="input-field" type="text" id="nameInput" placeholder="სახელი · Name · Nombre · Имя">
     <button class="calc-btn" onclick="calculate()">გამოთვლა</button>
   </div>
 
@@ -199,13 +199,22 @@ const CYR = {};
 const VOWELS = new Set([..."აეიოუ", ..."aeiou", ..."аеёиоуыэюя"]);
 // note: Y treated as consonant (classic Pythagorean default)
 
-function scriptOf(ch){
-  if(GEO[ch]!==undefined) return 'ka';
-  if(LAT[ch]!==undefined) return 'en';
-  if(CYR[ch]!==undefined) return 'ru';
+// Latin-script languages (EN·ES·IT·FR·DE·PT…): accents fold to base letter,
+// ligatures/specials expand: é→e, ñ→n, ç→c, ü→u, ß→ss, œ→oe, æ→ae
+const SPECIAL = {"ß":"ss","æ":"ae","œ":"oe","ø":"o","å":"a","ð":"d","þ":"th"};
+function units(ch){                       // → array of base letters, or null
+  if(GEO[ch]!==undefined||CYR[ch]!==undefined) return [ch];
+  if(SPECIAL[ch]) return SPECIAL[ch].split("");
+  const base=ch.normalize('NFD').replace(/[\u0300-\u036f]/g,"");
+  if(LAT[base]!==undefined) return [base];
   return null;
 }
-function valOf(ch){ return GEO[ch] ?? LAT[ch] ?? CYR[ch]; }
+function scriptOf(ch){
+  if(GEO[ch]!==undefined) return 'ka';
+  if(CYR[ch]!==undefined) return 'ru';
+  const u=units(ch);
+  return u&&u.every(c=>LAT[c]!==undefined) ? 'lat' : null;
+}
 
 /* ── REDUCTION with master numbers ── */
 function reduce(n){
@@ -257,14 +266,18 @@ function calculate(){
   let bd="";
 
   for(const ch of name){
-    const v=valOf(ch);
-    if(v!==undefined){
-      sumAll+=v; digitCount[v]++;
+    const us=units(ch);
+    if(us){
+      let chSum=0,isV=false;
+      for(const u of us){
+        const v=GEO[u] ?? CYR[u] ?? LAT[u];
+        chSum+=v; digitCount[v]++;
+        if(VOWELS.has(u)){ isV=true; sumV+=v; } else sumC+=v;
+      }
+      sumAll+=chSum;
       scripts.add(scriptOf(ch));
-      const isV=VOWELS.has(ch);
-      if(isV) sumV+=v; else sumC+=v;
-      bd+=`<span class="letter">${ch}</span><span class="val${isV?' vw':''}">${v}</span>`;
-    } else if(ch===" "||ch==="-"){
+      bd+=`<span class="letter">${ch}</span><span class="val${isV?' vw':''}">${chSum}</span>`;
+    } else if(ch===" "||ch==="-"||ch==="'"){
       bd+=`<span style="margin:0 8px;opacity:.2">·</span>`;
     }
   }
@@ -273,7 +286,7 @@ function calculate(){
   const expr=reduce(sumAll), soul=reduce(sumV), pers=reduce(sumC);
 
   // script chips
-  const SN={ka:"ქართული",en:"English",ru:"Русский"};
+  const SN={ka:"ქართული",lat:"Latin · EN ES IT FR DE",ru:"Русский"};
   const chips=document.getElementById("scriptChips");
   chips.innerHTML=[...scripts].map(s=>`<span class="schip">${SN[s]}</span>`).join("");
   chips.style.display="flex";
