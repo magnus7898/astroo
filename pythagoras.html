@@ -74,6 +74,22 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .compound-digits-label{font-size:10px;color:var(--muted);margin-bottom:10px;}
 .compound-body{font-size:12px;line-height:1.7;color:rgba(232,226,213,.6);}
 @media(max-width:600px){.compound-row{grid-template-columns:1fr;}.page{padding:40px 16px 80px;}}
+
+/* ── ENERGY CURVES ── */
+.curves-section{display:none;margin-top:56px;}
+.curve-legend{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:18px;}
+.cleg{display:flex;align-items:center;gap:7px;padding:6px 16px;border-radius:18px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;user-select:none;}
+.cleg .sw{width:16px;height:3px;border-radius:2px;}
+.cleg.on{color:var(--text);border-color:rgba(200,169,110,.35);}
+.cleg.off{opacity:.4;}
+.curve-svg-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 10px 10px;overflow-x:auto;}
+.curve-svg-wrap svg{width:100%;height:auto;display:block;min-width:560px;}
+.curve-formulas{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;margin-top:14px;
+  font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--muted);font-style:italic;}
+.curve-formulas b{font-style:normal;font-weight:400;}
+.curve-note{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.7;max-width:560px;margin-left:auto;margin-right:auto;}
 </style>
 </head>
 <body>
@@ -105,6 +121,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   <div class="pyth-grid" id="grid"></div>
 </div>
 <div id="results"></div>
+
+<div class="curves-section" id="curvesSection">
+  <div class="group-separator">
+    <div class="group-line"></div><div class="group-label">ენერგიის გრაფიკები</div><div class="group-line"></div>
+  </div>
+  <div class="curve-legend" id="curveLegend"></div>
+  <div class="curve-svg-wrap"><svg id="curveSvg" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="curve-formulas" id="curveFormulas"></div>
+  <div class="curve-note">წერტილები 12-წლიანი ინტერვალებით · 0–9 — ენერგიის დონე · ვერტიკალური ხაზი — მიმდინარე ასაკი.<br>ნების გრაფიკში ყველა ნული იცვლება ერთიანით (0→1). თუ თარიღში ნულები არ არის — სიცოცხლისა და ნების გრაფიკები ემთხვევა.</div>
+</div>
 </div>
 <script>
 const LABELS={1:"პიროვნება",2:"ენერგია",3:"ინტერესი",4:"ჯანმრთელობა",5:"ლოგიკა",6:"შრომა",7:"იღბალი",8:"პასუხისმგებლობა",9:"მეხსიერება"};
@@ -210,7 +236,93 @@ function calculate(){
   MODES=computeModes(day,month,year);
   document.getElementById("modeWrap").style.display="flex";
   setMode(activeMode,true);
+  renderCurves(day,month,year);
   setTimeout(()=>document.getElementById("summary").scrollIntoView({behavior:"smooth",block:"start"}),100);
+}
+
+/* ── ENERGY CURVES ──
+   I  სიცოცხლე: ddmm × yyyy
+   II ნება:     იგივე, ყველა 0 → 1  (3003→3113, 1990→1991)
+   III ბედი:    dd × mm × yyyy ცალ-ცალკე
+   ციფრები იშლება 12-წლიან წერტილებად; <7 ციფრი → მეორდება თავიდან */
+const CURVE_DEFS=[
+  {id:"life",name:"სიცოცხლე",color:"#c8a96e"},
+  {id:"will",name:"ნება",color:"#9b7fe8"},
+  {id:"fate",name:"ბედი",color:"#3aada4"}
+];
+let curveState={life:true,will:true,fate:false};
+let curveData=null;
+
+function pad7(ds){const o=[...ds];let i=0;while(o.length<7){o.push(ds[i%ds.length]);i++;}return o;}
+function computeCurves(dd,mm,yyyy){
+  const z=s=>s.replace(/0/g,"1");
+  const lifeN=parseInt(dd+mm,10)*parseInt(yyyy,10);
+  const willN=parseInt(z(dd+mm),10)*parseInt(z(yyyy),10);
+  const fateN=parseInt(dd,10)*parseInt(mm,10)*parseInt(yyyy,10);
+  const dig=n=>pad7(String(n).split("").map(Number));
+  return{
+    life:{n:lifeN,f:`${dd+mm} × ${yyyy}`,d:dig(lifeN)},
+    will:{n:willN,f:`${z(dd+mm)} × ${z(yyyy)}`,d:dig(willN)},
+    fate:{n:fateN,f:`${+dd} × ${+mm} × ${yyyy}`,d:dig(fateN)},
+    year0:Number(yyyy)
+  };
+}
+
+function renderCurves(dd,mm,yyyy){
+  curveData=computeCurves(dd,mm,yyyy);
+  // legend chips
+  document.getElementById("curveLegend").innerHTML=CURVE_DEFS.map(c=>
+    `<div class="cleg ${curveState[c.id]?'on':'off'}" id="cl-${c.id}" onclick="toggleCurve('${c.id}')">
+      <span class="sw" style="background:${c.color}"></span>${c.name}</div>`).join("");
+  document.getElementById("curveFormulas").innerHTML=CURVE_DEFS.map(c=>
+    `<span style="color:${c.color}"><b>${curveData[c.id].f}</b> = ${curveData[c.id].n}</span>`).join("");
+  drawCurveSvg();
+  document.getElementById("curvesSection").style.display="block";
+}
+function toggleCurve(id){
+  curveState[id]=!curveState[id];
+  document.getElementById("cl-"+id).className="cleg "+(curveState[id]?"on":"off");
+  drawCurveSvg();
+}
+function drawCurveSvg(){
+  const svg=document.getElementById("curveSvg");
+  const W=720,H=300,L=34,R=14,T=16,B=40;
+  const iw=W-L-R,ih=H-T-B;
+  const nPts=Math.max(...CURVE_DEFS.map(c=>curveData[c.id].d.length));
+  const x=i=>L+iw*i/(nPts-1);
+  const y=v=>T+ih*(1-v/9);
+  let s="";
+  // grid
+  for(let v=0;v<=9;v++){
+    s+=`<line x1="${L}" y1="${y(v)}" x2="${W-R}" y2="${y(v)}" stroke="rgba(255,255,255,${v%3?0.03:0.07})" stroke-width="1"/>`;
+    s+=`<text x="${L-8}" y="${y(v)+3}" text-anchor="end" font-size="9" fill="rgba(232,226,213,.35)" font-family="Cinzel,serif">${v}</text>`;
+  }
+  for(let i=0;i<nPts;i++){
+    s+=`<line x1="${x(i)}" y1="${T}" x2="${x(i)}" y2="${T+ih}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`;
+    const yr=curveData.year0+i*12;
+    s+=`<text x="${x(i)}" y="${H-B+16}" text-anchor="middle" font-size="9.5" fill="rgba(232,226,213,.45)" font-family="Cinzel,serif">${yr}</text>`;
+    s+=`<text x="${x(i)}" y="${H-B+28}" text-anchor="middle" font-size="8" fill="rgba(232,226,213,.25)">${i*12} წ.</text>`;
+  }
+  // current age marker
+  const now=new Date();
+  const age=now.getFullYear()+now.getMonth()/12-curveData.year0;
+  if(age>0&&age<(nPts-1)*12){
+    const ax=L+iw*age/((nPts-1)*12);
+    s+=`<line x1="${ax}" y1="${T}" x2="${ax}" y2="${T+ih}" stroke="rgba(232,127,127,.55)" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+    s+=`<text x="${ax}" y="${T-4}" text-anchor="middle" font-size="8.5" fill="rgba(232,127,127,.8)" font-family="Cinzel,serif">დღეს</text>`;
+  }
+  // curves
+  for(const c of CURVE_DEFS){
+    if(!curveState[c.id])continue;
+    const d=curveData[c.id].d;
+    const pts=d.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+    s+=`<polyline points="${pts}" fill="none" stroke="${c.color}" stroke-width="2" stroke-linejoin="round" opacity=".9"/>`;
+    d.forEach((v,i)=>{
+      s+=`<circle cx="${x(i)}" cy="${y(v)}" r="3.4" fill="#06050f" stroke="${c.color}" stroke-width="1.6"/>`;
+      s+=`<text x="${x(i)}" y="${y(v)-8}" text-anchor="middle" font-size="9.5" fill="${c.color}" font-family="Cormorant Garamond,serif">${v}</text>`;
+    });
+  }
+  svg.innerHTML=s;
 }
 
 function setMode(mode,force){
