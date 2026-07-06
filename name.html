@@ -11,7 +11,6 @@
   --surface: rgba(255,255,255,0.035);
   --border: rgba(255,255,255,0.07);
   --gold: #c8a96e;
-  --gold-dim: rgba(200,169,110,0.3);
   --text: #e8e2d5;
   --muted: rgba(232,226,213,0.38);
   --teal: #3aada4;
@@ -19,187 +18,103 @@
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--bg); color: var(--text);
   font-family: 'Noto Sans Georgian', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100vh; overflow-x: hidden;
 }
 body::before {
-  content: '';
-  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
     radial-gradient(ellipse 60% 50% at 10% 20%, rgba(20,80,75,0.22) 0%, transparent 60%),
     radial-gradient(ellipse 50% 60% at 90% 80%, rgba(40,30,100,0.2) 0%, transparent 60%),
     radial-gradient(ellipse 40% 40% at 50% 50%, rgba(30,60,55,0.12) 0%, transparent 55%);
 }
+.page { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 64px 24px 100px; }
 
-.page {
-  position: relative; z-index: 1;
-  max-width: 680px;
-  margin: 0 auto;
-  padding: 64px 24px 100px;
-}
+.page-header { text-align: center; margin-bottom: 44px; }
+.eyebrow { font-family:'Cinzel',serif; font-size:10px; letter-spacing:6px; color:var(--teal); text-transform:uppercase; margin-bottom:14px; opacity:.8; }
+.page-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(34px,7vw,56px); line-height:1.05; color:var(--text); }
+.page-title em { font-style:italic; color:rgba(232,226,213,0.45); }
+.lang-note { font-size:11px; color:var(--muted); margin-top:12px; letter-spacing:1px; }
+.ornament { display:flex; align-items:center; justify-content:center; gap:14px; margin-top:18px; }
+.ornament-line { height:1px; width:70px; background:linear-gradient(90deg,transparent,var(--teal-dim)); }
+.ornament-line.r { background:linear-gradient(90deg,var(--teal-dim),transparent); }
+.ornament-dot { width:6px; height:6px; background:var(--teal); transform:rotate(45deg); opacity:.5; box-shadow:0 0 8px rgba(58,173,164,.5); }
 
-/* Header */
-.page-header { text-align: center; margin-bottom: 52px; }
-.eyebrow {
-  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 6px;
-  color: var(--teal); text-transform: uppercase; margin-bottom: 14px; opacity: 0.8;
-}
-.page-title {
-  font-family: 'Cormorant Garamond', serif; font-weight: 300;
-  font-size: clamp(34px, 7vw, 56px); line-height: 1.05; color: var(--text);
-}
-.page-title em { font-style: italic; color: rgba(232,226,213,0.45); }
-.ornament { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; }
-.ornament-line { height: 1px; width: 70px; background: linear-gradient(90deg, transparent, var(--teal-dim)); }
-.ornament-line.r { background: linear-gradient(90deg, var(--teal-dim), transparent); }
-.ornament-dot { width: 6px; height: 6px; background: var(--teal); transform: rotate(45deg); opacity: 0.5; box-shadow: 0 0 8px rgba(58,173,164,0.5); }
-
-/* Input */
-.input-wrap {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; margin-bottom: 52px; flex-wrap: wrap;
-}
+.input-wrap { display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
 .input-field {
-  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
-  border-radius: 8px; color: var(--text); font-family: 'Cormorant Garamond', serif;
-  font-size: 22px; font-weight: 300; letter-spacing: 4px;
-  padding: 13px 22px; outline: none; width: 240px; text-align: center;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:300;
+  letter-spacing:3px; padding:13px 22px; outline:none; width:300px; text-align:center;
+  transition:border-color .3s, box-shadow .3s;
 }
-.input-field:focus {
-  border-color: rgba(58,173,164,0.35);
-  box-shadow: 0 0 20px rgba(58,173,164,0.08);
-}
-.input-field::placeholder { color: var(--muted); font-size: 14px; letter-spacing: 2px; }
+.input-field:focus { border-color:rgba(58,173,164,0.35); box-shadow:0 0 20px rgba(58,173,164,0.08); }
+.input-field::placeholder { color:var(--muted); font-size:14px; letter-spacing:2px; }
 .calc-btn {
-  padding: 13px 28px;
-  background: linear-gradient(135deg, rgba(58,173,164,0.18), rgba(40,130,125,0.1));
-  border: 1px solid rgba(58,173,164,0.3); border-radius: 8px;
-  color: var(--text); font-family: 'Cinzel', serif; font-size: 11px;
-  letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
-  transition: all 0.3s;
+  padding:13px 28px; background:linear-gradient(135deg,rgba(58,173,164,.18),rgba(40,130,125,.1));
+  border:1px solid rgba(58,173,164,.3); border-radius:8px; color:var(--text);
+  font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; transition:all .3s;
 }
-.calc-btn:hover {
-  border-color: rgba(58,173,164,0.6);
-  box-shadow: 0 0 24px rgba(58,173,164,0.15);
-  transform: translateY(-1px);
-}
+.calc-btn:hover { border-color:rgba(58,173,164,.6); box-shadow:0 0 24px rgba(58,173,164,.15); transform:translateY(-1px); }
 
-/* Letter breakdown */
-.breakdown {
-  display: none;
-  font-family: 'Cormorant Garamond', serif;
-  text-align: center;
-  margin-bottom: 44px;
-  font-size: 15px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  line-height: 2;
-  font-style: italic;
-}
-.breakdown span.letter { color: var(--text); margin-right: 2px; }
-.breakdown span.val { color: var(--teal); font-size: 11px; vertical-align: super; margin-right: 8px; }
+.script-chips { display:none; justify-content:center; gap:8px; margin-bottom:36px; }
+.schip { padding:3px 12px; border-radius:14px; font-size:10px; letter-spacing:2px; font-family:'Cinzel',serif;
+  color:rgba(200,169,110,.85); border:1px solid rgba(200,169,110,.25); background:rgba(200,169,110,.06); }
 
-/* Result display */
-.result-display {
-  display: none;
-  text-align: center;
-  margin-bottom: 52px;
-}
-.result-label {
-  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 5px;
-  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
-}
-.result-number {
-  font-family: 'Cormorant Garamond', serif; font-weight: 300;
-  font-size: clamp(72px, 18vw, 120px); line-height: 1;
-  color: white;
-  text-shadow: 0 0 60px rgba(58,173,164,0.3);
-  position: relative; display: inline-block;
-}
-.result-name-label {
-  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 4px;
-  color: var(--teal); text-transform: uppercase; margin-top: 10px; opacity: 0.7;
-}
-.result-name-value {
-  font-family: 'Cormorant Garamond', serif; font-style: italic;
-  font-size: 22px; color: rgba(232,226,213,0.6); margin-top: 4px; letter-spacing: 2px;
-}
+.breakdown { display:none; font-family:'Cormorant Garamond',serif; text-align:center; margin-bottom:40px;
+  font-size:15px; color:var(--muted); letter-spacing:2px; line-height:2; font-style:italic; }
+.breakdown span.letter { color:var(--text); margin-right:2px; }
+.breakdown span.val { color:var(--teal); font-size:11px; vertical-align:super; margin-right:8px; }
+.breakdown span.val.vw { color:var(--gold); }
 
-/* Ring around number */
-.number-wrap {
-  position: relative; display: inline-block;
-  padding: 20px 30px;
-}
-.number-wrap::before {
-  content: '';
-  position: absolute; inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(58,173,164,0.2);
-  box-shadow: 0 0 40px rgba(58,173,164,0.08);
-  animation: ringPulse 3s ease-in-out infinite;
-}
-@keyframes ringPulse {
-  0%,100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.03); }
-}
+/* trio of numbers */
+.trio { display:none; grid-template-columns:1fr 1.3fr 1fr; gap:14px; margin-bottom:44px; align-items:stretch; }
+@media(max-width:560px){ .trio{grid-template-columns:1fr;} }
+.tcard { background:var(--surface); border:1px solid var(--border); border-radius:12px;
+  padding:22px 14px; text-align:center; position:relative; overflow:hidden; }
+.tcard::before { content:''; position:absolute; top:0; left:20%; right:20%; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(58,173,164,.4),transparent); }
+.tcard.main::before { background:linear-gradient(90deg,transparent,rgba(200,169,110,.55),transparent); }
+.tcard .tl { font-family:'Cinzel',serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.tcard .tn { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:56px; line-height:1; color:#fff; }
+.tcard.main .tn { font-size:82px; text-shadow:0 0 50px rgba(200,169,110,.35); }
+.tcard .ts { font-size:10px; color:var(--muted); margin-top:8px; letter-spacing:1px; line-height:1.6; }
+.tcard .master { display:inline-block; margin-top:6px; font-size:9px; letter-spacing:2px; color:var(--gold);
+  border:1px solid rgba(200,169,110,.3); border-radius:10px; padding:2px 10px; font-family:'Cinzel',serif; }
 
-/* Interpretation */
-.interpretation {
-  display: none;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 32px 36px;
-  position: relative; overflow: hidden;
-}
-.interpretation::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(58,173,164,0.4), transparent);
-}
-.interp-title {
-  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 4px;
-  text-transform: uppercase; color: var(--teal); margin-bottom: 18px; opacity: 0.7;
-}
-.interp-headline {
-  font-family: 'Cormorant Garamond', serif; font-weight: 400;
-  font-size: clamp(22px, 4vw, 28px); color: var(--text);
-  margin-bottom: 16px; line-height: 1.2;
-}
-.interp-body {
-  font-family: 'Noto Sans Georgian', sans-serif; font-weight: 300;
-  font-size: 14px; line-height: 1.85; color: rgba(232,226,213,0.68);
-}
-.interp-body strong { color: var(--text); font-weight: 500; }
+/* Pythagorean square */
+.psq-wrap { display:none; margin-bottom:44px; }
+.psq-title { font-family:'Cinzel',serif; font-size:9px; letter-spacing:4px; text-transform:uppercase;
+  color:var(--teal); opacity:.7; text-align:center; margin-bottom:16px; }
+.psq { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:380px; margin:0 auto; }
+.pcell { aspect-ratio:1.35; background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  transition:border-color .3s, box-shadow .3s; position:relative; }
+.pcell:hover { border-color:rgba(58,173,164,.35); box-shadow:0 0 18px rgba(58,173,164,.1); }
+.pcell .digs { font-family:'Cormorant Garamond',serif; font-size:clamp(17px,3.4vw,24px); letter-spacing:2px; color:#fff; min-height:1.2em; }
+.pcell .digs.empty { color:rgba(232,226,213,.14); }
+.pcell .plabel { font-size:8.5px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; font-family:'Cinzel',serif; text-align:center; padding:0 4px; }
 
-/* Keywords */
-.keywords {
-  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px;
-}
-.kw {
-  padding: 5px 14px;
-  background: rgba(58,173,164,0.08);
-  border: 1px solid rgba(58,173,164,0.2);
-  border-radius: 20px;
-  font-size: 11px; letter-spacing: 1.5px;
-  color: rgba(58,173,164,0.8);
-  font-family: 'Cinzel', serif;
-}
+.interpretation { display:none; background:var(--surface); border:1px solid var(--border);
+  border-radius:12px; padding:32px 36px; position:relative; overflow:hidden; }
+.interpretation::before { content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(58,173,164,.4),transparent); }
+.interp-title { font-family:'Cinzel',serif; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--teal); margin-bottom:18px; opacity:.7; }
+.interp-headline { font-family:'Cormorant Garamond',serif; font-weight:400; font-size:clamp(22px,4vw,28px); color:var(--text); margin-bottom:16px; line-height:1.2; }
+.interp-body { font-weight:300; font-size:14px; line-height:1.85; color:rgba(232,226,213,.68); }
+.interp-body strong { color:var(--text); font-weight:500; }
+.subinterp { margin-top:22px; padding-top:18px; border-top:1px solid rgba(255,255,255,.05); }
+.subinterp .sh { font-family:'Cinzel',serif; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--gold); opacity:.75; margin-bottom:8px; }
+.subinterp .sb { font-size:13px; line-height:1.8; color:rgba(232,226,213,.6); }
+.keywords { display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+.kw { padding:5px 14px; background:rgba(58,173,164,.08); border:1px solid rgba(58,173,164,.2);
+  border-radius:20px; font-size:11px; letter-spacing:1.5px; color:rgba(58,173,164,.8); font-family:'Cinzel',serif; }
 
-/* Fade in */
-.fade-in { opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s ease; }
-.fade-in.visible { opacity: 1; transform: none; }
-
-@media (max-width: 480px) {
-  .page { padding: 40px 16px 80px; }
-  .interpretation { padding: 24px 20px; }
-}
+.fade-in { opacity:0; transform:translateY(14px); transition:opacity .6s ease, transform .6s ease; }
+.fade-in.visible { opacity:1; transform:none; }
+@media(max-width:480px){ .page{padding:40px 16px 80px;} .interpretation{padding:24px 20px;} }
 </style>
 </head>
 <body>
@@ -208,151 +123,202 @@ body::before {
   <header class="page-header">
     <div class="eyebrow">ნუმეროლოგია</div>
     <h1 class="page-title">სახელის <em>ნუმეროლოგია</em></h1>
+    <div class="lang-note">ქართული · English · Русский — ენა ავტომატურად ამოიცნობა</div>
     <div class="ornament">
-      <div class="ornament-line"></div>
-      <div class="ornament-dot"></div>
-      <div class="ornament-line r"></div>
+      <div class="ornament-line"></div><div class="ornament-dot"></div><div class="ornament-line r"></div>
     </div>
   </header>
 
   <div class="input-wrap">
-    <input class="input-field" type="text" id="nameInput" placeholder="შეიყვანე სახელი">
+    <input class="input-field" type="text" id="nameInput" placeholder="სახელი · Name · Имя">
     <button class="calc-btn" onclick="calculate()">გამოთვლა</button>
   </div>
 
+  <div class="script-chips" id="scriptChips"></div>
   <div class="breakdown fade-in" id="breakdown"></div>
 
-  <div class="result-display fade-in" id="resultDisplay">
-    <div class="result-label">სახელის რიცხვი</div>
-    <div class="number-wrap">
-      <div class="result-number" id="resultNumber">—</div>
+  <div class="trio fade-in" id="trio">
+    <div class="tcard">
+      <div class="tl">სულის რიცხვი</div>
+      <div class="tn" id="soulNum">—</div>
+      <div class="ts">ხმოვნები · შინაგანი სურვილი<br>Soul Urge</div>
+      <div id="soulMaster"></div>
     </div>
-    <div class="result-name-label">სახელი</div>
-    <div class="result-name-value" id="resultName"></div>
+    <div class="tcard main">
+      <div class="tl">სახელის რიცხვი · ექსპრესია</div>
+      <div class="tn" id="exprNum">—</div>
+      <div class="ts">ყველა ასო · ბედისწერა<br>Expression / Destiny</div>
+      <div id="exprMaster"></div>
+    </div>
+    <div class="tcard">
+      <div class="tl">პიროვნების რიცხვი</div>
+      <div class="tn" id="persNum">—</div>
+      <div class="ts">თანხმოვნები · გარეგანი სახე<br>Personality</div>
+      <div id="persMaster"></div>
+    </div>
+  </div>
+
+  <div class="psq-wrap fade-in" id="psqWrap">
+    <div class="psq-title">სახელის პითაგორას კვადრატი</div>
+    <div class="psq" id="psq"></div>
   </div>
 
   <div class="interpretation fade-in" id="interpretation">
-    <div class="interp-title">განმარტება</div>
+    <div class="interp-title">განმარტება · ექსპრესიის რიცხვი</div>
     <div class="interp-headline" id="interpHeadline"></div>
     <div class="interp-body" id="interpBody"></div>
+    <div class="subinterp" id="soulInterp" style="display:none">
+      <div class="sh">სულის რიცხვი — რა გინდა სინამდვილეში</div>
+      <div class="sb" id="soulBody"></div>
+    </div>
+    <div class="subinterp" id="persInterp" style="display:none">
+      <div class="sh">პიროვნების რიცხვი — როგორს გხედავენ</div>
+      <div class="sb" id="persBody"></div>
+    </div>
     <div class="keywords" id="keywords"></div>
   </div>
 
 </div>
 
 <script>
+/* ── LETTER VALUE MAPS ────────────────────────────────────────── */
+// ქართული — 33 ასო, ციკლური 1–9
 const GEO = {
   "ა":1,"ბ":2,"გ":3,"დ":4,"ე":5,"ვ":6,"ზ":7,"თ":8,"ი":9,
   "კ":1,"ლ":2,"მ":3,"ნ":4,"ო":5,"პ":6,"ჟ":7,"რ":8,"ს":9,
   "ტ":1,"უ":2,"ფ":3,"ქ":4,"ღ":5,"ყ":6,"შ":7,"ჩ":8,"ც":9,
   "ძ":1,"წ":2,"ჭ":3,"ხ":4,"ჯ":5,"ჰ":6
 };
+// English — Pythagorean A=1…I=9, J=1…
+const LAT = {};
+"abcdefghijklmnopqrstuvwxyz".split("").forEach((c,i)=>LAT[c]=(i%9)+1);
+// Русский — стандартная кириллическая таблица 1–9
+const CYR = {};
+"абвгдеёжзийклмнопрстуфхцчшщъыьэюя".split("").forEach((c,i)=>CYR[c]=(i%9)+1);
 
-function reduce(n) {
-  while (n > 9) n = n.toString().split("").reduce((a,b)=>a+Number(b), 0);
+const VOWELS = new Set([..."აეიოუ", ..."aeiou", ..."аеёиоуыэюя"]);
+// note: Y treated as consonant (classic Pythagorean default)
+
+function scriptOf(ch){
+  if(GEO[ch]!==undefined) return 'ka';
+  if(LAT[ch]!==undefined) return 'en';
+  if(CYR[ch]!==undefined) return 'ru';
+  return null;
+}
+function valOf(ch){ return GEO[ch] ?? LAT[ch] ?? CYR[ch]; }
+
+/* ── REDUCTION with master numbers ── */
+function reduce(n){
+  while(n>9 && n!==11 && n!==22 && n!==33)
+    n=String(n).split("").reduce((a,b)=>a+ +b,0);
   return n;
 }
+function baseOf(n){ return n>9 ? String(n).split("").reduce((a,b)=>a+ +b,0) : n; } // 11→2, 22→4, 33→6
 
+/* ── INTERPRETATIONS ── */
 const INTERP = {
-  1: {
-    headline: "ლიდერი · დამოუკიდებელი სული",
-    body: "ერთი — დასაწყისის, ძალისა და ლიდერობის რიცხვია. ამ სახელის მქონე ადამიანი <strong>ბუნებრივი ლიდერია</strong> — მას ადვილად გადაეცემა ინიციატივა, ძნელდება მიყოლა სხვის კვალდაკვალ. ის ამჯობინებს თავად გაუსწროს საქმეებს და საკუთარი გზა გაკვალოს. <strong>დამოუკიდებლობა</strong> ამ ადამიანისთვის სიცოცხლის ჟანგბადია.",
-    kws: ["ლიდერობა","ინიციატივა","სიძლიერე","დამოუკიდებლობა","თვითდაჯერება"]
-  },
-  2: {
-    headline: "ჰარმონია · ემოციური სიბრძნე",
-    body: "ორი — ბალანსის, ჰარმონიისა და ემოციური სიღრმის რიცხვია. ამ სახელს ატარებელი ადამიანი <strong>ბუნებრივი შუამავალია</strong> — ის კონფლიქტებს ქარვასლასავით ამსუბუქებს და სხვებს ეხმარება ერთმანეთის გაგებაში. მგრძნობიარე, ინტუიციური, ემპათიური — ეს ადამიანი <strong>ურთიერთობების ოსტატია</strong>.",
-    kws: ["ჰარმონია","ემპათია","ინტუიცია","ბალანსი","მოლოდინი"]
-  },
-  3: {
-    headline: "შემოქმედება · სიხარული",
-    body: "სამი — გამოხატვის, შემოქმედებისა და სიხარულის რიცხვია. ამ სახელის მატარებელი ადამიანი <strong>ბუნებრივი შემოქმედია</strong> — მეტყველება, ხელოვნება, იუმორი, ელოკვენტობა ამ ადამიანში ბუნებრივად ცოცხლობს. ის <strong>ვინც ოთახში შედის — ოთახი ნათდება</strong>. ენთუზიაზმი და სითბო მისი ნიშანია.",
-    kws: ["შემოქმედება","ხელოვნება","სიხარული","კომუნიკაცია","ენთუზიაზმი"]
-  },
-  4: {
-    headline: "სტაბილურობა · სანდოობა",
-    body: "ოთხი — სტრუქტურის, შრომისა და სანდოობის რიცხვია. ამ სახელის ადამიანი <strong>კლდეა</strong> — ყველა ენდობა, ყველა ეყრდნობა. ის გეგმებს ასრულებს, სიტყვას იცავს, ვალდებულებებს პასუხისმგებლობით ეკიდება. <strong>სისტემატური, ორგანიზებული</strong> — ამ ადამიანს ნებისმიერი პროექტი სჭირდება.",
-    kws: ["სტაბილურობა","სანდოობა","შრომა","ორგანიზება","პასუხისმგებლობა"]
-  },
-  5: {
-    headline: "თავისუფლება · ავანტიურიზმი",
-    body: "ხუთი — ცვლილების, თავისუფლებისა და ავანტიურის რიცხვია. ამ სახელის ადამიანი <strong>ბუნებრივი მოგზაურია</strong> — ახალი ადგილები, ახალი ადამიანები, ახალი გამოცდილება. ის ვერ ეგუება ერთფეროვნებას, <strong>ყოველ კუთხეში სიახლეს ეძებს</strong>. ცხოვრება ამ ადამიანისთვის ყოველ ნაბიჯში — სიახლეა.",
-    kws: ["თავისუფლება","სიახლე","მოგზაურობა","ადაპტაცია","ვნება"]
-  },
-  6: {
-    headline: "სიყვარული · მზრუნველობა",
-    body: "ექვსი — სიყვარულის, ოჯახისა და მზრუნველობის რიცხვია. ამ სახელის ადამიანი <strong>ოჯახის გული</strong> — ახლობლებზე ზრუნვა მისთვის ბუნებრივ სუნთქვასავითაა. ის ყველასთვის მზადაა — ფიზიკურად, ემოციურად, პრაქტიკულად. <strong>სიყვარული ამ ადამიანის ენაა</strong>.",
-    kws: ["სიყვარული","ოჯახი","მზრუნველობა","ჰარმონია","სამსახური"]
-  },
-  7: {
-    headline: "სიბრძნე · შინაგანი ძიება",
-    body: "შვიდი — სიბრძნის, ანალიზისა და სულიერი ძიების რიცხვია. ამ სახელის ადამიანი <strong>ფილოსოფოსია</strong> — ის ღრმა კითხვებს ეძებს, ზედაპირული პასუხები არ აკმაყოფილებს. ინტროვერტი ბუნებით, <strong>ღრმა შინაგანი სამყარო</strong> გააჩნია. მის ახლოს ყოფნა — პრივილეგიაა.",
-    kws: ["სიბრძნე","ანალიზი","სულიერება","ინტროვერსია","ფილოსოფია"]
-  },
-  8: {
-    headline: "ძალა · წარმატება",
-    body: "რვა — ამბიციის, ძალისა და მატერიალური წარმატების რიცხვია. ამ სახელის ადამიანი <strong>ბუნებრივი ლიდერია ბიზნესში</strong> — ის ხედავს შანსებს, ეფექტურად ანაწილებს რესურსებს, <strong>დიდ სურათს</strong> ყოველთვის ხედავს. ამბიცია, სტრატეგია და ნება — ეს სამი მისი საიარაღოა.",
-    kws: ["წარმატება","ამბიცია","ბიზნესი","ძალა","სტრატეგია"]
-  },
-  9: {
-    headline: "ჰუმანიზმი · დასრულება",
-    body: "ცხრა — ჰუმანიზმის, გლობალური სიყვარულისა და დასრულების რიცხვია. ამ სახელის ადამიანი <strong>ადამიანთა მოყვარულია</strong> — ის ფართოდ ფიქრობს, სამყაროს სიკეთისკენ ისწრაფვის. ტოლერანტული, გულუხვი, <strong>ყველა ადამიანში კარგს ხედავს</strong>. ამ ადამიანს სამყარო ოოდნავ უკეთესია.",
-    kws: ["ჰუმანიზმი","სიყვარული","გულუხვობა","სიბრძნე","დასრულება"]
-  }
+  1:{headline:"ლიდერი · დამოუკიდებელი სული",body:"ერთი — დასაწყისის, ძალისა და ლიდერობის რიცხვია. ამ სახელის მქონე ადამიანი <strong>ბუნებრივი ლიდერია</strong> — მას ადვილად გადაეცემა ინიციატივა, ძნელდება მიყოლა სხვის კვალდაკვალ. ის ამჯობინებს თავად გაუსწროს საქმეებს და საკუთარი გზა გაკვალოს. <strong>დამოუკიდებლობა</strong> ამ ადამიანისთვის სიცოცხლის ჟანგბადია.",kws:["ლიდერობა","ინიციატივა","სიძლიერე","დამოუკიდებლობა","თვითდაჯერება"]},
+  2:{headline:"ჰარმონია · ემოციური სიბრძნე",body:"ორი — ბალანსის, ჰარმონიისა და ემოციური სიღრმის რიცხვია. ამ სახელს ატარებელი ადამიანი <strong>ბუნებრივი შუამავალია</strong> — ის კონფლიქტებს ქარვასლასავით ამსუბუქებს და სხვებს ეხმარება ერთმანეთის გაგებაში. მგრძნობიარე, ინტუიციური, ემპათიური — ეს ადამიანი <strong>ურთიერთობების ოსტატია</strong>.",kws:["ჰარმონია","ემპათია","ინტუიცია","ბალანსი","დიპლომატია"]},
+  3:{headline:"შემოქმედება · სიხარული",body:"სამი — გამოხატვის, შემოქმედებისა და სიხარულის რიცხვია. ამ სახელის მატარებელი ადამიანი <strong>ბუნებრივი შემოქმედია</strong> — მეტყველება, ხელოვნება, იუმორი, ელოკვენტობა ამ ადამიანში ბუნებრივად ცოცხლობს. ის <strong>ვინც ოთახში შედის — ოთახი ნათდება</strong>. ენთუზიაზმი და სითბო მისი ნიშანია.",kws:["შემოქმედება","ხელოვნება","სიხარული","კომუნიკაცია","ენთუზიაზმი"]},
+  4:{headline:"სტაბილურობა · სანდოობა",body:"ოთხი — სტრუქტურის, შრომისა და სანდოობის რიცხვია. ამ სახელის ადამიანი <strong>კლდეა</strong> — ყველა ენდობა, ყველა ეყრდნობა. ის გეგმებს ასრულებს, სიტყვას იცავს, ვალდებულებებს პასუხისმგებლობით ეკიდება. <strong>სისტემატური, ორგანიზებული</strong> — ამ ადამიანს ნებისმიერი პროექტი სჭირდება.",kws:["სტაბილურობა","სანდოობა","შრომა","ორგანიზება","პასუხისმგებლობა"]},
+  5:{headline:"თავისუფლება · ავანტიურიზმი",body:"ხუთი — ცვლილების, თავისუფლებისა და ავანტიურის რიცხვია. ამ სახელის ადამიანი <strong>ბუნებრივი მოგზაურია</strong> — ახალი ადგილები, ახალი ადამიანები, ახალი გამოცდილება. ის ვერ ეგუება ერთფეროვნებას, <strong>ყოველ კუთხეში სიახლეს ეძებს</strong>. ცხოვრება ამ ადამიანისთვის ყოველ ნაბიჯში — სიახლეა.",kws:["თავისუფლება","სიახლე","მოგზაურობა","ადაპტაცია","ვნება"]},
+  6:{headline:"სიყვარული · მზრუნველობა",body:"ექვსი — სიყვარულის, ოჯახისა და მზრუნველობის რიცხვია. ამ სახელის ადამიანი <strong>ოჯახის გული</strong> — ახლობლებზე ზრუნვა მისთვის ბუნებრივ სუნთქვასავითაა. ის ყველასთვის მზადაა — ფიზიკურად, ემოციურად, პრაქტიკულად. <strong>სიყვარული ამ ადამიანის ენაა</strong>.",kws:["სიყვარული","ოჯახი","მზრუნველობა","ჰარმონია","ერთგულება"]},
+  7:{headline:"სიბრძნე · შინაგანი ძიება",body:"შვიდი — სიბრძნის, ანალიზისა და სულიერი ძიების რიცხვია. ამ სახელის ადამიანი <strong>ფილოსოფოსია</strong> — ის ღრმა კითხვებს ეძებს, ზედაპირული პასუხები არ აკმაყოფილებს. ინტროვერტი ბუნებით, <strong>ღრმა შინაგანი სამყარო</strong> გააჩნია. მის ახლოს ყოფნა — პრივილეგიაა.",kws:["სიბრძნე","ანალიზი","სულიერება","ინტროვერსია","ფილოსოფია"]},
+  8:{headline:"ძალა · წარმატება",body:"რვა — ამბიციის, ძალისა და მატერიალური წარმატების რიცხვია. ამ სახელის ადამიანი <strong>ბუნებრივი ლიდერია ბიზნესში</strong> — ის ხედავს შანსებს, ეფექტურად ანაწილებს რესურსებს, <strong>დიდ სურათს</strong> ყოველთვის ხედავს. ამბიცია, სტრატეგია და ნება — ეს სამი მისი საიარაღოა.",kws:["წარმატება","ამბიცია","ბიზნესი","ძალა","სტრატეგია"]},
+  9:{headline:"ჰუმანიზმი · დასრულება",body:"ცხრა — ჰუმანიზმის, გლობალური სიყვარულისა და დასრულების რიცხვია. ამ სახელის ადამიანი <strong>ადამიანთა მოყვარულია</strong> — ის ფართოდ ფიქრობს, სამყაროს სიკეთისკენ ისწრაფვის. ტოლერანტული, გულუხვი, <strong>ყველა ადამიანში კარგს ხედავს</strong>. ამ ადამიანთან სამყარო ოდნავ უკეთესია.",kws:["ჰუმანიზმი","სიყვარული","გულუხვობა","სიბრძნე","დასრულება"]},
+  11:{headline:"ოსტატური რიცხვი 11 · ინტუიციური მაცნე",body:"თერთმეტი — პირველი ოსტატური რიცხვია: <strong>გაძლიერებული ინტუიცია, სულიერი ანტენა</strong>. ეს სახელი ატარებს ორის ჰარმონიას, მაგრამ გაცილებით მაღალ სიხშირეზე — შთაგონება, ხედვა, სხვების ამაღლება. დიდი პოტენციალი დიდ შინაგან დაძაბულობასაც ნიშნავს: მიწასთან კავშირი აუცილებელია.",kws:["ინტუიცია","შთაგონება","ხედვა","სულიერება","მგრძნობელობა"]},
+  22:{headline:"ოსტატური რიცხვი 22 · დიდი მშენებელი",body:"ოცდაორი — <strong>ოსტატი მშენებლის</strong> რიცხვია: ოთხის პრაქტიკულობა კოსმიურ მასშტაბზე. ამ სახელის მატარებელს შეუძლია <strong>ოცნებები რეალურ სტრუქტურებად აქციოს</strong> — დიდი პროექტები, ხანგრძლივი კვალი. მოთხოვნაც შესაბამისად დიდია: დისციპლინა და მოთმინება.",kws:["მშენებლობა","მასშტაბი","პრაქტიკულობა","ხედვა","დისციპლინა"]},
+  33:{headline:"ოსტატური რიცხვი 33 · ოსტატი მასწავლებელი",body:"ოცდაცამეტი — უიშვიათესი ოსტატური რიცხვი: <strong>უპირობო სიყვარულის მასწავლებელი</strong>. ექვსის მზრუნველობა მთელი კაცობრიობის მასშტაბით. ეს სახელი თანაგრძნობის, მსახურებისა და ამაღლების ვიბრაციას ატარებს.",kws:["თანაგრძნობა","მსახურება","სიყვარული","სწავლება","ამაღლება"]}
+};
+const SHORT = {
+  1:"ლიდერობა და დამოუკიდებლობა",2:"ჰარმონია და თანამშრომლობა",3:"გამოხატვა და შემოქმედება",
+  4:"სტაბილურობა და შრომა",5:"თავისუფლება და ცვლილება",6:"სიყვარული და მზრუნველობა",
+  7:"სიბრძნე და ანალიზი",8:"ძალა და მატერიალური წარმატება",9:"ჰუმანიზმი და გულუხვობა",
+  11:"გაძლიერებული ინტუიცია და შთაგონება (ოსტატური 11)",
+  22:"დიდი მშენებლის პოტენციალი (ოსტატური 22)",
+  33:"ოსტატი მასწავლებლის ვიბრაცია (ოსტატური 33)"
+};
+const PSQ_LABELS = {
+  1:"ხასიათი · ნება",2:"ენერგია",3:"ინტერესი · ცოდნა",
+  4:"ჯანმრთელობა",5:"ლოგიკა · ინტუიცია",6:"შრომა · ოსტატობა",
+  7:"იღბალი",8:"პასუხისმგებლობა",9:"მეხსიერება · გონება"
 };
 
-document.getElementById("nameInput").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") calculate();
-});
+document.getElementById("nameInput").addEventListener("keydown",e=>{ if(e.key==="Enter") calculate(); });
 
-function calculate() {
-  const raw = document.getElementById("nameInput").value.trim();
-  if (!raw) { alert("შეიყვანე სახელი"); return; }
+function calculate(){
+  const raw=document.getElementById("nameInput").value.trim();
+  if(!raw){ alert("შეიყვანე სახელი"); return; }
+  const name=raw.toLowerCase();
 
-  const name = raw.toLowerCase();
-  let sum = 0;
-  let breakdownHtml = "";
+  let sumAll=0,sumV=0,sumC=0;
+  const digitCount={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+  const scripts=new Set();
+  let bd="";
 
-  for (const ch of name) {
-    if (GEO[ch] !== undefined) {
-      sum += GEO[ch];
-      breakdownHtml += `<span class="letter">${ch}</span><span class="val">${GEO[ch]}</span>`;
-    } else if (ch === " ") {
-      breakdownHtml += `<span style="margin:0 8px;opacity:.2">·</span>`;
+  for(const ch of name){
+    const v=valOf(ch);
+    if(v!==undefined){
+      sumAll+=v; digitCount[v]++;
+      scripts.add(scriptOf(ch));
+      const isV=VOWELS.has(ch);
+      if(isV) sumV+=v; else sumC+=v;
+      bd+=`<span class="letter">${ch}</span><span class="val${isV?' vw':''}">${v}</span>`;
+    } else if(ch===" "||ch==="-"){
+      bd+=`<span style="margin:0 8px;opacity:.2">·</span>`;
     }
   }
+  if(sumAll===0){ alert("ასოები ვერ ამოიცნო — გამოიყენე ქართული, ლათინური ან კირილიცა"); return; }
 
-  const nameNum = reduce(sum);
-  const interp  = INTERP[nameNum] || {headline:"—", body:"—", kws:[]};
+  const expr=reduce(sumAll), soul=reduce(sumV), pers=reduce(sumC);
 
-  // Show breakdown
-  const bdEl = document.getElementById("breakdown");
-  bdEl.innerHTML = breakdownHtml + `<br><span style="font-size:13px;letter-spacing:1px;color:rgba(232,226,213,.4);">ჯამი: ${sum}</span>`;
-  bdEl.style.display = "block";
+  // script chips
+  const SN={ka:"ქართული",en:"English",ru:"Русский"};
+  const chips=document.getElementById("scriptChips");
+  chips.innerHTML=[...scripts].map(s=>`<span class="schip">${SN[s]}</span>`).join("");
+  chips.style.display="flex";
 
-  // Show result
-  document.getElementById("resultNumber").textContent = nameNum;
-  document.getElementById("resultName").textContent = raw;
-  document.getElementById("resultDisplay").style.display = "block";
+  // breakdown (gold superscripts = vowels)
+  const bdEl=document.getElementById("breakdown");
+  bdEl.innerHTML=bd+`<br><span style="font-size:13px;letter-spacing:1px;color:rgba(232,226,213,.4)">ჯამი: ${sumAll} · ხმოვნები: ${sumV} · თანხმოვნები: ${sumC}</span>`;
+  bdEl.style.display="block";
 
-  // Show interpretation
-  document.getElementById("interpHeadline").textContent = interp.headline;
-  document.getElementById("interpBody").innerHTML = interp.body;
-  const kwEl = document.getElementById("keywords");
-  kwEl.innerHTML = interp.kws.map(k=>`<span class="kw">${k}</span>`).join("");
-  document.getElementById("interpretation").style.display = "block";
+  // trio
+  setNum("exprNum","exprMaster",expr);
+  setNum("soulNum","soulMaster",sumV?soul:0);
+  setNum("persNum","persMaster",sumC?pers:0);
+  document.getElementById("trio").style.display="grid";
 
-  // Animate in
-  setTimeout(() => {
-    document.querySelectorAll(".fade-in").forEach((el,i) => {
-      setTimeout(() => el.classList.add("visible"), i * 120);
-    });
-  }, 30);
+  // pythagorean square of the name
+  const sq=document.getElementById("psq");
+  const order=[1,4,7,2,5,8,3,6,9]; // classic column layout: 1-2-3 / 4-5-6 / 7-8-9 by columns
+  sq.innerHTML=order.map(d=>{
+    const c=digitCount[d];
+    return `<div class="pcell">
+      <div class="digs${c?'':' empty'}">${c?String(d).repeat(c):'—'}</div>
+      <div class="plabel">${d} · ${PSQ_LABELS[d]}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("psqWrap").style.display="block";
 
-  // Scroll to result
-  setTimeout(() => {
-    document.getElementById("resultDisplay").scrollIntoView({behavior:"smooth", block:"center"});
-  }, 100);
+  // interpretation
+  const key=INTERP[expr]?expr:baseOf(expr);
+  const it=INTERP[key];
+  document.getElementById("interpHeadline").textContent=it.headline;
+  document.getElementById("interpBody").innerHTML=it.body;
+  document.getElementById("keywords").innerHTML=it.kws.map(k=>`<span class="kw">${k}</span>`).join("");
+  if(sumV){ document.getElementById("soulBody").textContent=SHORT[soul]||SHORT[baseOf(soul)]; document.getElementById("soulInterp").style.display="block"; }
+  else document.getElementById("soulInterp").style.display="none";
+  if(sumC){ document.getElementById("persBody").textContent=SHORT[pers]||SHORT[baseOf(pers)]; document.getElementById("persInterp").style.display="block"; }
+  else document.getElementById("persInterp").style.display="none";
+  document.getElementById("interpretation").style.display="block";
+
+  setTimeout(()=>{ document.querySelectorAll(".fade-in").forEach((el,i)=>setTimeout(()=>el.classList.add("visible"),i*120)); },30);
+  setTimeout(()=>{ document.getElementById("trio").scrollIntoView({behavior:"smooth",block:"center"}); },100);
+}
+function setNum(idNum,idMaster,n){
+  document.getElementById(idNum).textContent=n||"—";
+  document.getElementById(idMaster).innerHTML=(n===11||n===22||n===33)?`<span class="master">ოსტატური ${n}</span>`:"";
 }
 </script>
 </body>
