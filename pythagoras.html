@@ -20,17 +20,28 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .ornament-line{height:1px;width:70px;background:linear-gradient(90deg,transparent,var(--gold-dim));}
 .ornament-line.r{background:linear-gradient(90deg,var(--gold-dim),transparent);}
 .ornament-dot{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);opacity:.6;}
-.input-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:44px;flex-wrap:wrap;}
+.input-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
 .input-field{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Cinzel',serif;font-size:18px;letter-spacing:3px;padding:12px 20px;outline:none;width:200px;text-align:center;transition:border-color .3s;}
 .input-field:focus{border-color:rgba(200,169,110,.35);}
 .input-field::placeholder{color:var(--muted);font-size:13px;letter-spacing:2px;}
 .calc-btn{padding:12px 28px;background:linear-gradient(135deg,rgba(155,127,232,.2),rgba(120,100,200,.1));border:1px solid rgba(155,127,232,.3);border-radius:8px;color:var(--text);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .3s;}
 .calc-btn:hover{border-color:rgba(155,127,232,.6);box-shadow:0 0 24px rgba(155,127,232,.2);}
+
+/* mode toggle */
+.mode-wrap{display:none;flex-direction:column;align-items:center;gap:10px;margin-bottom:36px;}
+.mode-pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.mode-pill{padding:8px 20px;border-radius:20px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;}
+.mode-pill:hover{color:var(--text);border-color:rgba(200,169,110,.3);}
+.mode-pill.active{color:var(--gold);border-color:rgba(200,169,110,.5);background:rgba(200,169,110,.07);box-shadow:0 0 16px rgba(200,169,110,.1);}
+.mode-desc{font-size:11px;color:var(--muted);text-align:center;letter-spacing:.5px;max-width:520px;line-height:1.7;min-height:16px;}
+.mode-desc b{color:rgba(200,169,110,.85);font-weight:500;}
+
 .summary{display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 28px;margin-bottom:44px;text-align:center;}
-.summary-row{display:flex;gap:32px;justify-content:center;flex-wrap:wrap;}
+.summary-row{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;}
 .summary-item{display:flex;flex-direction:column;gap:4px;}
 .summary-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
 .summary-value{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--gold);}
+.summary-value.corr{color:rgba(155,127,232,.95);}
 .grid-section{display:none;margin-bottom:52px;}
 .grid-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);text-align:center;margin-bottom:24px;}
 .pyth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:400px;margin:0 auto;}
@@ -76,14 +87,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   <input class="input-field" type="text" id="birth" placeholder="DD/MM/YYYY" maxlength="10">
   <button class="calc-btn" onclick="calculate()">გამოთვლა</button>
 </div>
-<div class="summary" id="summary">
-  <div class="summary-row">
-    <div class="summary-item"><span class="summary-label">ჯამი</span><span class="summary-value" id="s-sum1">—</span></div>
-    <div class="summary-item"><span class="summary-label">მისია</span><span class="summary-value" id="s-sum2">—</span></div>
+
+<div class="mode-wrap" id="modeWrap">
+  <div class="mode-pills">
+    <div class="mode-pill active" id="mp-classic" onclick="setMode('classic')">კლასიკური</div>
+    <div class="mode-pill" id="mp-corrected" onclick="setMode('corrected')">კორექტირებული</div>
+    <div class="mode-pill" id="mp-crisis" onclick="setMode('crisis')">კრიზისული</div>
   </div>
+  <div class="mode-desc" id="modeDesc"></div>
+</div>
+
+<div class="summary" id="summary">
+  <div class="summary-row" id="summaryRow"></div>
 </div>
 <div class="grid-section" id="grid-section">
-  <div class="grid-title">ციფრების კვადრატი</div>
+  <div class="grid-title" id="gridTitle">ციფრების კვადრატი</div>
   <div class="pyth-grid" id="grid"></div>
 </div>
 <div id="results"></div>
@@ -92,6 +110,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 const LABELS={1:"პიროვნება",2:"ენერგია",3:"ინტერესი",4:"ჯანმრთელობა",5:"ლოგიკა",6:"შრომა",7:"იღბალი",8:"პასუხისმგებლობა",9:"მეხსიერება"};
 const COLORS={1:"rgba(155,127,232,.9)",2:"rgba(232,127,127,.9)",3:"rgba(127,207,232,.9)",4:"rgba(127,207,127,.9)",5:"rgba(200,169,110,.9)",6:"rgba(232,160,127,.9)",7:"rgba(210,210,90,.9)",8:"rgba(160,127,232,.9)",9:"rgba(127,180,232,.9)"};
 const GRID_ORDER=[1,4,7,2,5,8,3,6,9];
+
+const MODE_META={
+  classic:{title:"ციფრების კვადრატი · კლასიკური",
+    desc:"სტანდარტული გამოთვლა: I — თარიღის ციფრთა ჯამი, II — I-ის ციფრთა ჯამი, III — I − 2×(დღის პირველი ციფრი), IV — III-ის ციფრთა ჯამი.",
+    labels:["I · ჯამი","II · მისია","III","IV"]},
+  corrected:{title:"ციფრების კვადრატი · კორექტირებული",
+    desc:"საუკუნის შესწორება: <b>XX საუკუნე (19xx) → −2</b> — ორიანი ემატება კვადრატს, რადგან 19xx თარიღები მას არ იძლევა. <b>XXI საუკუნე (20xx) → +19</b> — ერთიანი და ცხრიანი ემატება, რადგან 20xx თარიღებს ისინი აკლია. III = I ± კორექცია.",
+    labels:["I · ჯამი","კორექცია","III","IV"]},
+  crisis:{title:"ციფრების კვადრატი · კრიზისული",
+    desc:"როგორ იქცევა ადამიანი <b>კრიზისულ სიტუაციაში</b>: პირველ სამუშაო რიცხვს აკლდება 9 (I − 9), დანარჩენი გამოთვლა იგივეა. კვადრატი აჩვენებს ენერგიების განაწილებას სტრესის დროს.",
+    labels:["I − 9","II","III","IV"]}
+};
 
 document.getElementById("birth").addEventListener("input",function(e){
   let v=e.target.value.replace(/\D/g,"");
@@ -102,11 +132,12 @@ document.getElementById("birth").addEventListener("input",function(e){
 document.getElementById("birth").addEventListener("keydown",function(e){if(e.key==="Enter")calculate();});
 
 function sumDigits(n){return Math.abs(n).toString().split("").reduce((a,b)=>a+Number(b),0);}
+function digitsOf(n){return Math.abs(n).toString().split("").map(Number);}
 
 function getDesc(n,count){
   const d={
     1:{0:"პიროვნული «მე» სუსტია. ადამიანს უჭირს საკუთარი თავის გამოხატვა, ყველას ემორჩილება. შინაგანი ძლიერების განვითარება საჭიროა.",1:"ძლიერი, მაგრამ მოქნილი პიროვნება. ადამიანი იცის ვინ არის, მაგრამ სხვებთან ეგუება. ლიდერობის კარგი პოტენციალი.",2:"ორი 1 — ძლიერი ხასიათი. თვითდაჯერებულია, ლიდერია, ზოგჯერ სიჯიუტე ხელს უშლის. მასზე ნდობა შეიძლება.",3:"სამი 1 — ენერგიული, ნება-სურვილი ძნელად შეიძლება ეჭვქვეშ დადგეს. ლიდერი ბუნებით — მაგრამ სხვების მოსმენა სჭირდება.",4:"ოთხი 1 — ძალიან დომინანტი. ამ ადამიანის ნება ძლიერია, მთელ გარემოს მოიცავს. ჰარმონიისთვის სხვებზე ზეწოლა შემცირება სჭირდება."},
-    2:{0:"ინტუიცია სუსტია. ადამიანი ხშირად ვერ ხვდება სიტუაციის ემოციურ ტონს. ენერგეტიკული მგრძნობელობა განვითარებას ელოდება.",1:"ერთი 2 — კარგი ინტუიცია. სხვებს კარგად გრძნობს, ჰარმონიისკენ მიისწრაფვის. ემოციური სიბრძნე ურთიერთობებში ეხმარება.",2:"ორი 2 — ძლიერი ემოციური ინტელექტი. ძალიან მგრძნობიარეა. ზოგჯერ ემოციები გადალახავს გონებას.",3:"სამი 2 — განსაკუთრებული ენერგეტიკური ნიჭი. სხვების განწყობის «კითხვა» ბუნებრივია. ინტუიცია ახლოს არის ექსტრასენსობასთან.",4:"ოთხი 2 — ჭარბი მგრძნობელობა ზოგჯერ ხელს უშლის. ენერგეტიკური დაცვა და სიმშვიდე სჭირდება."},
+    2:{0:"ინტუიცია სუსტია. ადამიანი ხშირად ვერ ხვდება სიტუაციის ემოციურ ტონს. ენერგეტიკული მგრძნობელობა განვითარებას ელოდება.",1:"ერთი 2 — კარგი ინტუიცია. სხვებს კარგად გრძნობს, ჰარმონიისკენ მიისწრაფვის. ემოციური სიბრძნე ურთიერთობებში ეხმარება.",2:"ორი 2 — ძლიერი ემოციური ინტელექტი. ძალიან მგრძნობიარეა. ზოგჯერ ემოციები გადალახავს გონებას.",3:"სამი 2 — განსაკუთრებული ენერგეტიკული ნიჭი. სხვების განწყობის «კითხვა» ბუნებრივია. ინტუიცია ახლოს არის ექსტრასენსობასთან.",4:"ოთხი 2 — ჭარბი მგრძნობელობა ზოგჯერ ხელს უშლის. ენერგეტიკული დაცვა და სიმშვიდე სჭირდება."},
     3:{0:"კრეატიულობა ჯერ განვითარების სტადიაშია. ახალი სფეროების შესწავლა ეხმარება.",1:"ერთი 3 — შემოქმედებითი ნიჭი არსებობს. ადამიანი გრძნობს ლამაზს, ჯერ ვერ ანვითარებს მთლიანად.",2:"ორი 3 — კარგი კრეატიული პოტენციალი. ხელოვნება, მუსიკა, ლიტერატურა — ბუნებრივად გამოხატავს.",3:"სამი 3 — ძლიერი შემოქმედებითი ენერგია. ხელოვნება ამ ადამიანის ბუნებაა. ნიჭი პროფესიად შეიძლება გადაიქცეს.",4:"ოთხი 3 — ნიჭი გამოირჩევა, მაგრამ ენერგია გაიფანტება. ერთ სფეროზე კონცენტრაცია ადამიანს შეუცვლელს გახდის."},
     4:{0:"ჯანმრთელობის ენერგეტიკა სუსტია. კვება, ძილი, ცხოვრების წესი განსაკუთრებულ ყურადღებას საჭიროებს.",1:"ერთი 4 — კარგი ვიტალური ენერგია. ძირითადად ჯანმრთელია, ყოველდღიური მოვლა მნიშვნელოვანია.",2:"ორი 4 — კარგი ფიზიკური ენერგია. ჯანმრთელობა სტაბილურია. მოძრაობა და სპორტი ბუნებრივია.",3:"სამი 4 — ძლიერი ვიტალური ენერგია. ბუნებრივი ჯანმრთელობა კარგია. ფიზიკური ნიჭი გამოირჩევა.",4:"ოთხი 4 — ძალიან ძლიერი ფიზიკური ენერგია. ბუნებრივი ატლეტი. ჭარბი ენერგია ზოგჯერ სიჩქარეში იკარგება."},
     5:{0:"ლოგიკური აზროვნება ჯერ არ გამოვლენილა. ემოციებით მოქმედება ჭარბობს. ანალიზი განვითარებადია.",1:"ერთი 5 — კარგი ლოგიკა. გონიერია, ფიქრობს სანამ გადაწყვეტილებას მიიღებს. კარგი ანალიტიკოსი.",2:"ორი 5 — ძლიერი ანალიტიკური გონება. სწრაფი, ლოგიკური ჯაჭვებით ფიქრობს. ტექნიკურ სფეროში გამოირჩევა.",3:"სამი 5 — ბრწყინვალე ლოგიკა. ნებისმიერი პრობლემა ადვილია. ინტელექტი გამოვლენილია, სწავლა სიამოვნებაა.",4:"ოთხი 5 — ძალიან მაღალი ინტელექტი. ლოგიკა მთავარი ინსტრუმენტია. ემოციური მხარე ყურადღებას საჭიროებს."},
@@ -128,29 +159,80 @@ const COMPOUND={
   temperament: {name:"ტემპერამენტი",      label:"3+5+7", keys:[3,5,7]},
   spirit:      {name:"სულიერება",         label:"1+5+9", keys:[1,5,9]}
 };
+
+/* ── THREE VARIANTS ──
+   classic:   I=Σთარიღი, II=Σ(I), III=|I−2×დღის პირვ.ციფრი|, IV=Σ(III)
+   corrected: XX(19xx): II→−2 (ციფრი 2 ითვლება), III=I−2
+              XXI(20xx): II→+19 (ციფრები 1,9 ითვლება), III=I+19; IV=Σ(III)
+   crisis:    I'=I−9, შემდეგ კლასიკურივით                              */
+function computeModes(day,month,year){
+  const birthDigits=(day+month+year).split("").map(Number);
+  const A=birthDigits.reduce((a,b)=>a+b,0);
+  const fd=(day[0]!=="0")?Number(day[0]):Number(day[1]);
+
+  const cB=sumDigits(A), cC=Math.abs(A-2*fd), cD=sumDigits(cC);
+  const classic={disp:[String(A),String(cB),String(cC),String(cD)],
+    extra:[...digitsOf(A),...digitsOf(cB),...digitsOf(cC),...digitsOf(cD)],note:""};
+
+  const isXXI=Number(year)>=2000;
+  let corrected;
+  if(isXXI){
+    const C=A+19,D=sumDigits(C);
+    corrected={disp:[String(A),"+19",String(C),String(D)],
+      extra:[...digitsOf(A),1,9,...digitsOf(C),...digitsOf(D)],note:"XXI საუკუნე · +19"};
+  }else{
+    const C=A-2,D=sumDigits(C);
+    corrected={disp:[String(A),"−2",String(C),String(D)],
+      extra:[...digitsOf(A),2,...digitsOf(C),...digitsOf(D)],note:"XX საუკუნე · −2"};
+  }
+
+  const kA=A-9,kB=sumDigits(kA),kC=Math.abs(kA-2*fd),kD=sumDigits(kC);
+  const crisis={disp:[String(kA),String(kB),String(kC),String(kD)],
+    extra:[...digitsOf(kA),...digitsOf(kB),...digitsOf(kC),...digitsOf(kD)],note:"I − 9"};
+
+  const mk=extra=>{
+    const count={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+    [...birthDigits,...extra].forEach(d=>{if(count[d]!==undefined)count[d]++;});
+    return count;
+  };
+  classic.count=mk(classic.extra);
+  corrected.count=mk(corrected.extra);
+  crisis.count=mk(crisis.extra);
+  return {classic,corrected,crisis};
+}
+
+let MODES=null, activeMode='classic';
+
 function calculate(){
   const val=document.getElementById("birth").value;
   if(!/^\d{2}\/\d{2}\/\d{4}$/.test(val)){alert("შეიყვანე თარიღი ფორმატით: DD/MM/YYYY");return;}
   const[day,month,year]=val.split("/");
-  const base=day+month+year;
-  let digits=base.split("").map(Number);
-  const sum1=digits.reduce((a,b)=>a+b,0);
-  const sum2=sumDigits(sum1);
-  const fd=digits.find(d=>d!==0);
-  let sum3=Math.abs(sum1-(fd*2));
-  const sum4=sumDigits(sum3);
-  const extra=(""+sum1+sum2+sum3+sum4).split("").map(Number);
-  digits=digits.concat(extra);
-  const count={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
-  digits.forEach(d=>{if(count[d]!==undefined)count[d]++;});
-  document.getElementById("s-sum1").textContent=sum1;
-  document.getElementById("s-sum2").textContent=sum2;
+  MODES=computeModes(day,month,year);
+  document.getElementById("modeWrap").style.display="flex";
+  setMode(activeMode,true);
+  setTimeout(()=>document.getElementById("summary").scrollIntoView({behavior:"smooth",block:"start"}),100);
+}
+
+function setMode(mode,force){
+  if(!MODES)return;
+  if(mode===activeMode&&!force&&document.getElementById("summary").style.display==="block")return;
+  activeMode=mode;
+  ["classic","corrected","crisis"].forEach(m=>
+    document.getElementById("mp-"+m).classList.toggle("active",m===mode));
+  const meta=MODE_META[mode], data=MODES[mode];
+  document.getElementById("modeDesc").innerHTML=meta.desc+(data.note?` <b>· ${data.note}</b>`:"");
+  // summary
+  const row=document.getElementById("summaryRow");
+  row.innerHTML=meta.labels.map((lab,i)=>{
+    const isCorr=(mode==="corrected"&&i===1);
+    return `<div class="summary-item"><span class="summary-label">${lab}</span><span class="summary-value${isCorr?" corr":""}">${data.disp[i]}</span></div>`;
+  }).join("");
   document.getElementById("summary").style.display="block";
-  renderGrid(count);
+  document.getElementById("gridTitle").textContent=meta.title;
+  renderGrid(data.count);
   document.getElementById("grid-section").style.display="block";
-  renderResults(count);
+  renderResults(data.count);
   document.getElementById("results").style.display="block";
-  setTimeout(()=>document.getElementById("results").scrollIntoView({behavior:"smooth",block:"start"}),100);
 }
 
 function renderGrid(count){
@@ -171,7 +253,6 @@ function renderResults(count){
   const wrap=document.getElementById("results");
   wrap.innerHTML="";
 
-  // Individual sections
   const gs1=document.createElement("div");
   gs1.className="group-separator";
   gs1.innerHTML=`<div class="group-line"></div><div class="group-label">ინდივიდუალური ციფრები</div><div class="group-line"></div>`;
@@ -187,7 +268,6 @@ function renderResults(count){
     if(idx<8){const dv=document.createElement("div");dv.className="divider";dv.innerHTML=`<div class="divider-line"></div><div class="divider-gem"></div><div class="divider-line"></div>`;wrap.appendChild(dv);}
   });
 
-  // Compound sections
   const gs2=document.createElement("div");gs2.className="group-separator";
   gs2.innerHTML=`<div class="group-line"></div><div class="group-label">კომბინირებული ანალიზი</div><div class="group-line"></div>`;
   wrap.appendChild(gs2);
@@ -197,9 +277,7 @@ function renderResults(count){
     const total=d.keys.reduce((s,k)=>s+count[k],0);
     const card=document.createElement("div");
     card.className="compound-card section";
-    // Show breakdown: which digits and their counts
     const breakdown=d.keys.map(k=>`${k}×${count[k]}`).join("  ");
-    // Total score badge
     const totalHtml = total===0
       ? `<span style="color:var(--muted);font-size:20px;font-family:'Cormorant Garamond',serif">—</span>`
       : `<span style="font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);font-weight:300">${total}</span><span style="font-size:10px;color:var(--muted);margin-left:4px;letter-spacing:1px;">ქულა</span>`;
