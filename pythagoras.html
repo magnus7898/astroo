@@ -90,6 +90,30 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--muted);font-style:italic;}
 .curve-formulas b{font-style:normal;font-weight:400;}
 .curve-note{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.7;max-width:560px;margin-left:auto;margin-right:auto;}
+
+/* ── VEDIC SQUARE ── */
+.vsq-section{display:none;margin-top:56px;}
+.vsq-howto{font-size:12px;color:var(--muted);text-align:center;line-height:1.9;max-width:560px;margin:0 auto 22px;}
+.vsq-howto b{color:var(--gold);font-weight:500;}
+.digit-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;}
+.dchip{width:56px;padding:8px 0 7px;border-radius:10px;text-align:center;cursor:pointer;
+  border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;user-select:none;position:relative;}
+.dchip .dn{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--text);line-height:1;}
+.dchip .dg{font-size:8px;letter-spacing:.5px;color:var(--muted);margin-top:3px;font-family:'Cinzel',serif;text-transform:uppercase;}
+.dchip:hover{border-color:rgba(200,169,110,.35);}
+.dchip.active{border-color:rgba(200,169,110,.6);background:rgba(200,169,110,.09);}
+.dchip.active .dn{color:var(--gold);}
+.dchip.mine::after{content:'●';position:absolute;top:3px;right:6px;font-size:7px;color:rgba(155,127,232,.9);}
+.vsq-mine-note{text-align:center;font-size:10.5px;color:rgba(155,127,232,.75);margin-bottom:8px;letter-spacing:.5px;}
+.mirror-toggle{display:flex;justify-content:center;margin-bottom:22px;}
+.mt-btn{padding:7px 20px;border-radius:18px;font-family:'Cinzel',serif;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;color:var(--muted);border:1px solid var(--border);background:rgba(255,255,255,.02);transition:all .25s;user-select:none;}
+.mt-btn.on{color:rgba(155,127,232,.95);border-color:rgba(155,127,232,.45);background:rgba(155,127,232,.07);}
+.sq-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;max-width:520px;margin:0 auto 16px;}
+.sq-wrap svg{width:100%;height:auto;display:block;}
+.pattern-info{text-align:center;font-size:12px;color:var(--muted);line-height:1.8;min-height:20px;}
+.pattern-info b{color:var(--gold);font-weight:500;}
+.pattern-info i{color:rgba(155,127,232,.95);font-style:normal;}
 </style>
 </head>
 <body>
@@ -130,6 +154,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
   <div class="curve-svg-wrap"><svg id="curveSvg" viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg"></svg></div>
   <div class="curve-formulas" id="curveFormulas"></div>
   <div class="curve-note">წერტილები 12-წლიანი ინტერვალებით · 0–9 — ენერგიის დონე · ვერტიკალური ხაზი — მიმდინარე ასაკი.<br>ნების გრაფიკში ყველა ნული იცვლება ერთიანით (0→1). თუ თარიღში ნულები არ არის — სიცოცხლისა და ნების გრაფიკები ემთხვევა.</div>
+</div>
+
+<div class="vsq-section" id="vsqSection">
+  <div class="group-separator">
+    <div class="group-line"></div><div class="group-label">ვედური კვადრატი</div><div class="group-line"></div>
+  </div>
+  <div class="vsq-howto">
+    8×8 ცხრილი — გამრავლების ტაბულა, სადაც ყველა რიცხვი ციფრულ ფესვამდეა დაყვანილი (მაგ. 4×5=20 → 2+0 = <b>2</b>).<br>
+    <b>როგორ გამოვიყენო:</b> დააჭირე ციფრს ქვემოთ — ოქროსფერი ხაზები შეაერთებს ყველა უჯრას, სადაც ეს ციფრი ზის. ეს არის ამ ციფრის გეომეტრიული ნიმუში — მისი „იანტრა". ვიოლეტისფერი წერტილით ● მონიშნულია <b>შენი პირადი ციფრები</b> თარიღიდან — დღის ფსიქიკური რიცხვი და ბედისწერის რიცხვი.
+  </div>
+  <div class="vsq-mine-note" id="vsqMine"></div>
+  <div class="digit-row" id="digitRow"></div>
+  <div class="mirror-toggle"><div class="mt-btn" id="mtBtn" onclick="toggleMirror()">სარკე · 9−n</div></div>
+  <div class="sq-wrap"><svg id="sq" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg"></svg></div>
+  <div class="pattern-info" id="patternInfo"></div>
 </div>
 </div>
 <script>
@@ -237,7 +276,74 @@ function calculate(){
   document.getElementById("modeWrap").style.display="flex";
   setMode(activeMode,true);
   renderCurves(day,month,year);
+  renderVedic(day,month,year);
   setTimeout(()=>document.getElementById("summary").scrollIntoView({behavior:"smooth",block:"start"}),100);
+}
+
+/* ── VEDIC SQUARE (8×8 digit roots of multiplication table) ── */
+const VN=8, VCELL=64, VPAD=24;
+const vroot=n=>((n-1)%9)+1;
+const GRAHA={1:"მზე",2:"მთვარე",3:"იუპიტ.",4:"რაჰუ",5:"მერკ.",6:"ვენერა",7:"კეტუ",8:"სატ.",9:"მარსი"};
+const GRAHA_FULL={1:"მზე · Surya",2:"მთვარე · Chandra",3:"იუპიტერი · Guru",4:"რაჰუ · Rahu",5:"მერკური · Budha",6:"ვენერა · Shukra",7:"კეტუ · Ketu",8:"სატურნი · Shani",9:"მარსი · Mangala"};
+const VT=[];for(let i=1;i<=VN;i++){VT[i]=[];for(let j=1;j<=VN;j++)VT[i][j]=vroot(i*j);}
+let vSelected=1, vMirror=false, vMine=new Set();
+
+function vCells(k){const a=[];for(let i=1;i<=VN;i++)for(let j=1;j<=VN;j++)if(VT[i][j]===k)a.push([i,j]);return a;}
+function vCenter([i,j]){return [VPAD+(j-0.5)*VCELL, VPAD+(i-0.5)*VCELL];}
+function vLoop(cells){
+  const pts=cells.map(vCenter);
+  const cx=pts.reduce((s,p)=>s+p[0],0)/pts.length, cy=pts.reduce((s,p)=>s+p[1],0)/pts.length;
+  const sorted=pts.map(p=>({p,a:Math.atan2(p[1]-cy,p[0]-cx)})).sort((u,v)=>u.a-v.a).map(o=>o.p);
+  return sorted.map((p,i)=>(i?"L":"M")+p[0]+","+p[1]).join(" ")+" Z";
+}
+function vDraw(){
+  const svg=document.getElementById("sq");
+  let s="";
+  const mk=9-vSelected;
+  const selCells=vCells(vSelected);
+  const mirCells=(vMirror&&mk!==vSelected&&mk>=1)?vCells(mk):[];
+  const selSet=new Set(selCells.map(c=>c.join(",")));
+  const mirSet=new Set(mirCells.map(c=>c.join(",")));
+  for(let i=1;i<=VN;i++)for(let j=1;j<=VN;j++){
+    const x=VPAD+(j-1)*VCELL, y=VPAD+(i-1)*VCELL, key=i+","+j;
+    const isSel=selSet.has(key), isMir=mirSet.has(key);
+    const fill=isSel?"rgba(200,169,110,.13)":isMir?"rgba(155,127,232,.11)":"rgba(255,255,255,.015)";
+    const stroke=isSel?"rgba(200,169,110,.45)":isMir?"rgba(155,127,232,.4)":"rgba(255,255,255,.06)";
+    s+=`<rect x="${x}" y="${y}" width="${VCELL}" height="${VCELL}" rx="7" fill="${fill}" stroke="${stroke}" stroke-width="1"/>`;
+    const col=isSel?"#c8a96e":isMir?"#9b7fe8":"rgba(232,226,213,.3)";
+    s+=`<text x="${x+VCELL/2}" y="${y+VCELL/2+1}" text-anchor="middle" dominant-baseline="central" font-family="Cormorant Garamond,serif" font-size="${isSel||isMir?23:17}" fill="${col}">${VT[i][j]}</text>`;
+  }
+  if(mirCells.length>1)s+=`<path d="${vLoop(mirCells)}" fill="rgba(155,127,232,.05)" stroke="#9b7fe8" stroke-width="1.4" opacity=".7" stroke-linejoin="round"/>`;
+  if(selCells.length>1)s+=`<path d="${vLoop(selCells)}" fill="rgba(200,169,110,.06)" stroke="#c8a96e" stroke-width="1.9" opacity=".95" stroke-linejoin="round"/>`;
+  for(const c of mirCells){const[px,py]=vCenter(c);s+=`<circle cx="${px}" cy="${py}" r="3.4" fill="#06050f" stroke="#9b7fe8" stroke-width="1.5"/>`;}
+  for(const c of selCells){const[px,py]=vCenter(c);s+=`<circle cx="${px}" cy="${py}" r="3.8" fill="#06050f" stroke="#c8a96e" stroke-width="1.8"/>`;}
+  svg.innerHTML=s;
+  let info=`<b>${vSelected} — ${GRAHA_FULL[vSelected]}</b> · ${selCells.length} უჯრა`;
+  if(vMirror&&mk!==vSelected&&mk>=1)info+=` &nbsp;·&nbsp; <i>სარკე: ${mk} — ${GRAHA_FULL[mk]}</i>`;
+  if(vSelected===9)info+=`<br>9 ცხრილში მხოლოდ 4 უჯრაა — კვადრატი კვადრატში (ამიტომ მე-9 ხაზი ცხრილს გარეთ რჩება)`;
+  if(vSelected===3||vSelected===6)info+=`<br>3 და 6 — ყველაზე მკვრივი ნიმუშები (12 უჯრა)`;
+  document.getElementById("patternInfo").innerHTML=info;
+}
+function vSelect(k){
+  vSelected=k;
+  document.querySelectorAll(".dchip").forEach(e=>e.classList.toggle("active",Number(e.dataset.d)===k));
+  vDraw();
+}
+function toggleMirror(){
+  vMirror=!vMirror;
+  document.getElementById("mtBtn").classList.toggle("on",vMirror);
+  vDraw();
+}
+const vdsum=s=>{let n=[...s].reduce((a,c)=>a+ +c,0);while(n>9)n=[...String(n)].reduce((a,c)=>a+ +c,0);return n;};
+function renderVedic(dd,mm,yy){
+  const psychic=vdsum(dd), destiny=vdsum(dd+mm+yy);
+  vMine=new Set([psychic,destiny]);
+  document.getElementById("digitRow").innerHTML=[1,2,3,4,5,6,7,8,9].map(d=>
+    `<div class="dchip${vMine.has(d)?' mine':''}" data-d="${d}" onclick="vSelect(${d})"><div class="dn">${d}</div><div class="dg">${GRAHA[d]}</div></div>`).join("");
+  document.getElementById("vsqMine").textContent=
+    `● შენი ციფრები: ფსიქიკური (დღე) = ${psychic} · ბედისწერა (მთელი თარიღი) = ${destiny}`;
+  document.getElementById("vsqSection").style.display="block";
+  vSelect(psychic);
 }
 
 /* ── ENERGY CURVES ──
