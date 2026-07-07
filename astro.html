@@ -1394,24 +1394,25 @@ function drawAcgLines(chartData,birthLon){
     placeLabel(35,mcLon,sym,'M',col);
     placeLabel(-35,icLon,sym,'I',col);
 
-    // AC/DC curves
+    // AC/DC curves — hour-angle sweep: apex included, no gaps
+    // φ(H)=atan(−cosH/tanδ), λ(H)=ra+H−GST; H∈[0,180]→DC, [180,360]→AC
     const acPts=[],dcPts=[];
-    let prevAc=null,prevDc=null;
-    for(let lat=-82;lat<=82;lat+=0.5){
-      const cosH=-Math.tan(lat*RAD)*Math.tan(dec*RAD);
-      if(Math.abs(cosH)>=1){prevAc=null;prevDc=null;continue;}
-      const H=Math.acos(cosH)*DEG;
-      let acL=normLon(ra-H-GST);
-      let dcL=normLon(ra+H-GST);
-      // Unwrap to stay continuous
-      if(prevAc!==null){
-        while(acL-prevAc>180)acL-=360;
-        while(acL-prevAc<-180)acL+=360;
-        while(dcL-prevDc>180)dcL-=360;
-        while(dcL-prevDc<-180)dcL+=360;
+    if(Math.abs(dec)>0.05){
+      const tanDec=Math.tan(dec*RAD);
+      let prev=null;
+      for(let H=0;H<=360;H+=0.5){
+        let phi=Math.atan(-Math.cos(H*RAD)/tanDec)*DEG;
+        if(phi>85)phi=85;else if(phi<-85)phi=-85;
+        let lon=normLon(ra+H-GST);
+        if(prev!==null){
+          while(lon-prev>180)lon-=360;
+          while(lon-prev<-180)lon+=360;
+        }
+        const pt=[phi,lon];
+        if(H<=180)dcPts.push(pt);
+        if(H>=180)acPts.push(pt);
+        prev=lon;
       }
-      acPts.push([lat,acL]);dcPts.push([lat,dcL]);
-      prevAc=acL;prevDc=dcL;
     }
 
     // Draw each curve once with looping copies — no splits needed
