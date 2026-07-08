@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAGNUS · ადმინი</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Noto+Sans+Georgian:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--void:#04030a;--gold:#c9a84c;--gold-l:#f0d080;--purple:#a78bfa;--txt:#e0d8ff;
+  --dim:rgba(155,168,184,.6);--card:rgba(8,6,20,.75);--line:rgba(45,31,110,.55);
+  --green:#3ad48f;--red:#e05252;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--void);color:var(--txt);font-family:'Noto Sans Georgian',sans-serif;min-height:100vh;padding:0 0 80px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:
+ radial-gradient(ellipse 600px 400px at 15% 15%,rgba(100,40,200,.08),transparent 70%),
+ radial-gradient(ellipse 500px 500px at 85% 75%,rgba(40,80,200,.06),transparent 70%);}
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:32px 20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px}
+.brand{font-family:'Cinzel',serif;font-size:15px;letter-spacing:5px;color:var(--gold)}
+.brand span{color:var(--dim);font-size:10px;letter-spacing:3px;margin-left:10px}
+.who{font-size:11px;color:var(--dim)}
+.who b{color:var(--gold-l);font-weight:500}
+.btn{background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);color:var(--txt);
+  border-radius:8px;padding:8px 18px;font-size:11px;letter-spacing:2px;cursor:pointer;
+  font-family:'Cinzel',serif;transition:all .25s}
+.btn:hover{background:rgba(124,58,237,.28)}
+.btn.ghost{background:transparent;border-color:var(--line);color:var(--dim)}
+
+/* login gate */
+#gate{max-width:380px;margin:14vh auto 0;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:34px;backdrop-filter:blur(10px)}
+#gate h1{font-family:'Cinzel',serif;font-size:14px;letter-spacing:4px;color:var(--gold);text-align:center;margin-bottom:22px}
+#gate input{width:100%;background:rgba(10,8,30,.7);border:1px solid var(--line);border-radius:8px;
+  color:var(--txt);padding:11px 14px;font-size:13px;margin-bottom:12px;font-family:inherit}
+#gate input:focus{outline:none;border-color:var(--purple)}
+#gate .btn{width:100%;padding:12px}
+#gate .err{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+
+/* dashboard */
+#dash{display:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,168,76,.5),transparent)}
+.stat .k{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--dim)}
+.stat .v{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:#fff;line-height:1.15}
+.stat .v.gold{color:var(--gold-l)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:22px;overflow:hidden}
+.panel-title{padding:12px 18px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--purple);border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center}
+.bars{padding:16px 18px;display:flex;flex-direction:column;gap:8px}
+.bar-row{display:grid;grid-template-columns:140px 1fr 44px;gap:10px;align-items:center;font-size:11px}
+.bar-name{color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{height:8px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#6d28d9,var(--gold));border-radius:4px}
+.bar-n{color:var(--dim);text-align:right}
+
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{font-family:'Cinzel',serif;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--dim);text-align:left;padding:9px 14px;border-bottom:1px solid var(--line)}
+td{padding:8px 14px;border-bottom:1px solid rgba(15,13,40,.8);color:rgba(224,216,255,.85);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(124,58,237,.05)}
+.tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;letter-spacing:1px}
+.tag.admin{background:rgba(201,168,76,.12);color:var(--gold-l);border:1px solid rgba(201,168,76,.35)}
+.tag.user{background:rgba(124,58,237,.1);color:var(--purple);border:1px solid rgba(124,58,237,.3)}
+.tag.paid{background:rgba(58,212,143,.1);color:var(--green);border:1px solid rgba(58,212,143,.3)}
+.tag.created{background:rgba(155,168,184,.08);color:var(--dim);border:1px solid rgba(155,168,184,.25)}
+.tag.failed{background:rgba(224,82,82,.1);color:var(--red);border:1px solid rgba(224,82,82,.3)}
+.detail{color:var(--dim);font-size:10px;max-width:320px;word-break:break-all}
+.scroll{max-height:420px;overflow-y:auto}
+.scroll::-webkit-scrollbar{width:6px}
+.scroll::-webkit-scrollbar-thumb{background:rgba(124,58,237,.3);border-radius:3px}
+.empty{padding:24px;text-align:center;color:var(--dim);font-size:12px}
+@media(max-width:640px){.bar-row{grid-template-columns:90px 1fr 36px}.detail{max-width:140px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGIN GATE -->
+  <div id="gate">
+    <h1>MAGNUS · ადმინ პანელი</h1>
+    <input type="email" id="g-email" placeholder="ელფოსტა" autocomplete="username">
+    <input type="password" id="g-pass" placeholder="პაროლი" autocomplete="current-password">
+    <button class="btn" onclick="login()">შესვლა</button>
+    <div class="err" id="g-err"></div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dash">
+    <div class="topbar">
+      <div class="brand">MAGNUS<span>ადმინ პანელი</span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="who" id="who"></span>
+        <button class="btn ghost" onclick="refresh()">↻ განახლება</button>
+        <button class="btn ghost" onclick="logout()">გასვლა</button>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="stat"><div class="k">მომხმარებლები</div><div class="v" id="s-users">—</div></div>
+      <div class="stat"><div class="k">ქმედებები</div><div class="v" id="s-events">—</div></div>
+      <div class="stat"><div class="k">გადახდები</div><div class="v" id="s-pays">—</div></div>
+      <div class="stat"><div class="k">შემოსავალი</div><div class="v gold" id="s-rev">—</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">ქმედებები ტიპის მიხედვით</div>
+      <div class="bars" id="bars"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">ბოლო ქმედებები <span id="ev-count" style="color:var(--dim)"></span></div>
+      <div class="scroll"><table>
+        <thead><tr><th>ID</th><th>დრო</th><th>მომხმ.</th><th>ქმედება</th><th>დეტალი</th><th>IP</th></tr></thead>
+        <tbody id="t-events"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">მომხმარებლები</div>
+      <div class="scroll"><table>
+        <thead><tr><th>ID</th><th>ელფოსტა</th><th>სახელი</th><th>როლი</th><th>რეგისტრაცია</th></tr></thead>
+        <tbody id="t-users"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">გადახდები</div>
+      <div class="scroll"><table>
+        <thead><tr><th>ID</th><th>Order</th><th>მომხმ.</th><th>პროდუქტი</th><th>თანხა</th><th>სტატუსი</th><th>დრო</th></tr></thead>
+        <tbody id="t-pays"></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BACKEND='https://astrology-production-b165.up.railway.app';
+let TOKEN=localStorage.getItem('magnus_admin_token')||null;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtT=t=>t?t.slice(0,16).replace('T',' '):'';
+
+async function api(path,opts={}){
+  opts.headers=Object.assign({'Content-Type':'application/json'},opts.headers||{});
+  if(TOKEN)opts.headers['Authorization']='Bearer '+TOKEN;
+  const r=await fetch(BACKEND+path,opts);
+  if(r.status===401||r.status===403||r.status===422){logout();throw new Error('auth');}
+  return r.json();
+}
+
+async function login(){
+  $('g-err').textContent='';
+  try{
+    const r=await fetch(BACKEND+'/api/login',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:$('g-email').value,password:$('g-pass').value})});
+    const d=await r.json();
+    if(!r.ok){$('g-err').textContent=d.error||'შეცდომა';return;}
+    if(d.role!=='admin'){$('g-err').textContent='ეს ანგარიში არ არის ადმინი';return;}
+    TOKEN=d.token;localStorage.setItem('magnus_admin_token',TOKEN);
+    $('who').innerHTML='ავტორიზებული: <b>'+esc(d.name||$('g-email').value)+'</b>';
+    show();refresh();
+  }catch(e){$('g-err').textContent='სერვერი მიუწვდომელია';}
+}
+function logout(){TOKEN=null;localStorage.removeItem('magnus_admin_token');
+  $('dash').style.display='none';$('gate').style.display='block';}
+function show(){$('gate').style.display='none';$('dash').style.display='block';}
+
+async function refresh(){
+  try{
+    const [st,ev,us,ps]=await Promise.all([
+      api('/api/admin/stats'),api('/api/admin/events'),
+      api('/api/admin/users'),api('/api/admin/payments')]);
+    $('s-users').textContent=st.users;
+    $('s-events').textContent=st.events;
+    $('s-pays').textContent=st.payments;
+    $('s-rev').textContent=st.revenue.toFixed(2)+' ₾';
+    // bars
+    const max=Math.max(1,...st.by_action.map(a=>a.n));
+    $('bars').innerHTML=st.by_action.length?st.by_action.map(a=>
+      `<div class="bar-row"><div class="bar-name">${esc(a.action)}</div>
+       <div class="bar-track"><div class="bar-fill" style="width:${(a.n/max*100).toFixed(1)}%"></div></div>
+       <div class="bar-n">${a.n}</div></div>`).join('')
+      :'<div class="empty">ჯერ არ არის მონაცემები</div>';
+    // events
+    $('ev-count').textContent='('+ev.length+')';
+    $('t-events').innerHTML=ev.length?ev.map(e=>
+      `<tr><td>${e.id}</td><td>${fmtT(e.t)}</td><td>${e.user_id??'—'}</td>
+       <td>${esc(e.action)}</td><td class="detail">${e.detail?esc(JSON.stringify(e.detail)):'—'}</td>
+       <td>${esc(e.ip||'')}</td></tr>`).join('')
+      :'<tr><td colspan="6" class="empty">ცარიელია</td></tr>';
+    // users
+    $('t-users').innerHTML=us.length?us.map(u=>
+      `<tr><td>${u.id}</td><td>${esc(u.email)}</td><td>${esc(u.name)}</td>
+       <td><span class="tag ${u.role==='admin'?'admin':'user'}">${esc(u.role)}</span></td>
+       <td>${fmtT(u.t)}</td></tr>`).join('')
+      :'<tr><td colspan="5" class="empty">ცარიელია</td></tr>';
+    // payments
+    $('t-pays').innerHTML=ps.length?ps.map(p=>
+      `<tr><td>${p.id}</td><td>${esc(p.order_id||'')}</td><td>${p.user_id??'—'}</td>
+       <td>${esc(p.product||'')}</td><td>${p.amount.toFixed(2)} ${esc(p.currency)}</td>
+       <td><span class="tag ${p.status==='paid'?'paid':p.status==='failed'?'failed':'created'}">${esc(p.status)}</span></td>
+       <td>${fmtT(p.t)}</td></tr>`).join('')
+      :'<tr><td colspan="7" class="empty">ჯერ არ არის გადახდები</td></tr>';
+  }catch(e){/* logged out on auth error */}
+}
+
+['g-email','g-pass'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')login();}));
+
+// auto-resume session
+if(TOKEN){
+  api('/api/me').then(d=>{
+    if(d.role==='admin'){$('who').innerHTML='ავტორიზებული: <b>'+esc(d.name||d.email)+'</b>';show();refresh();}
+    else logout();
+  }).catch(()=>{});
+}
+// auto-refresh every 60s while dashboard open
+setInterval(()=>{if($('dash').style.display==='block')refresh();},60000);
+</script>
+</body>
+</html>
