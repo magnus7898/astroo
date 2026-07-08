@@ -612,11 +612,6 @@ tr:hover td{background:rgba(19,16,58,.6)}
     <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(167,139,250,.5);margin-bottom:10px">ასპექტ ფილტრი</div>
     <div style="display:flex;gap:24px;flex-wrap:wrap;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <input type="checkbox" id="f-minor" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer">
-        <span style="font-size:11px;color:rgba(200,170,255,.9)">მინორი</span>
-        <span style="font-size:10px;color:rgba(150,120,200,.5)">კვინტ · ბი-კვინტ · სესქვ · ნახ-სექსტ</span>
-      </label>
-      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
         <input type="checkbox" id="f-virtual" style="accent-color:#7c3aed;width:14px;height:14px;cursor:pointer">
         <span style="font-size:11px;color:rgba(200,170,255,.9)">ვირტუალური წერტილები</span>
         <span style="font-size:10px;color:rgba(150,120,200,.5)">ლილ · სელ · ბედ · კვანძ · Vx · AC · MC</span>
@@ -810,10 +805,6 @@ const ASPECTS_DEF=[
   {name:'კვადრატი',angles:[90,270],orb:10,sym:'□',color:'#e84040'},
   {name:'სექსტილი',angles:[60,300],orb:8,sym:'⚹',color:'#30c890'},
   {name:'კვინკონსი',angles:[150,210],orb:6,sym:'⚻',color:'#9ba8b8'},
-  {name:'კვინტილი',angles:[72,288],orb:2,sym:'Q',color:'#60c8a0',minor:true},
-  {name:'ბი-კვინტილი',angles:[144,216],orb:2,sym:'bQ',color:'#50b890',minor:true},
-  {name:'სესქვ-კვად.',angles:[135,225],orb:3,sym:'⊼',color:'#c07050',minor:true},
-  {name:'ნახ-სექსტ.',angles:[30,330],orb:2,sym:'⊾',color:'#70a0c0',minor:true},
 ];
 function calcCrossAspects(p1,p2){
   const aspects=[];
@@ -843,14 +834,11 @@ function calcCrossAspects(p1,p2){
 // Aspect filter categories
 const VIRTUAL_PLANETS=new Set(['ლილიტი','თეთრი მთვარე','ბედის ვარსკვლავი','ჩრდ. კვანძი','სამხ. კვანძი','ვერტექსი','AC','MC']);
 const ASTEROID_PLANETS=new Set(['ქირონი','იუნო']);
-const MINOR_ASPECTS=new Set(['კვინტილი','ბი-კვინტილი','სესქვ-კვად.','ნახ-სექსტ.']);
 
 function isAspectVisible(asp){
-  const fMinor=document.getElementById('f-minor')?.checked;
   const fVirtual=document.getElementById('f-virtual')?.checked;
   const fAsteroid=document.getElementById('f-asteroid')?.checked;
   // Minor aspects filter
-  if(MINOR_ASPECTS.has(asp.type)&&!fMinor)return false;
   // Virtual planets filter
   if((VIRTUAL_PLANETS.has(asp.p1)||VIRTUAL_PLANETS.has(asp.p2))&&!fVirtual)return false;
   // Asteroid filter
@@ -1195,10 +1183,8 @@ function initAcgMap(){
       }
       // Draw aspects with ACG-specific filters (AC/MC checked by default)
       function acgAspVisible(asp){
-        const fM=document.getElementById('acg-f-minor')?.checked;
         const fV=document.getElementById('acg-f-virtual')?.checked;
         const fA=document.getElementById('acg-f-asteroid')?.checked;
-        if(MINOR_ASPECTS.has(asp.type)&&!fM)return false;
         if((VIRTUAL_PLANETS.has(asp.p1)||VIRTUAL_PLANETS.has(asp.p2))&&!fV)return false;
         if((ASTEROID_PLANETS.has(asp.p1)||ASTEROID_PLANETS.has(asp.p2))&&!fA)return false;
         return true;
@@ -1206,7 +1192,7 @@ function initAcgMap(){
       const acgFiltered=d._allAspects.filter(acgAspVisible);
       drawAspectTable(acgFiltered,'acg-asp-tbody','acg-asp-title2','⚡ ასპექტები — '+acgFiltered.length);
       // Re-filter on checkbox change
-      ['acg-f-minor','acg-f-virtual','acg-f-asteroid'].forEach(id=>{
+      ['acg-f-virtual','acg-f-asteroid'].forEach(id=>{
         const cb=document.getElementById(id);
         if(cb)cb.onchange=()=>{
           const filtered=d._allAspects.filter(acgAspVisible);
@@ -1972,7 +1958,7 @@ function drawWheel(data1,data2,dualAsp){
     if(deg1==null||deg2==null)continue;
     const a1=e2s(deg1,asc),a2=e2s(deg2,asc);
     const pp1=pxy(a1,aspR),pp2=pxy(a2,aspR);
-    const ln=el('line',{x1:pp1.x,y1:pp1.y,x2:pp2.x,y2:pp2.y,stroke:asp.color,'stroke-width':0.8,opacity:.43,'stroke-dasharray':asp.angle===90||asp.angle===180?'':'4 3','class':'asp-line'},svg);
+    const ln=el('line',{x1:pp1.x,y1:pp1.y,x2:pp2.x,y2:pp2.y,stroke:asp.color,'stroke-width':1,opacity:.5,'class':'asp-line'},svg);
     ln.dataset.p1=asp.p1;ln.dataset.p2=asp.p2;
     if(data2)ln.dataset.dual='1';
   }
@@ -2150,7 +2136,7 @@ function drawHouseTable(data){
   }
 }
 
-const ASP_ORDER=['შეერთება','ოპოზიცია','ტრინი','კვადრატი','სექსტილი','კვინკონსი','კვინტილი','ბი-კვინტილი','სესქვ-კვად.','ნახ-სექსტ.'];
+const ASP_ORDER=['შეერთება','ოპოზიცია','ტრინი','კვადრატი','სექსტილი','კვინკონსი'];
 function drawAspectTable(aspects,tbodyId='aspect-tbody',titleId,titleText,isB){
   if(titleId&&titleText){const t=document.getElementById(titleId);if(t)t.textContent=titleText;}
   const tbody=document.getElementById(tbodyId);
@@ -2182,7 +2168,7 @@ setToday('tt');
 setToday('pd');
 
 // Attach filter listeners
-['f-minor','f-virtual','f-asteroid'].forEach(id=>{
+['f-virtual','f-asteroid'].forEach(id=>{
   const el=document.getElementById(id);
   if(el){
     el.addEventListener('change',applyAspFilter);
