@@ -655,6 +655,11 @@ tr:hover td{background:rgba(19,16,58,.6)}
     <table><thead><tr><th>პლანეტა 1</th><th>ასპ.</th><th>პლანეტა 2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
     <tbody id="aspect-tbody"></tbody></table>
   </div>
+
+  <div class="data-card" id="dominants-card" style="display:none;margin-top:14px">
+    <div class="data-card-title">👑 დომინანტები (Pullen)</div>
+    <div id="dominants-body" style="padding:12px 14px"></div>
+  </div>
 </div>
 
   <div id="acg-section">
@@ -1639,6 +1644,88 @@ async function generate(){
   }
 }
 
+/* ===== Pullen (Astrolog -j) dominants engine ===== */
+const DOMX=(()=>{
+const K=["sun","moon","mercury","venus","mars","jupiter","saturn","uranus","neptune","pluto","chiron","node","lilith","asc","mc"];
+const OI={sun:30,moon:25,mercury:10,venus:10,mars:10,jupiter:10,saturn:10,uranus:10,neptune:10,pluto:10,chiron:5,node:5,lilith:5,asc:20,mc:15};
+const HI=[20,0,0,10,0,0,5,0,0,15,0,0];
+const R1S={1:"mars",2:"venus",3:"mercury",4:"moon",5:"sun",6:"mercury",7:"venus",8:"pluto",9:"jupiter",10:"saturn",11:"uranus",12:"neptune"};
+const R2S={8:"mars",11:"saturn",12:"jupiter"};
+const OR1={sun:5,moon:4,mercury:3,venus:7,mars:1,jupiter:9,saturn:10,uranus:11,neptune:12,pluto:8,chiron:9,node:11,lilith:8,asc:1,mc:10};
+const OR2={mercury:6,venus:2,mars:8,jupiter:12,saturn:11};
+const EX={sun:1,moon:2,mercury:6,venus:12,mars:10,jupiter:4,saturn:7,uranus:8,neptune:4,pluto:11,chiron:12,node:3,lilith:12,asc:2,mc:10};
+const AS=[[0,1.0,7],[180,0.8,7],[90,0.8,7],[120,0.6,7],[60,0.6,6]];
+const OO={node:2},OA={sun:1,moon:1};
+const nrm=d=>{d%=360;return d<0?d+360:d;};
+const sgn=l=>Math.floor(nrm(l)/30)+1;
+function hse(l,c){l=nrm(l);for(let h=0;h<12;h++){const a=nrm(c[h]),b=nrm(c[(h+1)%12]);
+ if(a<=b){if(l>=a&&l<b)return h+1;}else{if(l>=a||l<b)return h+1;}}return 12;}
+const sep=(a,b)=>{let d=Math.abs(nrm(a)-nrm(b));return d<=180?d:360-d;};
+function compute(P,cusps){
+ const pos={};for(const k of K)if(P[k]!=null)pos[k]=nrm(P[k]);
+ if(pos.asc==null)pos.asc=nrm(cusps[0]);
+ if(pos.mc==null)pos.mc=nrm(cusps[9]);
+ const os=K.filter(k=>pos[k]!=null),S={},H={},p1={},p2={};
+ for(const o of os){S[o]=sgn(pos[o]);H[o]=hse(pos[o],cusps);p1[o]=0;p2[o]=0;}
+ if(H.asc!=null)H.asc=1;if(H.mc!=null)H.mc=10;
+ for(const o of os){const s=S[o],h=H[o];
+  p1[o]+=OI[o]+HI[h-1];
+  if(OR1[o]===s||OR2[o]===s)p1[o]+=20;if(EX[o]===s)p1[o]+=10;
+  if(OR1[o]===h||OR2[o]===h)p1[o]+=15;if(EX[o]===h)p1[o]+=5;
+  const hf=OI[o]/2;
+  for(const t of[s,h])for(const r of[R1S[t],R2S[t]])if(r&&r!==o&&p1[r]!=null)p1[r]+=hf;}
+ for(let h=1;h<=12;h++){const r=R1S[sgn(cusps[h-1])];if(p1[r]!=null)p1[r]+=HI[h-1];}
+ for(let i=0;i<os.length;i++)for(let j=i+1;j<os.length;j++){
+  const a=os[i],b=os[j],d=sep(pos[a],pos[b]);let bt=null;
+  for(const[ang,inf,ao]of AS){
+   const orb=Math.min(ao,OO[a]??360,OO[b]??360)+(OA[a]??0)+(OA[b]??0);
+   const df=Math.abs(d-ang);if(df<=orb&&(!bt||df<bt[0]))bt=[df,inf,orb];}
+  if(bt){const f=1-bt[0]/bt[2];p2[a]+=bt[1]*OI[b]*f;p2[b]+=bt[1]*OI[a]*f;}}
+ const T={};let tt=0;for(const o of os){T[o]=p1[o]+p2[o];tt+=T[o];}
+ const ord=[...os].sort((a,b)=>T[b]-T[a]);
+ const pls=ord.map((o,i)=>({key:o,pct:tt?Math.round(T[o]/tt*1000)/10:0,rank:i+1,total:Math.round(T[o]*10)/10}));
+ const sp={};for(let s=1;s<=12;s++)sp[s]=0;
+ for(const o of os){sp[S[o]]+=T[o]/2;if(OR1[o])sp[OR1[o]]+=T[o]/3;if(OR2[o])sp[OR2[o]]+=T[o]/3;}
+ let st=0;for(let s=1;s<=12;s++)st+=sp[s];
+ const so=Object.keys(sp).map(Number).sort((a,b)=>sp[b]-sp[a]);
+ const sgs=so.map((s,i)=>({sign:s,pct:st?Math.round(sp[s]/st*1000)/10:0,rank:i+1}));
+ return{planets:pls,signs:sgs};}
+return{compute};})();
+
+const DOMX_KA={sun:"მზე",moon:"მთვარე",mercury:"მერკური",venus:"ვენერა",mars:"მარსი",jupiter:"იუპიტერი",saturn:"სატურნი",uranus:"ურანი",neptune:"ნეპტუნი",pluto:"პლუტონი",chiron:"ქირონი",node:"ჩრდ. კვანძი",lilith:"ლილიტი",asc:"ASC",mc:"MC"};
+const DOMX_MAP={'მზე':'sun','მთვარე':'moon','მერკური':'mercury','ვენერა':'venus','მარსი':'mars','იუპიტერი':'jupiter','სატურნი':'saturn','ურანი':'uranus','ნეპტუნი':'neptune','პლუტონი':'pluto','ქირონი':'chiron','ლილიტი':'lilith','ჩრდ. კვანძი':'node'};
+function renderDominants(data){
+ const card=document.getElementById('dominants-card'),body=document.getElementById('dominants-body');
+ if(!card||!body)return;
+ try{
+  if(!data||!data.planets||!data.houses){card.style.display='none';return;}
+  const P={};
+  for(const[ka,en]of Object.entries(DOMX_MAP))
+   if(data.planets[ka]&&data.planets[ka].degree!=null)P[en]=data.planets[ka].degree;
+  if(data.asc!=null)P.asc=data.asc;
+  if(data.mc!=null)P.mc=data.mc;
+  const r=DOMX.compute(P,data.houses.slice(0,12));
+  const SK=SIGN_KA;
+  const bar=(lbl,pct,mx,hl)=>`<div style="display:flex;align-items:center;gap:8px;margin:3px 0">
+   <span style="width:92px;font-size:11px;color:${hl?'#e9d5ff':'#9ba8b8'};white-space:nowrap">${lbl}</span>
+   <div style="flex:1;height:9px;background:rgba(45,31,110,.3);border-radius:5px;overflow:hidden">
+    <div style="height:100%;width:${mx?pct/mx*100:0}%;border-radius:5px;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div>
+   <span style="width:44px;text-align:right;font-size:11px;color:${hl?'#a78bfa':'#9ba8b8'}">${pct.toFixed(1)}%</span></div>`;
+  const mp=r.planets[0]?.pct||1,ms=r.signs[0]?.pct||1;
+  body.innerHTML=`
+   <div style="font-size:12px;color:#e9d5ff;margin-bottom:10px">👑 დომინანტი პლანეტა: <b style="color:#a78bfa">${DOMX_KA[r.planets[0].key]}</b>
+    &nbsp;·&nbsp; დომინანტი ნიშანი: <b style="color:#a78bfa">${SK[r.signs[0].sign-1]}</b></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="domx-grid">
+    <div>${r.planets.map((p,i)=>bar(DOMX_KA[p.key],p.pct,mp,i===0)).join('')}</div>
+    <div>${r.signs.map((s,i)=>bar(SK[s.sign-1],s.pct,ms,i===0)).join('')}</div>
+   </div>
+   <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">Pullen / Astrolog −j მეთოდი</div>`;
+  if(window.matchMedia&&matchMedia('(max-width:600px)').matches)
+   body.querySelector('.domx-grid').style.gridTemplateColumns='1fr';
+  card.style.display='block';
+ }catch(e){card.style.display='none';}
+}
+
 function showSingleChart(data,label,dual){
   // Compute ALL aspects (main+virtual+asteroid) including AC/MC
   data._allAspects=calcAllNatalAspects(data);
@@ -1660,6 +1747,7 @@ function showSingleChart(data,label,dual){
   const initFiltered=data._allAspects.filter(isAspectVisible);
   drawAspectTable(initFiltered,'aspect-tbody','aspect-table-title',`⚡ ასპექტები — სულ ${initFiltered.length}`);
   if(data.lunar)displayLunarBadge(data.lunar);
+  renderDominants(data);
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -1684,6 +1772,7 @@ function swapPersons(){
 
 function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   document.getElementById('mode-label').textContent=label;
+  const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
   document.getElementById('legend-wrap').style.display='flex';
   document.getElementById('leg-a').textContent=name1;
   document.getElementById('leg-b').textContent=name2;
