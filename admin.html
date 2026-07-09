@@ -84,9 +84,13 @@ tr:hover td{background:rgba(124,58,237,.05)}
   <div id="gate">
     <h1>MAGNUS · ადმინ პანელი</h1>
     <input type="email" id="g-email" placeholder="ელფოსტა" autocomplete="username">
-    <input type="password" id="g-pass" placeholder="პაროლი" autocomplete="current-password">
+    <input type="password" id="g-pass" placeholder="პაროლი (მინ. 6 სიმბოლო)" autocomplete="current-password">
     <button class="btn" onclick="login()">შესვლა</button>
+    <button class="btn ghost" style="width:100%;margin-top:10px" onclick="registerAcc()">რეგისტრაცია</button>
     <div class="err" id="g-err"></div>
+    <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:12px;line-height:1.6">
+      პირველი დარეგისტრირებული ანგარიში ავტომატურად ხდება ადმინი.<br>ყველა შემდეგი — ჩვეულებრივი მომხმარებელი.
+    </div>
   </div>
 
   <!-- DASHBOARD -->
@@ -152,6 +156,26 @@ async function api(path,opts={}){
   const r=await fetch(BACKEND+path,opts);
   if(r.status===401||r.status===403||r.status===422){logout();throw new Error('auth');}
   return r.json();
+}
+
+async function registerAcc(){
+  $('g-err').textContent='';
+  const email=$('g-email').value.trim(), pw=$('g-pass').value;
+  if(!email||pw.length<6){$('g-err').textContent='ელფოსტა და პაროლი (მინ. 6 სიმბოლო)';return;}
+  try{
+    const r=await fetch(BACKEND+'/api/register',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email:email,password:pw,name:email.split('@')[0]})});
+    const d=await r.json();
+    if(!r.ok){$('g-err').textContent=d.error||'შეცდომა';return;}
+    if(d.role!=='admin'){
+      $('g-err').textContent='ანგარიში შეიქმნა, მაგრამ ადმინი უკვე არსებობს — ეს ანგარიში ჩვეულებრივია';
+      return;
+    }
+    TOKEN=d.token;localStorage.setItem('magnus_admin_token',TOKEN);
+    $('who').innerHTML='ავტორიზებული: <b>'+esc(d.name||email)+'</b>';
+    show();refresh();
+  }catch(e){$('g-err').textContent='სერვერი მიუწვდომელია';}
 }
 
 async function login(){
