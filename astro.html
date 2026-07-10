@@ -660,6 +660,14 @@ tr:hover td{background:rgba(19,16,58,.6)}
     <div class="data-card-title">👑 დომინანტები (Pullen)</div>
     <div id="dominants-body" style="padding:12px 14px"></div>
   </div>
+
+  <div class="data-card" id="cinderella-card" style="display:none;margin-top:14px">
+    <div class="data-card-title">🕛 ცინდერელას კარიბჭე</div>
+    <div id="cinderella-body" style="padding:12px 14px">
+      <button id="cind-btn" onclick="runCinderella()" style="background:linear-gradient(90deg,#7c3aed,#a78bfa);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ გამოთვლა — 100 წელი დაბადებიდან</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">ქირონი · ვენერა · იუპიტერი · ნეპტუნი — ჰარმონიული ტრანზიტული კარიბჭეები</div>
+    </div>
+  </div>
 </div>
 
   <div id="acg-section">
@@ -1493,10 +1501,12 @@ async function generate(){
   if(btn){btn.disabled=true;btn.textContent='⏳ იტვირთება...';}
   try{
     const mode=currentMode;
+    window._cindReq=null;
 
     if(mode==='natal'){
       const p=getPersonData('n');
       if(!p.lat||!p.lon){showError('შეიყვანეთ ქალაქი');return;}
+      window._cindReq={...p};
       const d=await fetchChart(p);
       d._timeUnknown=p.time_unknown;
       showSingleChart(d,'ნატალური რუქა',false);
@@ -1768,6 +1778,70 @@ function renderDominants(data){
  }catch(e){card.style.display='none';}
 }
 
+/* ===== Cinderella gate (ცინდერელას კარიბჭე) ===== */
+function setupCinderellaCard(){
+  const c=document.getElementById('cinderella-card');if(!c)return;
+  if(window._cindReq){
+    c.style.display='block';
+    document.getElementById('cinderella-body').innerHTML=`
+      <button id="cind-btn" onclick="runCinderella()" style="background:linear-gradient(90deg,#7c3aed,#a78bfa);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ გამოთვლა — 100 წელი დაბადებიდან</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">ქირონი · ვენერა · იუპიტერი · ნეპტუნი — ჰარმონიული ტრანზიტული კარიბჭეები</div>`;
+  }else c.style.display='none';
+}
+async function runCinderella(){
+  const body=document.getElementById('cinderella-body');
+  const btn=document.getElementById('cind-btn');
+  if(!window._cindReq||!btn)return;
+  btn.disabled=true;btn.textContent='⏳ სკანირება...';
+  try{
+    const res=await fetch(`${BACKEND}/api/cinderella`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...window._cindReq,years:100})});
+    if(!res.ok)throw new Error('server');
+    renderCinderella(await res.json());
+  }catch(e){
+    body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა გამოთვლა — სცადეთ მოგვიანებით</div>';
+  }
+}
+function renderCinderella(r){
+  const body=document.getElementById('cinderella-body');
+  const P=r.periods||[];
+  const na=(r.natal_aspects||[]).map(a=>`${a.a_ka} ${a.aspect} ${a.b_ka} (${a.orb}°)`).join(' · ');
+  const natalRow=Object.entries(r.natal).map(([k,v])=>
+    `<span style="margin-right:10px;white-space:nowrap">${({chiron:'ქირონი',venus:'ვენერა',jupiter:'იუპიტერი',neptune:'ნეპტუნი'})[k]} ${v.deg}° ${v.sign_ka}${v.retro?' ℞':''}</span>`).join('');
+  // timeline strip: markers by age
+  const marks=P.map(p=>{
+    const l=(p.age/(r.years_scanned||100)*100).toFixed(2);
+    const hgt=p.stars.length*5+4;
+    return `<div title="${p.peak} · ${p.stars}" style="position:absolute;left:${l}%;bottom:0;width:3px;height:${hgt}px;background:${p.stars.length>=3?'#f0c96b':'#a78bfa'};border-radius:2px"></div>`;
+  }).join('');
+  const rows=P.map(p=>{
+    const ln=p.links.map(l=>`ტ.${l.t_ka} ${l.aspect} ნ.${l.n_ka} (${l.orb}°)`).join(', ');
+    const tc=Object.entries(p.transit_chart).map(([k,v])=>
+      `<span style="margin-right:9px;white-space:nowrap">${({chiron:'ქირონი',venus:'ვენერა',jupiter:'იუპიტერი',neptune:'ნეპტუნი'})[k]} ${v.deg}° ${v.sign_ka}${v.retro?' ℞':''}</span>`).join('');
+    return `<details style="border-bottom:1px solid rgba(124,58,237,.15);padding:5px 0">
+      <summary style="cursor:pointer;font-size:11.5px;color:#d7dde6;display:flex;gap:8px;align-items:baseline;list-style:none">
+        <span style="color:#f0c96b;width:34px;display:inline-block">${p.stars}</span>
+        <span style="min-width:150px">${p.start} — ${p.end}</span>
+        <span style="color:#9ba8b8">ასაკი ${p.age}</span>
+        <span style="color:rgba(155,168,184,.5);font-size:10px">${p.days}დღ</span>
+      </summary>
+      <div style="font-size:11px;color:#a78bfa;padding:4px 0 2px 42px">${ln}</div>
+      <div style="font-size:10px;color:#9ba8b8;padding:0 0 6px 42px">პიკი ${p.peak} · ტრანზიტები: ${tc}</div>
+    </details>`;
+  }).join('');
+  body.innerHTML=`
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">ნატალური: ${natalRow}</div>
+    <div style="font-size:12px;color:#e9d5ff;margin-bottom:8px">${r.predisposed
+      ?`💫 ნატალური წინაპირობა: <b style="color:#a78bfa">${na}</b> — საკმარისია ერთი ჰარმონიული ტრანზიტიც`
+      :'ნატალური წინაპირობა არ არის — საჭიროა ≥2 ერთდროული ჰარმონიული ტრანზიტი'}</div>
+    <div style="position:relative;height:22px;background:rgba(45,31,110,.25);border-radius:4px;margin:6px 0 2px">${marks}</div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(155,168,184,.5);margin-bottom:8px"><span>0</span><span>25</span><span>50</span><span>75</span><span>100 წელი</span></div>
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">ნაპოვნია ${r.total_periods} პერიოდი</div>
+    <div style="max-height:340px;overflow-y:auto">${rows}</div>
+    <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">☌ შეერთება · △ ტრიგონი · ⚹ სექსტილი · ★ სიძლიერე</div>`;
+}
+
 function showSingleChart(data,label,dual){
   // Compute ALL aspects (main+virtual+asteroid) including AC/MC
   data._allAspects=calcAllNatalAspects(data);
@@ -1790,6 +1864,7 @@ function showSingleChart(data,label,dual){
   drawAspectTable(initFiltered,'aspect-tbody','aspect-table-title',`⚡ ასპექტები — სულ ${initFiltered.length}`);
   if(data.lunar)displayLunarBadge(data.lunar);
   renderDominants(data);
+  setupCinderellaCard();
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -1815,6 +1890,7 @@ function swapPersons(){
 function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   document.getElementById('mode-label').textContent=label;
   const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
+  const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
   document.getElementById('legend-wrap').style.display='flex';
   document.getElementById('leg-a').textContent=name1;
   document.getElementById('leg-b').textContent=name2;
