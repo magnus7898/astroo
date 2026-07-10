@@ -1648,7 +1648,8 @@ async function generate(){
 const DOMX=(()=>{
 const K=["sun","moon","mercury","venus","mars","jupiter","saturn","uranus","neptune","pluto","chiron","node","lilith","asc","mc"];
 const OI={sun:30,moon:25,mercury:10,venus:10,mars:10,jupiter:10,saturn:10,uranus:10,neptune:10,pluto:10,chiron:5,node:5,lilith:5,asc:20,mc:15};
-const HI=[20,0,0,10,0,0,5,0,0,15,0,0];
+const HI=[20,5,2,8,5,2,10,5,2,15,5,2];
+const AORB=10,APROX={asc:15,mc:12,dsc:8,ic:6},CRIT=15;
 const R1S={1:"pluto",2:"venus",3:"mercury",4:"moon",5:"sun",6:"mercury",7:"venus",8:"mars",9:"jupiter",10:"saturn",11:"uranus",12:"neptune"};
 const R2S={1:"mars",8:"pluto",11:"saturn",12:"jupiter"};
 const OR1={sun:5,moon:4,mercury:3,venus:7,mars:8,jupiter:9,saturn:10,uranus:11,neptune:12,pluto:1,chiron:9,node:11,lilith:8,asc:1,mc:10};
@@ -1667,12 +1668,18 @@ function compute(P,cusps,retro){
  const pos={};for(const k of K)if(P[k]!=null)pos[k]=nrm(P[k]);
  if(pos.asc==null)pos.asc=nrm(cusps[0]);
  if(pos.mc==null)pos.mc=nrm(cusps[9]);
- const os=K.filter(k=>pos[k]!=null),S={},H={},p1={},p2={},RXF={};
+ const os=K.filter(k=>pos[k]!=null),S={},H={},p1={},p2={},RXF={},CRX={};
  for(const o of os)RXF[o]=!!(retro[o]&&RETRO_OK.has(o));
+ const ANG={asc:nrm(cusps[0]),mc:nrm(cusps[9]),dsc:nrm(cusps[0]+180),ic:nrm(cusps[9]+180)};
  for(const o of os){S[o]=sgn(pos[o]);H[o]=hse(pos[o],cusps);p1[o]=0;p2[o]=0;}
  if(H.asc!=null)H.asc=1;if(H.mc!=null)H.mc=10;
  for(const o of os){const s=S[o],h=H[o];
   p1[o]+=OI[o]+HI[h-1];
+  const sd=pos[o]%30;CRX[o]=(sd<1||sd>=29);if(CRX[o])p1[o]+=CRIT;
+  if(o!=="asc"&&o!=="mc"){let bp=0;
+   for(const a in APROX){const dd=sep(pos[o],ANG[a]);
+    if(dd<=AORB)bp=Math.max(bp,APROX[a]*(1-dd/AORB));}
+   p1[o]+=bp;}
   if(OR1[o]===s||OR2[o]===s)p1[o]+=20;if(EX[o]===s)p1[o]+=10;
   if(OR1[o]===h||OR2[o]===h)p1[o]+=15;if(EX[o]===h)p1[o]+=5;
   const hf=OI[o]/2;
@@ -1687,7 +1694,7 @@ function compute(P,cusps,retro){
  for(const o of os)if(RXF[o]){p1[o]*=RETRO_F;p2[o]*=RETRO_F;}
  const T={};let tt=0;for(const o of os){T[o]=p1[o]+p2[o];tt+=T[o];}
  const ord=[...os].sort((a,b)=>T[b]-T[a]);
- const pls=ord.map((o,i)=>({key:o,pct:tt?Math.round(T[o]/tt*1000)/10:0,rank:i+1,total:Math.round(T[o]*10)/10,rx:RXF[o]}));
+ const pls=ord.map((o,i)=>({key:o,pct:tt?Math.round(T[o]/tt*1000)/10:0,rank:i+1,total:Math.round(T[o]*10)/10,rx:RXF[o],crit:CRX[o]}));
  const sp={};for(let s=1;s<=12;s++)sp[s]=0;
  for(const o of os){sp[S[o]]+=T[o]/2;if(OR1[o])sp[OR1[o]]+=T[o]/3;if(OR2[o])sp[OR2[o]]+=T[o]/3;}
  let st=0;for(let s=1;s<=12;s++)st+=sp[s];
@@ -1723,10 +1730,10 @@ function renderDominants(data){
    <div style="font-size:12px;color:#e9d5ff;margin-bottom:10px">👑 დომინანტი პლანეტა: <b style="color:#a78bfa">${DOMX_KA[r.planets[0].key]}</b>
     &nbsp;·&nbsp; დომინანტი ნიშანი: <b style="color:#a78bfa">${SK[r.signs[0].sign-1]}</b></div>
    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="domx-grid">
-    <div>${r.planets.map((p,i)=>bar(DOMX_KA[p.key]+(p.rx?' ℞':''),p.pct,mp,i===0)).join('')}</div>
+    <div>${r.planets.map((p,i)=>bar(DOMX_KA[p.key]+(p.rx?' ℞':'')+(p.crit?' •':''),p.pct,mp,i===0)).join('')}</div>
     <div>${r.signs.map((s,i)=>bar(SK[s.sign-1],s.pct,ms,i===0)).join('')}</div>
    </div>
-   <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">Pullen / Astrolog −j მეთოდი</div>`;
+   <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">Pullen −j (მოდიფ.) · ℞ რეტროგრადი · • კრიტიკული გრადუსი (0°/29°)</div>`;
   if(window.matchMedia&&matchMedia('(max-width:600px)').matches)
    body.querySelector('.domx-grid').style.gridTemplateColumns='1fr';
   card.style.display='block';
