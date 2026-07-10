@@ -1702,10 +1702,24 @@ function compute(P,cusps,retro){
  let st=0;for(let s=1;s<=12;s++)st+=sp[s];
  const so=Object.keys(sp).map(Number).sort((a,b)=>sp[b]-sp[a]);
  const sgs=so.map((s,i)=>({sign:s,pct:st?Math.round(sp[s]/st*1000)/10:0,rank:i+1}));
- return{planets:pls,signs:sgs};}
+ const EL={fire:[1,5,9],earth:[2,6,10],air:[3,7,11],water:[4,8,12]};
+ const MO={cardinal:[1,4,7,10],fixed:[2,5,8,11],mutable:[3,6,9,12]};
+ const grp=m=>{const g={};let gt=0;
+  for(const k in m){g[k]=m[k].reduce((a,s)=>a+sp[s],0);gt+=g[k];}
+  return Object.keys(g).sort((a,b)=>g[b]-g[a])
+   .map((k,i)=>({key:k,pct:gt?Math.round(g[k]/gt*1000)/10:0,rank:i+1}));};
+ const els=grp(EL),mos=grp(MO);
+ const hp={};for(let x=1;x<=12;x++)hp[x]=0;
+ for(const o of os)if(o!=="asc"&&o!=="mc")hp[H[o]]+=T[o];
+ let ht=0;for(let x=1;x<=12;x++)ht+=hp[x];
+ const hss=Object.keys(hp).map(Number).sort((a,b)=>hp[b]-hp[a])
+  .map((x,i)=>({house:x,pct:ht?Math.round(hp[x]/ht*1000)/10:0,rank:i+1}));
+ return{planets:pls,signs:sgs,elements:els,modalities:mos,houses:hss};}
 return{compute};})();
 
 const DOMX_KA={sun:"მზე",moon:"მთვარე",mercury:"მერკური",venus:"ვენერა",mars:"მარსი",jupiter:"იუპიტერი",saturn:"სატურნი",uranus:"ურანი",neptune:"ნეპტუნი",pluto:"პლუტონი",chiron:"ქირონი",node:"ჩრდ. კვანძი",lilith:"ლილიტი",asc:"ASC",mc:"MC"};
+const DOMX_ELKA={fire:"🔥 ცეცხლი",earth:"⛰ მიწა",air:"💨 ჰაერი",water:"💧 წყალი"};
+const DOMX_MOKA={cardinal:"კარდინალური",fixed:"ფიქსირებული",mutable:"მუტაბელური"};
 const DOMX_MAP={'მზე':'sun','მთვარე':'moon','მერკური':'mercury','ვენერა':'venus','მარსი':'mars','იუპიტერი':'jupiter','სატურნი':'saturn','ურანი':'uranus','ნეპტუნი':'neptune','პლუტონი':'pluto','ქირონი':'chiron','ლილიტი':'lilith','ჩრდ. კვანძი':'node'};
 function renderDominants(data){
  const card=document.getElementById('dominants-card'),body=document.getElementById('dominants-body');
@@ -1730,10 +1744,22 @@ function renderDominants(data){
   const mp=r.planets[0]?.pct||1,ms=r.signs[0]?.pct||1;
   body.innerHTML=`
    <div style="font-size:12px;color:#e9d5ff;margin-bottom:10px">👑 დომინანტი პლანეტა: <b style="color:#a78bfa">${DOMX_KA[r.planets[0].key]}</b>
-    &nbsp;·&nbsp; დომინანტი ნიშანი: <b style="color:#a78bfa">${SK[r.signs[0].sign-1]}</b></div>
+    &nbsp;·&nbsp; ნიშანი: <b style="color:#a78bfa">${SK[r.signs[0].sign-1]}</b>
+    &nbsp;·&nbsp; <b style="color:#a78bfa">${DOMX_ELKA[r.elements[0].key]}</b>
+    &nbsp;·&nbsp; <b style="color:#a78bfa">${DOMX_MOKA[r.modalities[0].key]}</b></div>
    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="domx-grid">
-    <div>${r.planets.map((p,i)=>bar(DOMX_KA[p.key]+(p.rx?' ℞':'')+(p.crit?' •':'')+(p.nasp?` <span style=\"opacity:.5;font-size:9px\">${p.nasp}asp</span>`:''),p.pct,mp,i===0)).join('')}</div>
+    <div>${r.planets.map((p,i)=>bar(DOMX_KA[p.key]+(p.rx?' ℞':'')+(p.crit?' •':'')+(p.nasp?` <span style="opacity:.5;font-size:9px">${p.nasp}asp</span>`:''),p.pct,mp,i===0)).join('')}</div>
     <div>${r.signs.map((s,i)=>bar(SK[s.sign-1],s.pct,ms,i===0)).join('')}</div>
+    <div>
+     <div style="font-size:10px;color:#9ba8b8;letter-spacing:2px;margin:6px 0 4px">ელემენტები</div>
+     ${r.elements.map((e,i)=>bar(DOMX_ELKA[e.key],e.pct,r.elements[0].pct||1,i===0)).join('')}
+     <div style="font-size:10px;color:#9ba8b8;letter-spacing:2px;margin:10px 0 4px">მოდალობა</div>
+     ${r.modalities.map((m,i)=>bar(DOMX_MOKA[m.key],m.pct,r.modalities[0].pct||1,i===0)).join('')}
+    </div>
+    <div>
+     <div style="font-size:10px;color:#9ba8b8;letter-spacing:2px;margin:6px 0 4px">სახლები</div>
+     ${r.houses.map((x,i)=>bar(x.house+' სახლი',x.pct,r.houses[0].pct||1,i===0)).join('')}
+    </div>
    </div>
    <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">Pullen −j (მოდიფ.) · ℞ რეტროგრადი · • კრიტიკული გრადუსი (0°/29°) · Nasp ასპექტების რაოდენობა</div>`;
   if(window.matchMedia&&matchMedia('(max-width:600px)').matches)
