@@ -668,6 +668,11 @@ tr:hover td{background:rgba(19,16,58,.6)}
       <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">ქირონი · ვენერა · იუპიტერი · ნეპტუნი — ჰარმონიული ტრანზიტული კარიბჭეები</div>
     </div>
   </div>
+
+  <div class="data-card" id="synastry-score-card" style="display:none;margin-top:14px">
+    <div class="data-card-title">💞 თავსებადობა</div>
+    <div id="synastry-score-body" style="padding:12px 14px"></div>
+  </div>
 </div>
 
   <div id="acg-section">
@@ -841,6 +846,100 @@ function calcCrossAspects(p1,p2){
     }
   }
   return aspects.sort((a,b)=>a.orb-b.orb);
+}
+
+/* ===== Synastry compatibility scoring ===== */
+const SYN_ORB={'შეერთება':12,'ოპოზიცია':12,'ტრინი':10,'კვადრატი':10,'სექსტილი':8,'კვინკონსი':6};
+const SYN_PERSONAL=new Set(['მზე','მთვარე','მერკური','ვენერა','მარსი']);
+const SYN_OUTER=new Set(['ურანი','ნეპტუნი','პლუტონი']);
+const SYN_SOCIAL=new Set(['იუპიტერი','სატურნი']);
+const SYN_POINTS=new Set(['AC','MC']);
+const SYN_MINOR=new Set(['ქირონი','ლილიტი','ჩრდ. კვანძი']);
+function _pairKey(a,b){return [a,b].sort().join('|');}
+const SYN_LOVE=new Set(['მზე|მთვარე','მზე|ვენერა','მთვარე|ვენერა','ვენერა|ვენერა',
+ 'მთვარე|მთვარე','ვენერა|იუპიტერი','იუპიტერი|მთვარე','AC|ვენერა','AC|მთვარე','AC|მზე',
+ 'ვენერა|ჩრდ. კვანძი','მთვარე|ჩრდ. კვანძი'].map(x=>x.split('|').sort().join('|')));
+const SYN_HOT=new Set(['ვენერა|მარსი','მარსი|მარსი','ვენერა|პლუტონი','მარსი|პლუტონი',
+ 'მთვარე|მარსი','მზე|მარსი','AC|მარსი','AC|პლუტონი','ლილიტი|მარსი','ლილიტი|ვენერა',
+ 'მზე|პლუტონი'].map(x=>x.split('|').sort().join('|')));
+const SYN_MALEFIC=new Set(['სატურნი','ურანი','ნეპტუნი','პლუტონი']);
+function _pairWeight(a,b){
+  const w=n=>SYN_PERSONAL.has(n)?1.0:(SYN_POINTS.has(n)?0.8:(SYN_SOCIAL.has(n)?0.7:(SYN_OUTER.has(n)?0.5:0.5)));
+  if((SYN_OUTER.has(a)||SYN_SOCIAL.has(a))&&(SYN_OUTER.has(b)||SYN_SOCIAL.has(b)))return 0.15; // generational
+  return (w(a)+w(b))/2;
+}
+function scoreSynastry(cross){
+  const S={love:0,hot:0,harmony:0,tension:0};
+  let good=0,bad=0,neutral=0;
+  const contrib=[];
+  for(const a of cross){
+    const key=_pairKey(a.p1,a.p2);
+    const maxo=SYN_ORB[a.type]||10;
+    const w=_pairWeight(a.p1,a.p2)*Math.pow(Math.max(0,1-a.orb/maxo),2);
+    if(w<=0){neutral++;continue;}
+    const isLove=SYN_LOVE.has(key),isHot=SYN_HOT.has(key);
+    const lbl=`${a.p1} ${a.sym} ${a.p2}`;
+    if(a.type==='ტრინი'||a.type==='სექსტილი'){
+      const q=a.type==='ტრინი'?1.0:0.8;
+      S.harmony+=w*q;good++;
+      if(isLove){S.love+=w*q;contrib.push({lbl,cat:'love',v:w*q});}
+      else if(isHot){S.hot+=w*q*0.7;contrib.push({lbl,cat:'hot',v:w*q*0.7});}
+      else contrib.push({lbl,cat:'harmony',v:w*q});
+    }else if(a.type==='შეერთება'){
+      if(isLove){S.love+=w*1.1;S.harmony+=w*0.5;good++;contrib.push({lbl,cat:'love',v:w*1.1});}
+      else if(isHot){S.hot+=w*1.1;good++;contrib.push({lbl,cat:'hot',v:w*1.1});}
+      else if((SYN_MALEFIC.has(a.p1)&&SYN_PERSONAL.has(a.p2))||(SYN_MALEFIC.has(a.p2)&&SYN_PERSONAL.has(a.p1))){
+        S.tension+=w*0.7;bad++;contrib.push({lbl,cat:'tension',v:w*0.7});}
+      else{neutral++;contrib.push({lbl,cat:'neutral',v:w*0.3});}
+    }else if(a.type==='კვადრატი'||a.type==='ოპოზიცია'){
+      const q=a.type==='კვადრატი'?1.0:0.9;
+      S.tension+=w*q;bad++;
+      if(isHot){S.hot+=w*0.8;contrib.push({lbl,cat:'hot_hard',v:w*0.8});}
+      else contrib.push({lbl,cat:'tension',v:w*q});
+    }else{ // კვინკონსი
+      S.tension+=w*0.35;neutral++;contrib.push({lbl,cat:'tension',v:w*0.35});
+    }
+  }
+  const pct=(v,sc)=>Math.min(100,Math.round(v/sc*100));
+  const love=pct(S.love,2),hot=pct(S.hot,3.5),harm=pct(S.harmony,12),ten=pct(S.tension,12);
+  const pos=S.love*1.1+S.harmony+S.hot*0.6,neg=S.tension;
+  const overall=pos+neg>0?Math.round(pos/(pos+neg)*100):50;
+  contrib.sort((x,y)=>y.v-x.v);
+  return {love,hot,harmony:harm,tension:ten,overall,good,bad,neutral,
+    best:contrib.filter(c=>c.cat==='love'||c.cat==='hot'||c.cat==='harmony').slice(0,4),
+    worst:contrib.filter(c=>c.cat==='tension').slice(0,3)};
+}
+function renderSynastryScore(label,cross){
+  const card=document.getElementById('synastry-score-card'),body=document.getElementById('synastry-score-body');
+  if(!card||!body)return;
+  if(label!=='სინასტრია'||!cross||!cross.length){card.style.display='none';return;}
+  try{
+    const s=scoreSynastry(cross);
+    const bar=(ico,lbl,pct,col)=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+      <span style="width:110px;font-size:11px;color:#d7dde6;white-space:nowrap">${ico} ${lbl}</span>
+      <div style="flex:1;height:9px;background:rgba(45,31,110,.3);border-radius:5px;overflow:hidden">
+       <div style="height:100%;width:${pct}%;border-radius:5px;background:${col}"></div></div>
+      <span style="width:40px;text-align:right;font-size:11px;color:#9ba8b8">${pct}%</span></div>`;
+    body.innerHTML=`
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
+        <div style="font-size:28px;font-weight:700;color:#a78bfa">${s.overall}%</div>
+        <div style="font-size:11px;color:#9ba8b8">საერთო თავსებადობა<br>
+         <span style="color:#30c890">${s.good} კარგი</span> · <span style="color:#e84040">${s.bad} დაძაბული</span> · ${s.neutral} ნეიტრალური</div>
+      </div>
+      ${bar('💗','სიყვარული',s.love,'linear-gradient(90deg,#e05585,#f492b7)')}
+      ${bar('🔥','ვნება',s.hot,'linear-gradient(90deg,#e8632c,#f0a04b)')}
+      ${bar('✨','ჰარმონია',s.harmony,'linear-gradient(90deg,#30c890,#7ee3bd)')}
+      ${bar('⚡','დაძაბულობა',s.tension,'linear-gradient(90deg,#e84040,#f08a8a)')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px" class="syn-grid">
+        <div><div style="font-size:10px;color:#30c890;letter-spacing:1px;margin-bottom:3px">საუკეთესო კავშირები</div>
+         ${s.best.map(c=>`<div style="font-size:11px;color:#d7dde6;margin:2px 0">${c.lbl}</div>`).join('')||'<div style="font-size:11px;color:#9ba8b8">—</div>'}</div>
+        <div><div style="font-size:10px;color:#e84040;letter-spacing:1px;margin-bottom:3px">გამოწვევები</div>
+         ${s.worst.map(c=>`<div style="font-size:11px;color:#d7dde6;margin:2px 0">${c.lbl}</div>`).join('')||'<div style="font-size:11px;color:#9ba8b8">—</div>'}</div>
+      </div>`;
+    if(window.matchMedia&&matchMedia('(max-width:600px)').matches)
+      body.querySelector('.syn-grid').style.gridTemplateColumns='1fr';
+    card.style.display='block';
+  }catch(e){card.style.display='none';}
 }
 
 
@@ -1865,6 +1964,7 @@ function showSingleChart(data,label,dual){
   if(data.lunar)displayLunarBadge(data.lunar);
   renderDominants(data);
   setupCinderellaCard();
+  const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -1891,6 +1991,7 @@ function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   document.getElementById('mode-label').textContent=label;
   const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
   const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
+  renderSynastryScore(label,crossAsp);
   document.getElementById('legend-wrap').style.display='flex';
   document.getElementById('leg-a').textContent=name1;
   document.getElementById('leg-b').textContent=name2;
