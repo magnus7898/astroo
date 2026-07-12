@@ -1725,6 +1725,7 @@ async function generate(){
         <div style="font-size:12px;color:#c8b8f0;margin-bottom:10px">დრაკონული პლუტო: <strong style="color:#c050a0">${ZSYM[si]} ${deg}°${String(mn).padStart(2,'0')}' ${SIGN_KA[si]}</strong></div>
         <div id="${plRId}"></div>`;
       document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
+      renderIncarnations(p);
       const plResult=await findPastLifeDate(dracoPl.degree,document.getElementById(plRId),p.year);
       if(plResult){
         const histData=await fetchChart({year:plResult.year,month:plResult.month,day:15,hour:12,minute:0,second:0,lat:p.lat,lon:p.lon,tz_name:p.tz_name});
@@ -1877,6 +1878,67 @@ function renderDominants(data){
  }catch(e){card.style.display='none';}
 }
 
+/* ===== Past-life incarnations map (dragon chart + Sun-IC) ===== */
+const PL_COLORS=['#f0c96b','#a78bfa','#30c890','#e05585'];
+async function renderIncarnations(p){
+  let wrap=document.getElementById('pl-incarn-wrap');
+  if(!wrap){wrap=document.createElement('div');wrap.id='pl-incarn-wrap';
+    wrap.style.cssText='margin:12px 0;padding:14px 18px;background:rgba(8,6,20,.8);border:1px solid rgba(100,30,180,.4);border-radius:12px;';
+    document.getElementById('chart-area').appendChild(wrap);}
+  wrap.innerHTML='<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(167,139,250,.7);margin-bottom:8px">🗺 ინკარნაციები — 2000 წელი</div><div style="color:#a78bfa;font-size:12px">⏳ სკანირება...</div>';
+  try{
+    const res=await fetch(`${BACKEND}/api/pastlife`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...p,count:4,span_years:2000})});
+    if(!res.ok)throw new Error('server');
+    const r=await res.json();
+    const rows=r.incarnations.map((inc,i)=>{
+      const c=PL_COLORS[i%4];
+      const ew=inc.ic_lon>=0?'აღმ':'დას';
+      return `<div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid rgba(124,58,237,.15);font-size:12px">
+        <span style="width:12px;height:12px;border-radius:3px;background:${c};display:inline-block;align-self:center"></span>
+        <span style="color:#f9c646;font-family:Cinzel,serif;min-width:150px">${inc.date.label}${inc.date.julian_cal?' <span style="font-size:9px;color:#9ba8b8">(იულ.)</span>':''}</span>
+        <span style="color:#9ba8b8">${inc.years_ago} წლის წინ</span>
+        <span style="color:#c8b8f0">მზე ${inc.sun.deg}° ${inc.sun.sign_ka}</span>
+        <span style="color:#9ba8b8">IC მერიდიანი ${Math.abs(inc.ic_lon).toFixed(1)}° ${ew}</span>
+        <button onclick="plCountries(${inc.ic_lon},this)" style="background:none;border:1px solid rgba(167,139,250,.4);color:#a78bfa;border-radius:6px;padding:1px 8px;font-size:10px;cursor:pointer;font-family:inherit">🌍 ქვეყნები</button>
+        <span class="pl-countries" style="font-size:10.5px;color:#7ee3bd;flex-basis:100%"></span>
+      </div>`;}).join('');
+    wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(167,139,250,.7);margin-bottom:8px">🗺 ინკარნაციები — 2000 წელი</div>
+      <div style="font-size:11px;color:#9ba8b8;margin-bottom:6px">დრაკონული პლუტო <b style="color:#c050a0">${r.target.deg}° ${r.target.sign_ka}</b> · ნაპოვნია ${r.total_passages} გავლა · მზე IC-ზე (მე-4 სახლი — ფესვები, სამშობლო)</div>
+      ${rows}
+      <div id="pl-incarn-map" style="height:320px;border-radius:10px;margin-top:10px;border:1px solid rgba(124,58,237,.3)"></div>
+      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ვერტიკალური ხაზი = მერიდიანი, სადაც მზე ზუსტად IC-ზე იყო ინკარნაციის მომენტში</div>`;
+    if(window._plMap){window._plMap.remove();window._plMap=null;}
+    const map=L.map('pl-incarn-map',{zoomControl:true,attributionControl:false,worldCopyJump:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+    map.setView([25,0],1);
+    r.incarnations.forEach((inc,i)=>{
+      const c=PL_COLORS[i%4];
+      L.polyline([[-85,inc.ic_lon],[85,inc.ic_lon]],{color:c,weight:2.5,opacity:.9})
+        .addTo(map).bindTooltip(`${inc.date.year} · მზე IC`,{permanent:false});
+      L.marker([60-i*8,inc.ic_lon],{icon:L.divIcon({className:'',html:`<div style="color:${c};font-size:10px;font-weight:700;text-shadow:0 0 4px #000;white-space:nowrap">${inc.date.year}</div>`})}).addTo(map);
+    });
+    window._plMap=map;
+  }catch(e){wrap.innerHTML+='<div style="color:#f87171;font-size:11px">ვერ მოხერხდა ('+e.message+')</div>';}
+}
+async function plCountries(lon,btn){
+  const out=btn.parentElement.querySelector('.pl-countries');
+  btn.disabled=true;btn.textContent='⏳';
+  const lats=[60,50,42,35,28,20,10,0,-10,-20,-30];
+  const found=[];
+  for(const lat of lats){
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=3&format=json&accept-language=ka`);
+      const d=await r.json();
+      const nm=d.address?.country||d.display_name;
+      if(nm&&!found.includes(nm))found.push(nm);
+    }catch(e){}
+    await new Promise(s=>setTimeout(s,350));
+  }
+  out.textContent=found.length?('🌍 '+found.join(' · ')):'ოკეანე / ვერ მოიძებნა';
+  btn.textContent='🌍 ქვეყნები';btn.disabled=false;
+}
+
 /* ===== Cinderella gate (ცინდერელას კარიბჭე) ===== */
 function setupCinderellaCard(){
   const c=document.getElementById('cinderella-card');if(!c)return;
@@ -1964,6 +2026,7 @@ function showSingleChart(data,label,dual){
   if(data.lunar)displayLunarBadge(data.lunar);
   renderDominants(data);
   setupCinderellaCard();
+  if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
   const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
 }
