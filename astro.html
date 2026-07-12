@@ -1880,6 +1880,21 @@ function renderDominants(data){
 
 /* ===== Past-life incarnations map (dragon chart + Sun-IC) ===== */
 const PL_COLORS=['#f0c96b','#a78bfa','#30c890','#e05585'];
+function plPlaceTable(){
+  const wrap=document.getElementById('pl-incarn-wrap');
+  const wheel=document.getElementById('wheel-wrap');
+  if(wrap&&wheel&&wheel.nextSibling!==wrap)wheel.after(wrap);
+  const at=document.getElementById('aspect-tbody');
+  if(at){const card=at.closest('.data-card');if(card)card.style.display='none';}
+  const af=document.getElementById('asp-filters');if(af)af.style.display='none';
+}
+function plShowChart(i){
+  const inc=window._plData?.incarnations?.[i];
+  if(!inc||!inc.chart)return;
+  const data={...inc.chart,_timeUnknown:false};
+  showSingleChart(data,`🔮 ინკარნაცია — ${inc.date.label}${inc.date.julian_cal?' (იულ.)':''}`,false);
+  if(window._plMap)setTimeout(()=>window._plMap.invalidateSize(),50);
+}
 async function renderIncarnations(p){
   let wrap=document.getElementById('pl-incarn-wrap');
   if(!wrap){wrap=document.createElement('div');wrap.id='pl-incarn-wrap';
@@ -1891,6 +1906,7 @@ async function renderIncarnations(p){
       body:JSON.stringify({...p,count:4,span_years:2000})});
     if(!res.ok)throw new Error('server');
     const r=await res.json();
+    window._plData=r;
     const GRADE={strong:['#f0c96b','★★★ ძლიერი რეზონანსი'],mid:['#a78bfa','★★ საშუალო'],weak:['#5a6472','★ სუსტი — მხოლოდ პლუტო']};
     const rows=r.incarnations.map((inc,i)=>{
       const c=inc.probable?PL_COLORS[(inc.rank-1)%4]:'#5a6472';
@@ -1903,12 +1919,14 @@ async function renderIncarnations(p){
           <span style="color:#f9c646;font-family:Cinzel,serif;min-width:145px">${inc.probable?'🔮 ':''}${inc.date.label}${inc.date.julian_cal?' <span style="font-size:9px;color:#9ba8b8">(იულ.)</span>':''}</span>
           <span style="color:${gc};font-size:10.5px">${gl}</span>
           <span style="color:#9ba8b8;font-size:11px">ქულა ${inc.score} · ${inc.n_connections} კავშირი${inc.geo_match?' · <b style="color:#7ee3bd">🌍 ნატალურ IC ხაზთან!</b>':''}</span>
+          <button onclick="event.preventDefault();plShowChart(${i})" style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:6px;padding:1px 9px;font-size:10px;cursor:pointer;font-family:inherit">📜 რუქა</button>
         </summary>
         <div style="font-size:11px;color:#c8b8f0;padding:5px 0 3px 21px">
           ${inc.years_ago} წლის წინ · მზე ${inc.sun.deg}° ${inc.sun.sign_ka} · IC მერიდიანი ${Math.abs(inc.ic_lon).toFixed(1)}° ${ew}
           <button onclick="plCountries(${inc.ic_lon},this)" style="background:none;border:1px solid rgba(167,139,250,.4);color:#a78bfa;border-radius:6px;padding:1px 8px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:6px">🌍 ქვეყნები</button>
           <span class="pl-countries" style="font-size:10.5px;color:#7ee3bd;display:block;margin-top:3px"></span>
         </div>
+        <div style="font-size:10px;color:#c8b8f0;padding:0 0 2px 21px">🔁 პლუტოს გადაკვეთები (რეტრო მარყუჟები): ${inc.crossing_dates.join(' · ')}</div>
         <div style="font-size:10.5px;color:#9ba8b8;padding:0 0 6px 21px;line-height:1.9">${conns||'—'}</div>
       </details>`;}).join('');
     const new_=r.natal_ic_lon>=0?'აღმ':'დას';
@@ -1937,6 +1955,7 @@ async function renderIncarnations(p){
       L.marker([62-i*7,inc.ic_lon],{icon:L.divIcon({className:'',html:`<div style="color:${c};font-size:10px;font-weight:700;text-shadow:0 0 4px #000;white-space:nowrap">${inc.date.year}</div>`})}).addTo(map);
     });
     window._plMap=map;
+    plPlaceTable();
   }catch(e){wrap.innerHTML+='<div style="color:#f87171;font-size:11px">ვერ მოხერხდა ('+e.message+')</div>';}
 }
 async function plCountries(lon,btn){
@@ -2044,7 +2063,7 @@ function showSingleChart(data,label,dual){
   if(data.lunar)displayLunarBadge(data.lunar);
   renderDominants(data);
   setupCinderellaCard();
-  if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
+  if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}else{plPlaceTable();}
   const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
 }
