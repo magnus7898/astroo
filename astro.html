@@ -1885,38 +1885,56 @@ async function renderIncarnations(p){
   if(!wrap){wrap=document.createElement('div');wrap.id='pl-incarn-wrap';
     wrap.style.cssText='margin:12px 0;padding:14px 18px;background:rgba(8,6,20,.8);border:1px solid rgba(100,30,180,.4);border-radius:12px;';
     document.getElementById('chart-area').appendChild(wrap);}
-  wrap.innerHTML='<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(167,139,250,.7);margin-bottom:8px">🗺 ინკარნაციები — 2000 წელი</div><div style="color:#a78bfa;font-size:12px">⏳ სკანირება...</div>';
+  wrap.innerHTML='<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(167,139,250,.7);margin-bottom:8px">🗺 ინკარნაციები — 2000 წელი</div><div style="color:#a78bfa;font-size:12px">⏳ სკანირება და რეზონანსის ანალიზი...</div>';
   try{
     const res=await fetch(`${BACKEND}/api/pastlife`,{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({...p,count:4,span_years:2000})});
     if(!res.ok)throw new Error('server');
     const r=await res.json();
+    const GRADE={strong:['#f0c96b','★★★ ძლიერი რეზონანსი'],mid:['#a78bfa','★★ საშუალო'],weak:['#5a6472','★ სუსტი — მხოლოდ პლუტო']};
     const rows=r.incarnations.map((inc,i)=>{
-      const c=PL_COLORS[i%4];
+      const c=inc.probable?PL_COLORS[(inc.rank-1)%4]:'#5a6472';
+      const [gc,gl]=GRADE[inc.grade];
       const ew=inc.ic_lon>=0?'აღმ':'დას';
-      return `<div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid rgba(124,58,237,.15);font-size:12px">
-        <span style="width:12px;height:12px;border-radius:3px;background:${c};display:inline-block;align-self:center"></span>
-        <span style="color:#f9c646;font-family:Cinzel,serif;min-width:150px">${inc.date.label}${inc.date.julian_cal?' <span style="font-size:9px;color:#9ba8b8">(იულ.)</span>':''}</span>
-        <span style="color:#9ba8b8">${inc.years_ago} წლის წინ</span>
-        <span style="color:#c8b8f0">მზე ${inc.sun.deg}° ${inc.sun.sign_ka}</span>
-        <span style="color:#9ba8b8">IC მერიდიანი ${Math.abs(inc.ic_lon).toFixed(1)}° ${ew}</span>
-        <button onclick="plCountries(${inc.ic_lon},this)" style="background:none;border:1px solid rgba(167,139,250,.4);color:#a78bfa;border-radius:6px;padding:1px 8px;font-size:10px;cursor:pointer;font-family:inherit">🌍 ქვეყნები</button>
-        <span class="pl-countries" style="font-size:10.5px;color:#7ee3bd;flex-basis:100%"></span>
-      </div>`;}).join('');
+      const conns=inc.connections.map(x=>`<span style="white-space:nowrap;margin-right:9px">ისტ.${x.h_ka} ${x.aspect} ნატ.${x.n_ka} <span style="opacity:.55">(${x.orb}°)</span></span>`).join('');
+      return `<details style="border-bottom:1px solid rgba(124,58,237,.15);padding:5px 0;${inc.probable?'':'opacity:.55'}">
+        <summary style="cursor:pointer;font-size:12px;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;list-style:none">
+          <span style="width:12px;height:12px;border-radius:3px;background:${c};display:inline-block;align-self:center"></span>
+          <span style="color:#f9c646;font-family:Cinzel,serif;min-width:145px">${inc.probable?'🔮 ':''}${inc.date.label}${inc.date.julian_cal?' <span style="font-size:9px;color:#9ba8b8">(იულ.)</span>':''}</span>
+          <span style="color:${gc};font-size:10.5px">${gl}</span>
+          <span style="color:#9ba8b8;font-size:11px">ქულა ${inc.score} · ${inc.n_connections} კავშირი${inc.geo_match?' · <b style="color:#7ee3bd">🌍 ნატალურ IC ხაზთან!</b>':''}</span>
+        </summary>
+        <div style="font-size:11px;color:#c8b8f0;padding:5px 0 3px 21px">
+          ${inc.years_ago} წლის წინ · მზე ${inc.sun.deg}° ${inc.sun.sign_ka} · IC მერიდიანი ${Math.abs(inc.ic_lon).toFixed(1)}° ${ew}
+          <button onclick="plCountries(${inc.ic_lon},this)" style="background:none;border:1px solid rgba(167,139,250,.4);color:#a78bfa;border-radius:6px;padding:1px 8px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:6px">🌍 ქვეყნები</button>
+          <span class="pl-countries" style="font-size:10.5px;color:#7ee3bd;display:block;margin-top:3px"></span>
+        </div>
+        <div style="font-size:10.5px;color:#9ba8b8;padding:0 0 6px 21px;line-height:1.9">${conns||'—'}</div>
+      </details>`;}).join('');
+    const new_=r.natal_ic_lon>=0?'აღმ':'დას';
     wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(167,139,250,.7);margin-bottom:8px">🗺 ინკარნაციები — 2000 წელი</div>
-      <div style="font-size:11px;color:#9ba8b8;margin-bottom:6px">დრაკონული პლუტო <b style="color:#c050a0">${r.target.deg}° ${r.target.sign_ka}</b> · ნაპოვნია ${r.total_passages} გავლა · მზე IC-ზე (მე-4 სახლი — ფესვები, სამშობლო)</div>
+      <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">დრაკონული პლუტო <b style="color:#c050a0">${r.target.deg}° ${r.target.sign_ka}</b> · ${r.total_passages} გავლა · რეზონანსი ნატალურ რუქასთან განასხვავებს ინკარნაციას შემთხვევითობისგან</div>
+      <div style="font-size:11px;color:#d7dde6;margin-bottom:6px">ნატალური მზე-IC ხაზი (ფესვები): <b style="color:#f0c96b">${Math.abs(r.natal_ic_lon).toFixed(1)}° ${new_}</b>
+        <button onclick="plCountries(${r.natal_ic_lon},this)" style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:6px;padding:1px 8px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:6px">🌍 ქვეყნები</button>
+        <span class="pl-countries" style="font-size:10.5px;color:#7ee3bd;display:block;margin-top:3px"></span></div>
       ${rows}
-      <div id="pl-incarn-map" style="height:320px;border-radius:10px;margin-top:10px;border:1px solid rgba(124,58,237,.3)"></div>
-      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ვერტიკალური ხაზი = მერიდიანი, სადაც მზე ზუსტად IC-ზე იყო ინკარნაციის მომენტში</div>`;
+      <div id="pl-incarn-map" style="height:340px;border-radius:10px;margin-top:10px;border:1px solid rgba(124,58,237,.3)"></div>
+      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ოქროსფერი წყვეტილი = ნატალური მზე-IC · მყარი ხაზები = სავარაუდო ინკარნაციები · წყვეტილი ნაცრისფერი = სუსტი (მხოლოდ პლუტო)</div>`;
     if(window._plMap){window._plMap.remove();window._plMap=null;}
     const map=L.map('pl-incarn-map',{zoomControl:true,attributionControl:false,worldCopyJump:false});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
     map.setView([25,0],1);
+    // natal Sun-IC line — gold dashed
+    L.polyline([[-85,r.natal_ic_lon],[85,r.natal_ic_lon]],{color:'#f0c96b',weight:3,opacity:.95,dashArray:'8 6'})
+      .addTo(map).bindTooltip('ნატალური მზე-IC',{permanent:false});
+    L.marker([72,r.natal_ic_lon],{icon:L.divIcon({className:'',html:'<div style="color:#f0c96b;font-size:10px;font-weight:700;text-shadow:0 0 4px #000;white-space:nowrap">ნატალი</div>'})}).addTo(map);
     r.incarnations.forEach((inc,i)=>{
-      const c=PL_COLORS[i%4];
-      L.polyline([[-85,inc.ic_lon],[85,inc.ic_lon]],{color:c,weight:2.5,opacity:.9})
-        .addTo(map).bindTooltip(`${inc.date.year} · მზე IC`,{permanent:false});
-      L.marker([60-i*8,inc.ic_lon],{icon:L.divIcon({className:'',html:`<div style="color:${c};font-size:10px;font-weight:700;text-shadow:0 0 4px #000;white-space:nowrap">${inc.date.year}</div>`})}).addTo(map);
+      const strong=inc.probable;
+      const c=strong?PL_COLORS[(inc.rank-1)%4]:'#5a6472';
+      L.polyline([[-85,inc.ic_lon],[85,inc.ic_lon]],
+        {color:c,weight:strong?2.8:1.4,opacity:strong?.95:.5,dashArray:strong?null:'3 5'})
+        .addTo(map).bindTooltip(`${inc.date.year} · ქულა ${inc.score}`,{permanent:false});
+      L.marker([62-i*7,inc.ic_lon],{icon:L.divIcon({className:'',html:`<div style="color:${c};font-size:10px;font-weight:700;text-shadow:0 0 4px #000;white-space:nowrap">${inc.date.year}</div>`})}).addTo(map);
     });
     window._plMap=map;
   }catch(e){wrap.innerHTML+='<div style="color:#f87171;font-size:11px">ვერ მოხერხდა ('+e.message+')</div>';}
