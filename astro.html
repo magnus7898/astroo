@@ -1682,6 +1682,7 @@ async function generate(){
       const p=getPersonData('dr');
       if(!p.lat||!p.lon){showError('შეიყვანეთ ქალაქი');return;}
       const d=await fetchChart(p);d._timeUnknown=false;
+      window._plNatal=d;
       const draco=calcDraconicChart(d);
       if(draco){
         const name=document.getElementById('dr-name').value||'დრაკონული';
@@ -1705,6 +1706,7 @@ async function generate(){
       const p=getPersonData('pl');
       if(!p.lat||!p.lon){showError('შეიყვანეთ ქალაქი');return;}
       const d=await fetchChart(p);d._timeUnknown=false;
+      window._plNatal=d;
       const draco=calcDraconicChart(d);
       if(!draco)return;
       const dracoPl=draco.planets['პლუტონი'];
@@ -1892,7 +1894,13 @@ function plShowChart(i){
   const inc=window._plData?.incarnations?.[i];
   if(!inc||!inc.chart)return;
   const data={...inc.chart,_timeUnknown:false};
-  showSingleChart(data,`🔮 ინკარნაცია — ${inc.date.label}${inc.date.julian_cal?' (იულ.)':''}`,false);
+  const lbl=`🔮 ინკარნაცია — ${inc.date.label}${inc.date.julian_cal?' (იულ.)':''}`;
+  if(window._plNatal){
+    const cross=calcCrossAspects(window._plNatal.planets,data.planets);
+    showDoubleChart(window._plNatal,data,'ნატალი',''+inc.date.year,lbl,cross);
+  }else{
+    showSingleChart(data,lbl,false);
+  }
   if(window._plMap)setTimeout(()=>window._plMap.invalidateSize(),50);
 }
 async function renderIncarnations(p){
@@ -1912,7 +1920,6 @@ async function renderIncarnations(p){
       const c=inc.probable?PL_COLORS[(inc.rank-1)%4]:'#5a6472';
       const [gc,gl]=GRADE[inc.grade];
       const ew=inc.ic_lon>=0?'აღმ':'დას';
-      const conns=inc.connections.map(x=>`<span style="white-space:nowrap;margin-right:9px">ისტ.${x.h_ka} ${x.aspect} ნატ.${x.n_ka} <span style="opacity:.55">(${x.orb}°)</span></span>`).join('');
       return `<details style="border-bottom:1px solid rgba(124,58,237,.15);padding:5px 0;${inc.probable?'':'opacity:.55'}">
         <summary style="cursor:pointer;font-size:12px;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap;list-style:none">
           <span style="width:12px;height:12px;border-radius:3px;background:${c};display:inline-block;align-self:center"></span>
@@ -1926,8 +1933,7 @@ async function renderIncarnations(p){
           <button onclick="plCountries(${inc.ic_lon},this)" style="background:none;border:1px solid rgba(167,139,250,.4);color:#a78bfa;border-radius:6px;padding:1px 8px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:6px">🌍 ქვეყნები</button>
           <span class="pl-countries" style="font-size:10.5px;color:#7ee3bd;display:block;margin-top:3px"></span>
         </div>
-        <div style="font-size:10px;color:#c8b8f0;padding:0 0 2px 21px">🔁 პლუტოს გადაკვეთები (რეტრო მარყუჟები): ${inc.crossing_dates.join(' · ')}</div>
-        <div style="font-size:10.5px;color:#9ba8b8;padding:0 0 6px 21px;line-height:1.9">${conns||'—'}</div>
+        <div style="font-size:10px;color:#c8b8f0;padding:0 0 8px 21px">🔁 პლუტოს გადაკვეთები (რეტრო მარყუჟები): ${(inc.crossing_dates&&inc.crossing_dates.length)?inc.crossing_dates.join(' · '):`${inc.crossings} გადაკვეთა / ${inc.span_days} დღე`}</div>
       </details>`;}).join('');
     const new_=r.natal_ic_lon>=0?'აღმ':'დას';
     wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(167,139,250,.7);margin-bottom:8px">🗺 ინკარნაციები — 2000 წელი</div>
@@ -2092,6 +2098,7 @@ function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
   const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
   renderSynastryScore(label,crossAsp);
+  if(currentMode==='pastlife'){plPlaceTable();}else{const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
   document.getElementById('legend-wrap').style.display='flex';
   document.getElementById('leg-a').textContent=name1;
   document.getElementById('leg-b').textContent=name2;
