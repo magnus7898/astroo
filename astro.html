@@ -900,14 +900,10 @@ function scoreSynastry(cross){
       S.tension+=w*0.35;neutral++;contrib.push({lbl,cat:'tension',v:w*0.35});
     }
   }
-  const pct=(v,sc)=>Math.min(100,Math.round(v/sc*100));
-  const love=pct(S.love,2),hot=pct(S.hot,3.5),harm=pct(S.harmony,12),ten=pct(S.tension,12);
-  const pos=S.love*1.1+S.harmony+S.hot*0.6,neg=S.tension;
-  const overall=pos+neg>0?Math.round(pos/(pos+neg)*100):50;
   contrib.sort((x,y)=>y.v-x.v);
-  return {love,hot,harmony:harm,tension:ten,overall,good,bad,neutral,
-    best:contrib.filter(c=>c.cat==='love'||c.cat==='hot'||c.cat==='harmony').slice(0,4),
-    worst:contrib.filter(c=>c.cat==='tension').slice(0,3)};
+  const cnt=c=>contrib.filter(x=>x.cat===c).length;
+  return {loveN:cnt('love'),hotN:cnt('hot')+cnt('hot_hard'),
+    good,bad,neutral};
 }
 function renderSynastryScore(label,cross){
   const card=document.getElementById('synastry-score-card'),body=document.getElementById('synastry-score-body');
@@ -915,29 +911,19 @@ function renderSynastryScore(label,cross){
   if(label!=='სინასტრია'||!cross||!cross.length){card.style.display='none';return;}
   try{
     const s=scoreSynastry(cross);
-    const bar=(ico,lbl,pct,col)=>`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
-      <span style="width:110px;font-size:11px;color:#d7dde6;white-space:nowrap">${ico} ${lbl}</span>
-      <div style="flex:1;height:9px;background:rgba(45,31,110,.3);border-radius:5px;overflow:hidden">
-       <div style="height:100%;width:${pct}%;border-radius:5px;background:${col}"></div></div>
-      <span style="width:40px;text-align:right;font-size:11px;color:#9ba8b8">${pct}%</span></div>`;
+    const tile=(ico,n,lbl,col)=>`<div style="text-align:center;padding:10px 6px;background:rgba(45,31,110,.22);border:1px solid ${col}33;border-radius:10px">
+      <div style="font-size:20px">${ico}</div>
+      <div style="font-size:24px;font-weight:700;color:${col}">${n}</div>
+      <div style="font-size:10px;color:#9ba8b8;letter-spacing:1px">${lbl}</div></div>`;
     body.innerHTML=`
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">
-        <div style="font-size:28px;font-weight:700;color:#a78bfa">${s.overall}%</div>
-        <div style="font-size:11px;color:#9ba8b8">საერთო თავსებადობა<br>
-         <span style="color:#30c890">${s.good} კარგი</span> · <span style="color:#e84040">${s.bad} დაძაბული</span> · ${s.neutral} ნეიტრალური</div>
-      </div>
-      ${bar('💗','სიყვარული',s.love,'linear-gradient(90deg,#e05585,#f492b7)')}
-      ${bar('🔥','ვნება',s.hot,'linear-gradient(90deg,#e8632c,#f0a04b)')}
-      ${bar('✨','ჰარმონია',s.harmony,'linear-gradient(90deg,#30c890,#7ee3bd)')}
-      ${bar('⚡','დაძაბულობა',s.tension,'linear-gradient(90deg,#e84040,#f08a8a)')}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px" class="syn-grid">
-        <div><div style="font-size:10px;color:#30c890;letter-spacing:1px;margin-bottom:3px">საუკეთესო კავშირები</div>
-         ${s.best.map(c=>`<div style="font-size:11px;color:#d7dde6;margin:2px 0">${c.lbl}</div>`).join('')||'<div style="font-size:11px;color:#9ba8b8">—</div>'}</div>
-        <div><div style="font-size:10px;color:#e84040;letter-spacing:1px;margin-bottom:3px">გამოწვევები</div>
-         ${s.worst.map(c=>`<div style="font-size:11px;color:#d7dde6;margin:2px 0">${c.lbl}</div>`).join('')||'<div style="font-size:11px;color:#9ba8b8">—</div>'}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px" class="syn-tiles">
+        ${tile('💗',s.loveN,'სიყვარული','#f492b7')}
+        ${tile('🔥',s.hotN,'ვნება','#f0a04b')}
+        ${tile('✨',s.good,'კარგი ასპექტი','#30c890')}
+        ${tile('⚡',s.bad,'ცუდი ასპექტი','#e84040')}
       </div>`;
     if(window.matchMedia&&matchMedia('(max-width:600px)').matches)
-      body.querySelector('.syn-grid').style.gridTemplateColumns='1fr';
+      body.querySelector('.syn-tiles').style.gridTemplateColumns='1fr 1fr';
     card.style.display='block';
   }catch(e){card.style.display='none';}
 }
