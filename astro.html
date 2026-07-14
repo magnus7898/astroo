@@ -677,6 +677,14 @@ tr:hover td{background:rgba(19,16,58,.6)}
     </div>
   </div>
 
+  <div class="data-card" id="skymap-card" style="display:none;margin-top:14px">
+    <div class="data-card-title">🔭 ასტრონომიული ცა (IAU)</div>
+    <div id="skymap-body" style="padding:12px 14px">
+      <button id="sky-btn" onclick="runSkymap()" style="background:linear-gradient(90deg,#1a4a7a,#3a8ac0);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">🌌 რეალური ასტრონომიული პოზიციები</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">JPL/Swiss Ephemeris სიზუსტე · IAU 88 თანავარსკვლავედი · ფიქსირებული ვარსკვლავები</div>
+    </div>
+  </div>
+
   <div class="data-card" id="synastry-score-card" style="display:none;margin-top:14px">
     <div class="data-card-title">💞 თავსებადობა</div>
     <div id="synastry-score-body" style="padding:12px 14px"></div>
@@ -1975,6 +1983,46 @@ async function plCountries(lon,btn){
   btn.textContent='🌍 ქვეყნები';btn.disabled=false;
 }
 
+/* ===== Astronomical sky map (IAU) ===== */
+function setupSkymapCard(){
+  const c=document.getElementById('skymap-card');if(!c)return;
+  if(window._cindReq){
+    c.style.display='block';
+    document.getElementById('skymap-body').innerHTML=`
+      <button id="sky-btn" onclick="runSkymap()" style="background:linear-gradient(90deg,#1a4a7a,#3a8ac0);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">🌌 რეალური ასტრონომიული პოზიციები</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">JPL/Swiss Ephemeris სიზუსტე · IAU 88 თანავარსკვლავედი · ფიქსირებული ვარსკვლავები</div>`;
+  }else c.style.display='none';
+}
+async function runSkymap(){
+  const body=document.getElementById('skymap-body');
+  const btn=document.getElementById('sky-btn');
+  if(!window._cindReq||!btn)return;
+  btn.disabled=true;btn.textContent='⏳ გამოთვლა...';
+  try{
+    const res=await fetch(`${BACKEND}/api/skymap`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(window._cindReq)});
+    if(!res.ok)throw new Error('server');
+    const r=await res.json();
+    const rows=r.bodies.map(b=>{
+      const st=b.stars.length?b.stars.map(s=>`<span style="white-space:nowrap;color:#f0c96b">✦ ${s.star_ka} <span style="opacity:.55">(${s.orb}°)</span></span>`).join('<br>'):'<span style="opacity:.35">—</span>';
+      return `<tr>
+        <td style="color:#e9d5ff">${b.name_ka}${b.retrograde?' ℞':''}</td>
+        <td><b style="color:#7ec8f0">${b.constellation_ka}</b> <span style="opacity:.45;font-size:9px">${b.constellation}</span></td>
+        <td style="font-size:10.5px;color:#9ba8b8;white-space:nowrap">${b.ra}</td>
+        <td style="font-size:10.5px;color:#9ba8b8;white-space:nowrap">${b.dec}</td>
+        <td style="font-size:10.5px">${st}</td></tr>`;
+    }).join('');
+    body.innerHTML=`
+      <div style="font-size:11px;color:#9ba8b8;margin-bottom:8px">რეალური IAU თანავარსკვლავედები (განსხვავდება ზოდიაქოს ნიშნებისგან) — პლანეტები ~25 თანავარსკვლავედს გადიან, მათ შორის გველისმჭერს, ვეშაპსა და გველს</div>
+      <table style="width:100%"><thead><tr><th>სხეული</th><th>თანავარსკვლავედი</th><th>RA</th><th>Dec</th><th>ვარსკვლავები (≤2°)</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">Roman 1987 IAU საზღვრები · J2000 → B1875 პრეცესია · sefstars.txt</div>`;
+  }catch(e){
+    body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა გამოთვლა — სცადეთ მოგვიანებით</div>';
+  }
+}
+
 /* ===== Hard/negative transit periods ===== */
 function setupHardPeriodsCard(){
   const c=document.getElementById('hardperiods-card');if(!c)return;
@@ -2116,6 +2164,7 @@ function showSingleChart(data,label,dual){
   renderDominants(data);
   setupCinderellaCard();
   setupHardPeriodsCard();
+  setupSkymapCard();
   if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}else{plPlaceTable();}
   const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
@@ -2145,6 +2194,7 @@ function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
   const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
   const _hc=document.getElementById('hardperiods-card');if(_hc)_hc.style.display='none';
+  const _sk=document.getElementById('skymap-card');if(_sk)_sk.style.display='none';
   renderSynastryScore(label,crossAsp);
   if(currentMode==='pastlife'){plPlaceTable();}else{const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
   document.getElementById('legend-wrap').style.display='flex';
