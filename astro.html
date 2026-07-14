@@ -669,6 +669,14 @@ tr:hover td{background:rgba(19,16,58,.6)}
     </div>
   </div>
 
+  <div class="data-card" id="hardperiods-card" style="display:none;margin-top:14px">
+    <div class="data-card-title">⚠️ რთული პერიოდები</div>
+    <div id="hardperiods-body" style="padding:12px 14px">
+      <button id="hp-btn" onclick="runHardPeriods()" style="background:linear-gradient(90deg,#8a2020,#e84040);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">⚡ გამოთვლა — 100 წელი დაბადებიდან</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">სატურნი · პლუტონი · ურანი · ნეპტუნი · მარსი — მრავალი მძიმე ასპექტის ერთდროული პერიოდები</div>
+    </div>
+  </div>
+
   <div class="data-card" id="synastry-score-card" style="display:none;margin-top:14px">
     <div class="data-card-title">💞 თავსებადობა</div>
     <div id="synastry-score-body" style="padding:12px 14px"></div>
@@ -1967,6 +1975,59 @@ async function plCountries(lon,btn){
   btn.textContent='🌍 ქვეყნები';btn.disabled=false;
 }
 
+/* ===== Hard/negative transit periods ===== */
+function setupHardPeriodsCard(){
+  const c=document.getElementById('hardperiods-card');if(!c)return;
+  if(window._cindReq){
+    c.style.display='block';
+    document.getElementById('hardperiods-body').innerHTML=`
+      <button id="hp-btn" onclick="runHardPeriods()" style="background:linear-gradient(90deg,#8a2020,#e84040);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">⚡ გამოთვლა — 100 წელი დაბადებიდან</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">სატურნი · პლუტონი · ურანი · ნეპტუნი · მარსი — მრავალი მძიმე ასპექტის ერთდროული პერიოდები</div>`;
+  }else c.style.display='none';
+}
+async function runHardPeriods(){
+  const body=document.getElementById('hardperiods-body');
+  const btn=document.getElementById('hp-btn');
+  if(!window._cindReq||!btn)return;
+  btn.disabled=true;btn.textContent='⏳ სკანირება...';
+  try{
+    const res=await fetch(`${BACKEND}/api/hardperiods`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...window._cindReq,years:100})});
+    if(!res.ok)throw new Error('server');
+    renderHardPeriods(await res.json());
+  }catch(e){
+    body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა გამოთვლა — სცადეთ მოგვიანებით</div>';
+  }
+}
+function renderHardPeriods(r){
+  const body=document.getElementById('hardperiods-body');
+  const P=r.periods||[];
+  const marks=P.map(p=>{
+    const l=(p.age/(r.years_scanned||100)*100).toFixed(2);
+    const hgt=p.marks.length*5+4;
+    return `<div title="${p.peak} · ${p.marks}" style="position:absolute;left:${l}%;bottom:0;width:3px;height:${hgt}px;background:${p.marks.length>=3?'#e84040':'#c77b4a'};border-radius:2px"></div>`;
+  }).join('');
+  const rows=P.map(p=>{
+    const ln=p.links.map(l=>`ტ.${l.t_ka} ${l.aspect} ნ.${l.n_ka} (${l.orb}°)`).join(', ');
+    return `<details style="border-bottom:1px solid rgba(200,60,60,.15);padding:5px 0">
+      <summary style="cursor:pointer;font-size:11.5px;color:#d7dde6;display:flex;gap:8px;align-items:baseline;list-style:none">
+        <span style="color:#e84040;width:38px;display:inline-block">${p.marks}</span>
+        <span style="min-width:150px">${p.start} — ${p.end}</span>
+        <span style="color:#9ba8b8">ასაკი ${p.age}</span>
+        <span style="color:rgba(155,168,184,.5);font-size:10px">${p.days}დღ</span>
+      </summary>
+      <div style="font-size:11px;color:#f0a04b;padding:4px 0 6px 46px">პიკი ${p.peak}: ${ln}</div>
+    </details>`;
+  }).join('');
+  body.innerHTML=`
+    <div style="position:relative;height:22px;background:rgba(90,20,20,.25);border-radius:4px;margin:2px 0 2px">${marks}</div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(155,168,184,.5);margin-bottom:8px"><span>0</span><span>25</span><span>50</span><span>75</span><span>100 წელი</span></div>
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">ნაპოვნია ${r.total_periods} პერიოდი — ≥2-3 ერთდროული მძიმე ასპექტი (☌ □ ☍)</div>
+    <div style="max-height:340px;overflow-y:auto">${rows}</div>
+    <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">⚠ სიმძიმე · ტრანზიტები: სატურნი, პლუტონი, ურანი, ნეპტუნი, მარსი</div>`;
+}
+
 /* ===== Cinderella gate (ცინდერელას კარიბჭე) ===== */
 function setupCinderellaCard(){
   const c=document.getElementById('cinderella-card');if(!c)return;
@@ -2054,6 +2115,7 @@ function showSingleChart(data,label,dual){
   if(data.lunar)displayLunarBadge(data.lunar);
   renderDominants(data);
   setupCinderellaCard();
+  setupHardPeriodsCard();
   if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}else{plPlaceTable();}
   const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
@@ -2082,6 +2144,7 @@ function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   document.getElementById('mode-label').textContent=label;
   const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
   const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
+  const _hc=document.getElementById('hardperiods-card');if(_hc)_hc.style.display='none';
   renderSynastryScore(label,crossAsp);
   if(currentMode==='pastlife'){plPlaceTable();}else{const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
   document.getElementById('legend-wrap').style.display='flex';
