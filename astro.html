@@ -2054,7 +2054,7 @@ async function runSkyChart(){
       window._skyData=await res.json();
     }
     body.innerHTML=`<canvas id="sky-canvas" style="width:100%;border-radius:10px;border:1px solid rgba(58,138,192,.3)"></canvas>
-      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ეკვატორული პროექცია · RA მარცხნივ იზრდება · ოქროსფერი წყვეტილი = ეკლიპტიკა</div>`;
+      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ეკლიპტიკური პროექცია · ოქროს ხაზი = ეკლიპტიკა · 0°♈ მარცხნივ → 360° · IAU თანავარსკვლავედები</div>`;
     drawSkyChart(window._skyData.bodies);
   }catch(e){
     body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა ('+e.message+')</div>';
@@ -2062,64 +2062,134 @@ async function runSkyChart(){
 }
 function drawSkyChart(bodies){
   const cv=document.getElementById('sky-canvas');if(!cv)return;
-  const W=cv.parentElement.clientWidth||700,H=Math.round(W*0.52);
+  const W=cv.parentElement.clientWidth||700,H=Math.round(W*0.46);
   const dpr=window.devicePixelRatio||1;
   cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
   const g=cv.getContext('2d');g.scale(dpr,dpr);
-  const DEC=62;
-  const X=ra=>W*(1-(ra%360)/360);                 // RA increases leftward
-  const Y=de=>H*(DEC-de)/(2*DEC);
-  // background
+  const R=Math.PI/180,eps=23.4367*R;
+  const BMAX=42,PADT=30,PADB=16;
+  const X=lon=>W*((((lon)%360)+360)%360)/360;          // 0°♈ left → 360° right
+  const Y=b=>PADT+(H-PADT-PADB)*(BMAX-b)/(2*BMAX);     // ecliptic latitude
+  const eq2ec=(ra,de)=>{                                // equatorial → ecliptic
+    const a=ra*R,d=de*R;
+    const b=Math.asin(Math.sin(d)*Math.cos(eps)-Math.cos(d)*Math.sin(eps)*Math.sin(a));
+    const l=Math.atan2(Math.sin(a)*Math.cos(eps)+Math.tan(d)*Math.sin(eps),Math.cos(a));
+    return [((l/R)+360)%360,b/R];
+  };
+  /* ── deep night sky ── */
   const bg=g.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,'#050a1e');bg.addColorStop(.5,'#0a1230');bg.addColorStop(1,'#050a1e');
+  bg.addColorStop(0,'#03071a');bg.addColorStop(.5,'#0a1132');bg.addColorStop(1,'#03071a');
   g.fillStyle=bg;g.fillRect(0,0,W,H);
-  // milky-way hint: none. constellation lines
-  g.strokeStyle='rgba(140,110,220,.28)';g.lineWidth=.8;
-  for(const seg of SKY_LINES){
-    g.beginPath();let prev=null;
-    for(const [ra,de] of seg){
-      const x=X(ra),y=Y(de);
-      if(prev&&Math.abs(prev-x)>W/2){g.stroke();g.beginPath();g.moveTo(x,y);}  // wrap split
-      else if(prev===null)g.moveTo(x,y);else g.lineTo(x,y);
-      prev=x;
+  for(const [fx,fy,fr,col] of [[.16,.28,.5,'rgba(90,60,185,.10)'],[.6,.72,.55,'rgba(40,95,175,.10)'],[.86,.24,.42,'rgba(160,90,205,.07)']]){
+    const rg=g.createRadialGradient(W*fx,H*fy,0,W*fx,H*fy,W*fr);
+    rg.addColorStop(0,col);rg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=rg;g.fillRect(0,0,W,H);
+  }
+  /* ── milky way (galactic equator, gal→eq rotation → ecliptic) ── */
+  const mw=[];
+  for(let L=0;L<=360;L+=3){
+    const cl=Math.cos(L*R),sl=Math.sin(L*R);
+    const x=-0.0548755604*cl+0.4941094279*sl;
+    const y=-0.8734370902*cl-0.4448296300*sl;
+    const z=-0.4838350155*cl+0.7469822445*sl;
+    mw.push(eq2ec(((Math.atan2(y,x)/R)+360)%360,Math.asin(z)/R));
+  }
+  const strokeWrapped=(pts,fn)=>{ // draw polyline splitting at wrap
+    g.beginPath();let pv=null;
+    for(const [lo,la] of pts){
+      const x=X(lo),y=Y(la);
+      if(pv!==null&&Math.abs(pv-x)>W/2){g.stroke();g.beginPath();g.moveTo(x,y);}
+      else if(pv===null)g.moveTo(x,y);else g.lineTo(x,y);
+      pv=x;
     }
     g.stroke();
+  };
+  g.lineJoin='round';g.lineCap='round';
+  g.strokeStyle='rgba(190,205,255,.05)';g.lineWidth=H*.22;strokeWrapped(mw);
+  g.strokeStyle='rgba(205,220,255,.06)';g.lineWidth=H*.10;strokeWrapped(mw);
+  /* ── zodiac sign columns ── */
+  const GLYPH=['\u2648','\u2649','\u264A','\u264B','\u264C','\u264D','\u264E','\u264F','\u2650','\u2651','\u2652','\u2653'];
+  for(let s=0;s<12;s++){
+    const x0=X(s*30);
+    if(s%2){g.fillStyle='rgba(212,168,67,.028)';g.fillRect(x0,PADT,W/12,H-PADT-PADB);}
+    g.strokeStyle='rgba(212,168,67,.12)';g.lineWidth=1;
+    g.beginPath();g.moveTo(x0,PADT);g.lineTo(x0,H-PADB);g.stroke();
+    g.font='13px serif';g.fillStyle='rgba(240,201,107,.75)';g.textAlign='center';
+    g.fillText(GLYPH[s],x0+W/24,19);
   }
-  // stars
+  /* ── constellation figures ── */
+  g.strokeStyle='rgba(145,115,225,.30)';g.lineWidth=.8;
+  for(const seg of SKY_LINES){
+    const pts=seg.map(([ra,de])=>eq2ec(ra,de));
+    if(pts.every(p=>Math.abs(p[1])>BMAX+4))continue;
+    strokeWrapped(pts);
+  }
+  /* ── stars with glow ── */
   for(const [ra,de,mag] of SKY_STARS){
-    const r=Math.max(.35,(5.2-mag)*.5);
+    const [lo,la]=eq2ec(ra,de);
+    if(Math.abs(la)>BMAX)continue;
+    const x=X(lo),y=Y(la),r=Math.max(.35,(5.2-mag)*.5);
+    if(mag<2){g.shadowColor='rgba(200,215,255,.9)';g.shadowBlur=6;}
     g.fillStyle=mag<2?'rgba(255,255,255,.95)':'rgba(220,228,255,.7)';
-    g.beginPath();g.arc(X(ra),Y(de),r,0,6.2832);g.fill();
+    g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();g.shadowBlur=0;
+    if(mag<1.2){ // diffraction spikes on the brightest
+      g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=.6;
+      g.beginPath();g.moveTo(x-r*3.2,y);g.lineTo(x+r*3.2,y);
+      g.moveTo(x,y-r*3.2);g.lineTo(x,y+r*3.2);g.stroke();
+    }
   }
-  // constellation labels
-  g.font='9px sans-serif';g.fillStyle='rgba(140,160,200,.5)';g.textAlign='center';
-  for(const [ra,de,nm] of SKY_LABELS)g.fillText(nm,X(ra),Y(de));
-  // ecliptic (obliquity 23.4367°)
-  const eps=23.4367*Math.PI/180;
-  g.strokeStyle='rgba(240,201,107,.55)';g.lineWidth=1.1;g.setLineDash([5,4]);
-  g.beginPath();let pv=null;
-  for(let L=0;L<=360;L+=2){
-    const l=L*Math.PI/180;
-    const de=Math.asin(Math.sin(eps)*Math.sin(l))*180/Math.PI;
-    let ra=Math.atan2(Math.sin(l)*Math.cos(eps),Math.cos(l))*180/Math.PI;ra=(ra+360)%360;
-    const x=X(ra),y=Y(de);
-    if(pv!==null&&Math.abs(pv-x)>W/2){g.stroke();g.beginPath();g.moveTo(x,y);}
-    else if(pv===null)g.moveTo(x,y);else g.lineTo(x,y);
-    pv=x;
+  /* ── constellation names (English) ── */
+  const EN={'ანდრომედა':'Andromeda','მერწყული':'Aquarius','არწივი':'Aquila','ვერძი':'Aries','მეეტლე':'Auriga','მენახირე':'Bootes','კირჩხიბი':'Cancer','დიდი ძაღლი':'Canis Major','მცირე ძაღლი':'Canis Minor','თხის რქა':'Capricornus','კასიოპეა':'Cassiopeia','კენტავრი':'Centaurus','ვეშაპი':'Cetus','ბერენიკეს თმა':'Coma Berenices','ჩრდ. გვირგვინი':'Corona Borealis','ყორანი':'Corvus','თასი':'Crater','გედი':'Cygnus','დელფინი':'Delphinus','ერიდანი':'Eridanus','ტყუპები':'Gemini','ჰერკულესი':'Hercules','ჰიდრა':'Hydra','ლომი':'Leo','კურდღელი':'Lepus','სასწორი':'Libra','ლირა':'Lyra','მარტორქა':'Monoceros','გველისმჭერი':'Ophiuchus','ორიონი':'Orion','პეგასი':'Pegasus','პერსევსი':'Perseus','თევზები':'Pisces','სამხ. თევზი':'Piscis Austrinus','ისარი':'Sagitta','მშვილდოსანი':'Sagittarius','მორიელი':'Scorpius','ფარი':'Scutum','გველი':'Serpens','სექსტანტი':'Sextans','კურო':'Taurus','სამკუთხედი':'Triangulum','დიდი დათვი':'Ursa Major','ქალწული':'Virgo','მელა':'Vulpecula'};
+  g.font='italic 9px "IM Fell English",serif';g.fillStyle='rgba(150,170,215,.55)';g.textAlign='center';
+  for(const [ra,de,nm] of SKY_LABELS){
+    const [lo,la]=eq2ec(ra,de);
+    if(Math.abs(la)>BMAX-1)continue;
+    g.fillText(EN[nm]||nm,X(lo),Y(la));
   }
-  g.stroke();g.setLineDash([]);
-  // planets
+  /* ── the ecliptic — a golden thread across the sky ── */
+  const y0=Y(0);
+  const eg=g.createLinearGradient(0,0,W,0);
+  eg.addColorStop(0,'rgba(240,201,107,.25)');eg.addColorStop(.5,'rgba(240,201,107,.8)');eg.addColorStop(1,'rgba(240,201,107,.25)');
+  g.shadowColor='rgba(240,201,107,.7)';g.shadowBlur=5;
+  g.strokeStyle=eg;g.lineWidth=1.3;
+  g.beginPath();g.moveTo(0,y0);g.lineTo(W,y0);g.stroke();g.shadowBlur=0;
+  for(let d=0;d<360;d+=10){ // degree ticks
+    const x=X(d),big=d%30===0;
+    g.strokeStyle=big?'rgba(240,201,107,.6)':'rgba(240,201,107,.28)';
+    g.lineWidth=big?1.1:.7;
+    g.beginPath();g.moveTo(x,y0-(big?5:3));g.lineTo(x,y0+(big?5:3));g.stroke();
+  }
+  /* ── planets on the golden road (English) ── */
   const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
     jupiter:'#f0b070',saturn:'#d8c890',uranus:'#80d0e0',neptune:'#6090f0',pluto:'#c07090',chiron:'#90e0b0'};
+  const PSYM={sun:'\u2609',moon:'\u263D',mercury:'\u263F',venus:'\u2640',mars:'\u2642',
+    jupiter:'\u2643',saturn:'\u2644',uranus:'\u2645',neptune:'\u2646',pluto:'\u2647',chiron:'\u26B7'};
+  const PEN={sun:'Sun',moon:'Moon',mercury:'Mercury',venus:'Venus',mars:'Mars',jupiter:'Jupiter',
+    saturn:'Saturn',uranus:'Uranus',neptune:'Neptune',pluto:'Pluto',chiron:'Chiron'};
   g.textAlign='center';
-  for(const b of bodies){
-    const x=X(b.ra_deg),y=Y(b.dec_deg),c=PCOL[b.key]||'#fff';
-    g.shadowColor=c;g.shadowBlur=8;
-    g.fillStyle=c;g.beginPath();g.arc(x,y,b.key==='sun'?5:(b.key==='moon'?4.5:3.4),0,6.2832);g.fill();
+  const sorted=[...bodies].sort((a,b)=>a.ecl_lon-b.ecl_lon);
+  let lastX=-1e9,flip=false;
+  for(const b of sorted){
+    const lon=b.ecl_lon!==undefined?b.ecl_lon:0,lat=b.ecl_lat!==undefined?b.ecl_lat:0;
+    const x=X(lon),y=Y(Math.max(-BMAX+2,Math.min(BMAX-2,lat)));
+    const c=PCOL[b.key]||'#fff';
+    if(x-lastX<30)flip=!flip;else flip=false;lastX=x;
+    g.strokeStyle='rgba(240,201,107,.25)';g.lineWidth=.7; // thread to the ecliptic
+    g.beginPath();g.moveTo(x,y);g.lineTo(x,y0);g.stroke();
+    g.shadowColor=c;g.shadowBlur=10;
+    g.fillStyle=c;g.beginPath();g.arc(x,y,b.key==='sun'?5.5:(b.key==='moon'?4.8:3.6),0,6.2832);g.fill();
     g.shadowBlur=0;
-    g.font='bold 10px sans-serif';g.fillStyle=c;
-    g.fillText(b.name_ka+(b.retrograde?' ℞':''),x,y-8);
+    const nm=(PEN[b.key]||b.key.charAt(0).toUpperCase()+b.key.slice(1))+(b.retrograde?' \u211E':'');
+    const dy=flip?18:-10,dy2=flip?28:-20;
+    const lx=Math.min(W-42,Math.max(42,x)); // keep labels inside the frame
+    g.font='11px "Cinzel",serif';g.fillStyle=c;
+    g.fillText((PSYM[b.key]||'')+' '+nm,lx,y+dy);
+    g.font='8.5px "Cinzel",serif';g.fillStyle='rgba(215,221,230,.55)';
+    g.fillText((lon%30).toFixed(1)+'\u00B0 '+GLYPH[Math.floor(lon/30)%12]+' \u00B7 '+b.constellation,lx,y+dy2);
   }
+  /* frame */
+  g.strokeStyle='rgba(212,168,67,.18)';g.lineWidth=1;
+  g.strokeRect(.5,.5,W-1,H-1);
 }
 
 /* ===== Hard/negative transit periods ===== */
