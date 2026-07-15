@@ -170,6 +170,7 @@ tr:hover td{background:rgba(19,16,58,.6)}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="skydata.js"></script>
 <style>
 .acg-tip{background:rgba(8,6,20,.92)!important;border:1px solid rgba(100,65,200,.5)!important;color:#c8b8f0!important;font-family:"Noto Sans Georgian",sans-serif!important;font-size:11px!important;padding:4px 8px!important;border-radius:6px!important;}
 .acg-tip::before{display:none!important;}
@@ -682,6 +683,13 @@ tr:hover td{background:rgba(19,16,58,.6)}
     <div id="skymap-body" style="padding:12px 14px">
       <button id="sky-btn" onclick="runSkymap()" style="background:linear-gradient(90deg,#1a4a7a,#3a8ac0);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">🌌 რეალური ასტრონომიული პოზიციები</button>
       <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">JPL/Swiss Ephemeris სიზუსტე · IAU 88 თანავარსკვლავედი · ფიქსირებული ვარსკვლავები</div>
+    </div>
+  </div>
+
+  <div class="data-card" id="skychart-card" style="display:none;margin-top:14px">
+    <div class="data-card-title">🌌 ცის რუკა</div>
+    <div id="skychart-body" style="padding:12px 14px">
+      <button id="skc-btn" onclick="runSkyChart()" style="background:linear-gradient(90deg,#0a2a4a,#2a6a9a);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ ცის დახატვა — პლანეტები თანავარსკვლავედებში</button>
     </div>
   </div>
 
@@ -2004,6 +2012,7 @@ async function runSkymap(){
       body:JSON.stringify(window._cindReq)});
     if(!res.ok)throw new Error('server');
     const r=await res.json();
+    window._skyData=r;
     const rows=r.bodies.map(b=>{
       const st=b.stars.length?b.stars.map(s=>`<span style="white-space:nowrap;color:#f0c96b">✦ ${s.star_ka} <span style="opacity:.55">(${s.orb}°)</span></span>`).join('<br>'):'<span style="opacity:.35">—</span>';
       return `<tr>
@@ -2020,6 +2029,96 @@ async function runSkymap(){
       <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">Roman 1987 IAU საზღვრები · J2000 → B1875 პრეცესია · sefstars.txt</div>`;
   }catch(e){
     body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა გამოთვლა — სცადეთ მოგვიანებით</div>';
+  }
+}
+
+/* ===== Sky chart drawing ===== */
+function setupSkyChartCard(){
+  const c=document.getElementById('skychart-card');if(!c)return;
+  if(window._cindReq&&typeof SKY_STARS!=='undefined'){
+    c.style.display='block';
+    document.getElementById('skychart-body').innerHTML=`
+      <button id="skc-btn" onclick="runSkyChart()" style="background:linear-gradient(90deg,#0a2a4a,#2a6a9a);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ ცის დახატვა — პლანეტები თანავარსკვლავედებში</button>`;
+  }else c.style.display='none';
+}
+async function runSkyChart(){
+  const body=document.getElementById('skychart-body');
+  const btn=document.getElementById('skc-btn');
+  if(!window._cindReq||!btn)return;
+  btn.disabled=true;btn.textContent='⏳ ...';
+  try{
+    if(!window._skyData){
+      const res=await fetch(`${BACKEND}/api/skymap`,{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify(window._cindReq)});
+      if(!res.ok)throw new Error('server');
+      window._skyData=await res.json();
+    }
+    body.innerHTML=`<canvas id="sky-canvas" style="width:100%;border-radius:10px;border:1px solid rgba(58,138,192,.3)"></canvas>
+      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ეკვატორული პროექცია · RA მარცხნივ იზრდება · ოქროსფერი წყვეტილი = ეკლიპტიკა</div>`;
+    drawSkyChart(window._skyData.bodies);
+  }catch(e){
+    body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა ('+e.message+')</div>';
+  }
+}
+function drawSkyChart(bodies){
+  const cv=document.getElementById('sky-canvas');if(!cv)return;
+  const W=cv.parentElement.clientWidth||700,H=Math.round(W*0.52);
+  const dpr=window.devicePixelRatio||1;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
+  const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const DEC=62;
+  const X=ra=>W*(1-(ra%360)/360);                 // RA increases leftward
+  const Y=de=>H*(DEC-de)/(2*DEC);
+  // background
+  const bg=g.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#050a1e');bg.addColorStop(.5,'#0a1230');bg.addColorStop(1,'#050a1e');
+  g.fillStyle=bg;g.fillRect(0,0,W,H);
+  // milky-way hint: none. constellation lines
+  g.strokeStyle='rgba(140,110,220,.28)';g.lineWidth=.8;
+  for(const seg of SKY_LINES){
+    g.beginPath();let prev=null;
+    for(const [ra,de] of seg){
+      const x=X(ra),y=Y(de);
+      if(prev&&Math.abs(prev-x)>W/2){g.stroke();g.beginPath();g.moveTo(x,y);}  // wrap split
+      else if(prev===null)g.moveTo(x,y);else g.lineTo(x,y);
+      prev=x;
+    }
+    g.stroke();
+  }
+  // stars
+  for(const [ra,de,mag] of SKY_STARS){
+    const r=Math.max(.35,(5.2-mag)*.5);
+    g.fillStyle=mag<2?'rgba(255,255,255,.95)':'rgba(220,228,255,.7)';
+    g.beginPath();g.arc(X(ra),Y(de),r,0,6.2832);g.fill();
+  }
+  // constellation labels
+  g.font='9px sans-serif';g.fillStyle='rgba(140,160,200,.5)';g.textAlign='center';
+  for(const [ra,de,nm] of SKY_LABELS)g.fillText(nm,X(ra),Y(de));
+  // ecliptic (obliquity 23.4367°)
+  const eps=23.4367*Math.PI/180;
+  g.strokeStyle='rgba(240,201,107,.55)';g.lineWidth=1.1;g.setLineDash([5,4]);
+  g.beginPath();let pv=null;
+  for(let L=0;L<=360;L+=2){
+    const l=L*Math.PI/180;
+    const de=Math.asin(Math.sin(eps)*Math.sin(l))*180/Math.PI;
+    let ra=Math.atan2(Math.sin(l)*Math.cos(eps),Math.cos(l))*180/Math.PI;ra=(ra+360)%360;
+    const x=X(ra),y=Y(de);
+    if(pv!==null&&Math.abs(pv-x)>W/2){g.stroke();g.beginPath();g.moveTo(x,y);}
+    else if(pv===null)g.moveTo(x,y);else g.lineTo(x,y);
+    pv=x;
+  }
+  g.stroke();g.setLineDash([]);
+  // planets
+  const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
+    jupiter:'#f0b070',saturn:'#d8c890',uranus:'#80d0e0',neptune:'#6090f0',pluto:'#c07090',chiron:'#90e0b0'};
+  g.textAlign='center';
+  for(const b of bodies){
+    const x=X(b.ra_deg),y=Y(b.dec_deg),c=PCOL[b.key]||'#fff';
+    g.shadowColor=c;g.shadowBlur=8;
+    g.fillStyle=c;g.beginPath();g.arc(x,y,b.key==='sun'?5:(b.key==='moon'?4.5:3.4),0,6.2832);g.fill();
+    g.shadowBlur=0;
+    g.font='bold 10px sans-serif';g.fillStyle=c;
+    g.fillText(b.name_ka+(b.retrograde?' ℞':''),x,y-8);
   }
 }
 
@@ -2165,6 +2264,7 @@ function showSingleChart(data,label,dual){
   setupCinderellaCard();
   setupHardPeriodsCard();
   setupSkymapCard();
+  setupSkyChartCard();
   if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}else{plPlaceTable();}
   const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
   document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
@@ -2195,6 +2295,7 @@ function _renderDouble(d1,d2,name1,name2,label,crossAsp){
   const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
   const _hc=document.getElementById('hardperiods-card');if(_hc)_hc.style.display='none';
   const _sk=document.getElementById('skymap-card');if(_sk)_sk.style.display='none';
+  const _sg=document.getElementById('skychart-card');if(_sg)_sg.style.display='none';
   renderSynastryScore(label,crossAsp);
   if(currentMode==='pastlife'){plPlaceTable();}else{const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
   document.getElementById('legend-wrap').style.display='flex';
