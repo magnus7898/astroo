@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAGNUS — ფენ-შუი</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@300;400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root { --void:#04030a; --gold:#c9a84c; --gold-pale:#e8d5a0; --silver:#9ba8b8; --jade:#2fae7d; --cinn:#c0503a; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:
+      radial-gradient(ellipse 700px 500px at 20% 15%, rgba(47,174,125,0.10), transparent 60%),
+      radial-gradient(ellipse 600px 500px at 82% 70%, rgba(192,80,58,0.08), transparent 60%),
+      radial-gradient(ellipse 500px 400px at 50% 95%, rgba(201,168,76,0.06), transparent 60%),
+      var(--void);
+    min-height:100vh;overflow-x:hidden;font-family:'Cinzel',serif;color:#d7dde6;}
+  .stars{position:fixed;inset:0;z-index:0;pointer-events:none;background:
+      radial-gradient(1px 1px at 8% 12%,rgba(255,255,255,.6),transparent),
+      radial-gradient(1px 1px at 23% 35%,rgba(255,255,255,.4),transparent),
+      radial-gradient(1px 1px at 41% 8%,rgba(255,255,255,.5),transparent),
+      radial-gradient(1px 1px at 60% 25%,rgba(255,255,255,.35),transparent),
+      radial-gradient(1px 1px at 77% 13%,rgba(255,255,255,.5),transparent),
+      radial-gradient(1px 1px at 88% 44%,rgba(255,255,255,.4),transparent),
+      radial-gradient(1px 1px at 15% 68%,rgba(255,255,255,.35),transparent),
+      radial-gradient(1px 1px at 50% 75%,rgba(255,255,255,.45),transparent),
+      radial-gradient(1px 1px at 82% 80%,rgba(255,255,255,.4),transparent),
+      radial-gradient(1.5px 1.5px at 34% 51%,rgba(47,174,125,.3),transparent),
+      radial-gradient(1.5px 1.5px at 66% 44%,rgba(201,168,76,.22),transparent);}
+  .vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(4,3,10,.55) 80%,rgba(4,3,10,.9) 100%);}
+  .page{position:relative;z-index:2;min-height:100vh;max-width:860px;margin:0 auto;padding:44px 20px 90px;}
+  header{text-align:center;margin-bottom:36px;}
+  .eyebrow{font-size:9px;letter-spacing:7px;text-transform:uppercase;color:var(--gold);opacity:.5;margin-bottom:12px;}
+  h1{font-family:'Cinzel Decorative',serif;font-size:clamp(24px,4.4vw,42px);font-weight:400;letter-spacing:2px;
+    background:linear-gradient(160deg,#f5e8ba,var(--gold) 35%,#9a7028 60%,var(--gold-pale) 80%,#c09040);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    filter:drop-shadow(0 0 28px rgba(201,168,76,.25));}
+  .subtitle{font-family:'IM Fell English',serif;font-style:italic;font-size:13px;color:var(--silver);opacity:.5;margin-top:10px;}
+  .back{display:inline-block;margin-bottom:20px;color:var(--gold);opacity:.55;text-decoration:none;font-size:11px;letter-spacing:2px;}
+  .back:hover{opacity:1;}
+  .panel{background:rgba(8,6,18,.78);border:1px solid rgba(201,168,76,.14);border-radius:4px;padding:22px 22px 26px;margin-bottom:22px;position:relative;}
+  .panel::before{content:'';position:absolute;top:8px;left:8px;width:13px;height:13px;border:solid rgba(201,168,76,.22);border-width:1px 0 0 1px;}
+  .panel::after{content:'';position:absolute;bottom:8px;right:8px;width:13px;height:13px;border:solid rgba(201,168,76,.22);border-width:0 1px 1px 0;}
+  .ptitle{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--gold-pale);margin-bottom:16px;}
+  label{font-size:10px;letter-spacing:2px;color:var(--silver);display:block;margin:8px 0 4px;}
+  input,select{background:rgba(20,15,40,.7);border:1px solid rgba(201,168,76,.25);color:#e8e2d0;padding:8px 10px;border-radius:3px;font-family:inherit;font-size:14px;width:100%;}
+  input:focus,select:focus{outline:none;border-color:var(--gold);}
+  .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;align-items:end;}
+  button.go{background:linear-gradient(135deg,#8a6a20,var(--gold));border:none;color:#0a0810;font-family:inherit;font-weight:600;letter-spacing:2px;padding:11px 26px;border-radius:3px;cursor:pointer;font-size:12px;margin-top:16px;}
+  button.go:hover{filter:brightness(1.15);}
+  .kua-big{font-family:'Cinzel Decorative',serif;font-size:64px;color:var(--gold);text-align:center;line-height:1;filter:drop-shadow(0 0 22px rgba(201,168,76,.4));}
+  .kua-sub{text-align:center;color:var(--silver);font-size:12px;margin-top:6px;letter-spacing:2px;}
+  .dir-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+  .dir-col h4{font-size:10px;letter-spacing:3px;margin-bottom:8px;}
+  .dir-item{display:flex;justify-content:space-between;font-size:12px;padding:5px 8px;border-radius:3px;margin-bottom:4px;background:rgba(20,15,40,.5);}
+  .good .dir-item{border-left:2px solid var(--jade);} .bad .dir-item{border-left:2px solid var(--cinn);}
+  .good h4{color:var(--jade);} .bad h4{color:var(--cinn);}
+  .dir-name{color:#e8e2d0;} .dir-mean{color:var(--silver);font-size:10.5px;}
+  .compass{display:block;margin:18px auto 0;}
+  .zoo-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+  .zoo-glyph{font-size:52px;filter:drop-shadow(0 0 14px rgba(201,168,76,.35));}
+  .fs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:420px;margin:14px auto 0;}
+  .fs-cell{aspect-ratio:1;border:1px solid rgba(201,168,76,.2);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(20,15,40,.55);padding:4px;}
+  .fs-num{font-family:'Cinzel Decorative',serif;font-size:26px;line-height:1;}
+  .fs-dir{font-size:9px;letter-spacing:1px;color:var(--silver);margin-bottom:4px;}
+  .fs-mean{font-size:8.5px;color:var(--silver);text-align:center;margin-top:4px;line-height:1.35;}
+  .bagua-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:520px;margin:14px auto 0;}
+  .bg-cell{border:1px solid rgba(201,168,76,.18);border-radius:3px;padding:10px 8px;background:rgba(20,15,40,.5);text-align:center;}
+  .bg-dir{font-size:9px;letter-spacing:2px;color:var(--gold);opacity:.7;}
+  .bg-area{font-size:12px;color:#e8e2d0;margin:4px 0;}
+  .bg-el{font-size:10px;color:var(--silver);}
+  .note{font-size:10px;color:rgba(155,168,184,.55);margin-top:10px;line-height:1.6;}
+  footer{margin-top:56px;text-align:center;}
+  footer span{font-size:9px;letter-spacing:6px;text-transform:uppercase;color:rgba(201,168,76,.2);}
+  @media(max-width:560px){.dir-grid{grid-template-columns:1fr;}.kua-big{font-size:48px;}}
+</style>
+</head>
+<body>
+<div class="stars"></div><div class="vignette"></div>
+<div class="page">
+<a class="back" href="index.html">← MAGNUS</a>
+<header>
+  <div class="eyebrow">ქარი და წყალი</div>
+  <h1>ფენ-შუი</h1>
+  <div class="subtitle">風水 — ენერგიის ჰარმონია სივრცეში</div>
+</header>
+
+<div class="panel">
+  <div class="ptitle">☯ გუას რიცხვი (Kua) — პირადი მიმართულებები</div>
+  <div class="frow">
+    <div><label>დღე</label><input type="number" id="k-day" min="1" max="31" value="15"></div>
+    <div><label>თვე</label><input type="number" id="k-month" min="1" max="12" value="5"></div>
+    <div><label>წელი</label><input type="number" id="k-year" min="1900" max="2035" value="1990"></div>
+    <div><label>სქესი</label><select id="k-sex"><option value="m">მამრობითი</option><option value="f">მდედრობითი</option></select></div>
+  </div>
+  <button class="go" onclick="calcKua()">გამოთვლა</button>
+  <div id="kua-out" style="display:none;margin-top:22px">
+    <div class="kua-big" id="kua-num"></div>
+    <div class="kua-sub" id="kua-info"></div>
+    <svg class="compass" id="kua-compass" width="230" height="230" viewBox="0 0 230 230"></svg>
+    <div class="dir-grid">
+      <div class="dir-col good"><h4>✦ კეთილი მიმართულებები</h4><div id="kua-good"></div></div>
+      <div class="dir-col bad"><h4>✦ არასასურველი მიმართულებები</h4><div id="kua-bad"></div></div>
+    </div>
+    <div class="note">4 თებერვლამდე (ლი ჩუნი) დაბადებულებისთვის გამოიყენება წინა წელი — ავტომატურად გათვალისწინებულია.</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="ptitle">🐉 ჩინური ზოდიაქო</div>
+  <div id="zoo-out" class="zoo-row" style="display:none"></div>
+</div>
+
+<div class="panel">
+  <div class="ptitle">✨ მფრინავი ვარსკვლავები — წლიური რუკა</div>
+  <div class="frow" style="max-width:220px">
+    <div><label>წელი</label><input type="number" id="fs-year" min="1900" max="2100" value="2026"></div>
+  </div>
+  <button class="go" onclick="drawFS()">ჩვენება</button>
+  <div id="fs-out" style="display:none">
+    <div class="fs-grid" id="fs-grid"></div>
+    <div class="note" style="text-align:center">სამხრეთი ზემოთ — ტრადიციული ფენ-შუი ორიენტაცია · ცენტრალური ვარსკვლავი წლისა: <span id="fs-center"></span></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="ptitle">🧭 ბაგუას რუკა — ცხოვრების სფეროები</div>
+  <div class="bagua-grid" id="bagua"></div>
+  <div class="note" style="text-align:center">მოათავსეთ ბაგუა თქვენი სახლის გეგმაზე — სამხრეთი ზემოთ</div>
+</div>
+
+<footer><span>Magnus · Feng Shui</span></footer>
+</div>
+
+<script>
+const DIR_KA={N:'ჩრდილოეთი',NE:'ჩრდ-აღმ',E:'აღმოსავლეთი',SE:'სამხ-აღმ',S:'სამხრეთი',SW:'სამხ-დას',W:'დასავლეთი',NW:'ჩრდ-დას'};
+const KUA_DIRS={
+ 1:{good:{SE:'შენ ჩი — წარმატება',E:'ტიან ი — ჯანმრთელობა',S:'იან ნიენ — ურთიერთობები',N:'ფუ ვეი — სტაბილურობა'},
+    bad:{W:'ჰო ჰაი — უიღბლობა',NE:'ვუ გუი — ხუთი მოჩვენება',NW:'ლიუ შა — ექვსი მკვლელი',SW:'ძუე მინ — სრული დანაკარგი'}},
+ 2:{good:{NE:'შენ ჩი — წარმატება',W:'ტიან ი — ჯანმრთელობა',NW:'იან ნიენ — ურთიერთობები',SW:'ფუ ვეი — სტაბილურობა'},
+    bad:{E:'ჰო ჰაი — უიღბლობა',SE:'ვუ გუი — ხუთი მოჩვენება',S:'ლიუ შა — ექვსი მკვლელი',N:'ძუე მინ — სრული დანაკარგი'}},
+ 3:{good:{S:'შენ ჩი — წარმატება',N:'ტიან ი — ჯანმრთელობა',SE:'იან ნიენ — ურთიერთობები',E:'ფუ ვეი — სტაბილურობა'},
+    bad:{SW:'ჰო ჰაი — უიღბლობა',NW:'ვუ გუი — ხუთი მოჩვენება',NE:'ლიუ შა — ექვსი მკვლელი',W:'ძუე მინ — სრული დანაკარგი'}},
+ 4:{good:{N:'შენ ჩი — წარმატება',S:'ტიან ი — ჯანმრთელობა',E:'იან ნიენ — ურთიერთობები',SE:'ფუ ვეი — სტაბილურობა'},
+    bad:{NW:'ჰო ჰაი — უიღბლობა',SW:'ვუ გუი — ხუთი მოჩვენება',W:'ლიუ შა — ექვსი მკვლელი',NE:'ძუე მინ — სრული დანაკარგი'}},
+ 6:{good:{W:'შენ ჩი — წარმატება',NE:'ტიან ი — ჯანმრთელობა',SW:'იან ნიენ — ურთიერთობები',NW:'ფუ ვეი — სტაბილურობა'},
+    bad:{SE:'ჰო ჰაი — უიღბლობა',E:'ვუ გუი — ხუთი მოჩვენება',N:'ლიუ შა — ექვსი მკვლელი',S:'ძუე მინ — სრული დანაკარგი'}},
+ 7:{good:{NW:'შენ ჩი — წარმატება',SW:'ტიან ი — ჯანმრთელობა',NE:'იან ნიენ — ურთიერთობები',W:'ფუ ვეი — სტაბილურობა'},
+    bad:{N:'ჰო ჰაი — უიღბლობა',S:'ვუ გუი — ხუთი მოჩვენება',SE:'ლიუ შა — ექვსი მკვლელი',E:'ძუე მინ — სრული დანაკარგი'}},
+ 8:{good:{SW:'შენ ჩი — წარმატება',NW:'ტიან ი — ჯანმრთელობა',W:'იან ნიენ — ურთიერთობები',NE:'ფუ ვეი — სტაბილურობა'},
+    bad:{S:'ჰო ჰაი — უიღბლობა',N:'ვუ გუი — ხუთი მოჩვენება',E:'ლიუ შა — ექვსი მკვლელი',SE:'ძუე მინ — სრული დანაკარგი'}},
+ 9:{good:{E:'შენ ჩი — წარმატება',SE:'ტიან ი — ჯანმრთელობა',N:'იან ნიენ — ურთიერთობები',S:'ფუ ვეი — სტაბილურობა'},
+    bad:{NE:'ჰო ჰაი — უიღბლობა',W:'ვუ გუი — ხუთი მოჩვენება',SW:'ლიუ შა — ექვსი მკვლელი',NW:'ძუე მინ — სრული დანაკარგი'}}};
+const KUA_EL={1:'წყალი',2:'მიწა',3:'ხე',4:'ხე',6:'ლითონი',7:'ლითონი',8:'მიწა',9:'ცეცხლი'};
+function digitSum(n){while(n>9){n=String(n).split('').reduce((a,c)=>a+ +c,0);}return n;}
+function calcKua(){
+  let y=+document.getElementById('k-year').value;
+  const m=+document.getElementById('k-month').value,d=+document.getElementById('k-day').value;
+  const sex=document.getElementById('k-sex').value;
+  if(!y||y<1900)return;
+  if(m<2||(m===2&&d<4))y--;                       // Li Chun boundary
+  const s=digitSum(y);
+  let k=sex==='m'?11-s:4+s;
+  k=digitSum(k);
+  if(k===5)k=sex==='m'?2:8;
+  const grp=[1,3,4,9].includes(k)?'აღმოსავლური ჯგუფი':'დასავლური ჯგუფი';
+  document.getElementById('kua-num').textContent=k;
+  document.getElementById('kua-info').textContent=`${grp} · ელემენტი: ${KUA_EL[k]}`;
+  const D=KUA_DIRS[k];
+  document.getElementById('kua-good').innerHTML=Object.entries(D.good).map(([dir,me])=>
+    `<div class="dir-item"><span class="dir-name">${DIR_KA[dir]}</span><span class="dir-mean">${me}</span></div>`).join('');
+  document.getElementById('kua-bad').innerHTML=Object.entries(D.bad).map(([dir,me])=>
+    `<div class="dir-item"><span class="dir-name">${DIR_KA[dir]}</span><span class="dir-mean">${me}</span></div>`).join('');
+  drawCompass(D);
+  document.getElementById('kua-out').style.display='block';
+  showZodiac(y);
+}
+function drawCompass(D){
+  const ANG={N:0,NE:45,E:90,SE:135,S:180,SW:225,W:270,NW:315};
+  let svg='<circle cx="115" cy="115" r="100" fill="none" stroke="rgba(201,168,76,.3)"/><circle cx="115" cy="115" r="58" fill="none" stroke="rgba(201,168,76,.15)"/>';
+  for(const [dir,a] of Object.entries(ANG)){
+    const good=dir in D.good;
+    const rad=(a-90)*Math.PI/180;
+    const x1=115+58*Math.cos(rad),y1=115+58*Math.sin(rad);
+    const x2=115+100*Math.cos(rad),y2=115+100*Math.sin(rad);
+    const tx=115+82*Math.cos(rad),ty=115+82*Math.sin(rad);
+    const col=good?'#2fae7d':'#c0503a';
+    svg+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="9" stroke-linecap="round" opacity=".75"/>`;
+    svg+=`<text x="${115+112*Math.cos(rad)}" y="${115+112*Math.sin(rad)+3}" text-anchor="middle" fill="${col}" font-size="11">${dir}</text>`;
+  }
+  svg+='<circle cx="115" cy="115" r="3" fill="#c9a84c"/>';
+  document.getElementById('kua-compass').innerHTML=svg;
+}
+const ZOO=[['ვირთხა','🐀'],['ხარი','🐂'],['ვეფხვი','🐅'],['კურდღელი','🐇'],['დრაკონი','🐉'],['გველი','🐍'],['ცხენი','🐎'],['თხა','🐐'],['მაიმუნი','🐒'],['მამალი','🐓'],['ძაღლი','🐕'],['ღორი','🐖']];
+const ZEL=['ლითონი','ლითონი','წყალი','წყალი','ხე','ხე','ცეცხლი','ცეცხლი','მიწა','მიწა'];
+function showZodiac(yAdj){
+  const b=(yAdj-4)%12,st=(yAdj-4)%10;
+  const yin=yAdj%2?' (ინი)':' (იანი)';
+  document.getElementById('zoo-out').innerHTML=
+    `<div class="zoo-glyph">${ZOO[b][1]}</div>
+     <div><div style="font-size:20px;color:#e8d5a0">${ZEL[st]} ${ZOO[b][0]}${yin}</div>
+     <div style="font-size:11px;color:#9ba8b8;margin-top:4px">ჩინური წელი: ${yAdj} (4 თებერვლის საზღვრით)</div></div>`;
+  document.getElementById('zoo-out').style.display='flex';
+}
+const FS_MEAN={1:['თეთრი — კარიერა, წყალი','#7ec8f0'],2:['შავი — ავადმყოფობა','#8a8a8a'],3:['ხის — კონფლიქტი, დავა','#5a9a5a'],
+ 4:['მწვანე — რომანტიკა, სწავლა','#2fae7d'],5:['ყვითელი — უბედურება ⚠','#e0c040'],6:['თეთრი — ზეციური დახმარება','#e8e2d0'],
+ 7:['წითელი — ძარცვა, დანაკარგი','#c0503a'],8:['თეთრი — სიმდიდრე ★','#c9a84c'],9:['იისფერი — ზეიმი, კეთილდღეობა','#a070d0']};
+function drawFS(){
+  const y=+document.getElementById('fs-year').value;if(!y)return;
+  let c=(11-(y%9))%9;if(c===0)c=9;
+  const off={NW:1,W:2,NE:3,S:4,N:5,SW:6,E:7,SE:8};
+  const star=d=>{if(d==='C')return c;let v=(c+off[d])%9;return v===0?9:v;};
+  const layout=[['SE','S','SW'],['E','C','W'],['NE','N','NW']];   // South at top
+  document.getElementById('fs-grid').innerHTML=layout.flat().map(d=>{
+    const n=star(d);const [mean,col]=FS_MEAN[n];
+    return `<div class="fs-cell"${n===5?' style="border-color:rgba(224,192,64,.5)"':''}>
+      <div class="fs-dir">${d==='C'?'ცენტრი':DIR_KA[d]}</div>
+      <div class="fs-num" style="color:${col}">${n}</div>
+      <div class="fs-mean">${mean}</div></div>`;
+  }).join('');
+  document.getElementById('fs-center').textContent=c;
+  document.getElementById('fs-out').style.display='block';
+}
+const BAGUA=[['SE','სიმდიდრე','ხე · მწვანე/იისფერი'],['S','დიდება, რეპუტაცია','ცეცხლი · წითელი'],['SW','სიყვარული, ქორწინება','მიწა · ვარდისფერი'],
+ ['E','ოჯახი, ჯანმრთელობა','ხე · მწვანე'],['C','ცენტრი — ბალანსი','მიწა · ყვითელი'],['W','შვილები, შემოქმედება','ლითონი · თეთრი'],
+ ['NE','ცოდნა, სიბრძნე','მიწა · ლურჯი'],['N','კარიერა, გზა','წყალი · შავი/ლურჯი'],['NW','დამხმარეები, მოგზაურობა','ლითონი · ნაცრისფერი']];
+document.getElementById('bagua').innerHTML=BAGUA.map(([d,area,el])=>
+  `<div class="bg-cell"><div class="bg-dir">${d==='C'?'ცენტრი':DIR_KA[d]}</div><div class="bg-area">${area}</div><div class="bg-el">${el}</div></div>`).join('');
+drawFS();
+</script>
+</body>
+</html>
