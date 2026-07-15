@@ -69,6 +69,13 @@
   .bg-area{font-size:12px;color:#e8e2d0;margin:4px 0;}
   .bg-el{font-size:10px;color:var(--silver);}
   .note{font-size:10px;color:rgba(155,168,184,.55);margin-top:10px;line-height:1.6;}
+  .cl-row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(201,168,76,.1);flex-wrap:wrap;}
+  .cl-label{min-width:150px;font-size:11px;letter-spacing:1px;color:var(--gold-pale);padding-top:3px;}
+  .cl-sw{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1;}
+  .sw{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.22);box-shadow:0 2px 6px rgba(0,0,0,.5);}
+  .sw-name{font-size:10px;color:var(--silver);margin-right:8px;align-self:center;}
+  .cl-note{font-size:10px;color:var(--silver);flex-basis:100%;margin-top:3px;opacity:.75;}
+  .num-chip{display:inline-block;min-width:30px;text-align:center;padding:5px 8px;border:1px solid rgba(201,168,76,.4);border-radius:6px;color:var(--gold);font-size:15px;margin-right:6px;font-family:'Cinzel Decorative',serif;}
   footer{margin-top:56px;text-align:center;}
   footer span{font-size:9px;letter-spacing:6px;text-transform:uppercase;color:rgba(201,168,76,.2);}
   @media(max-width:560px){.dir-grid{grid-template-columns:1fr;}.kua-big{font-size:48px;}}
@@ -108,6 +115,11 @@
 <div class="panel">
   <div class="ptitle">🐉 ჩინური ზოდიაქო</div>
   <div id="zoo-out" class="zoo-row" style="display:none"></div>
+</div>
+
+<div class="panel" id="colors-panel" style="display:none">
+  <div class="ptitle">🎨 პირადი ფერები, საფულე და აქსესუარები</div>
+  <div id="colors-out"></div>
 </div>
 
 <div class="panel">
@@ -173,6 +185,7 @@ function calcKua(){
   drawCompass(D);
   document.getElementById('kua-out').style.display='block';
   showZodiac(y);
+  renderColors(k);
 }
 function drawCompass(D){
   const ANG={N:0,NE:45,E:90,SE:135,S:180,SW:225,W:270,NW:315};
@@ -189,6 +202,43 @@ function drawCompass(D){
   }
   svg+='<circle cx="115" cy="115" r="3" fill="#c9a84c"/>';
   document.getElementById('kua-compass').innerHTML=svg;
+}
+const EL_DATA={
+ 'წყალი':{colors:[['შავი','#101018'],['მუქი ლურჯი','#12275a']],nums:[1]},
+ 'ხე':{colors:[['მწვანე','#2f7d46'],['ფირუზი','#1f8a7a']],nums:[3,4]},
+ 'ცეცხლი':{colors:[['წითელი','#b3271e'],['იისფერი','#6a3aa0'],['ნარინჯისფერი','#d1691f']],nums:[9]},
+ 'მიწა':{colors:[['ყვითელი','#d1a92f'],['ბეჟი','#c9b287'],['ყავისფერი','#6e4a2a']],nums:[2,5,8]},
+ 'ლითონი':{colors:[['თეთრი','#e8e8ec'],['ვერცხლისფერი','#b8bcc6'],['ოქროსფერი','#c9a84c'],['ნაცრისფერი','#7d828c']],nums:[6,7]}};
+const EL_PRODUCES={'წყალი':'ხე','ხე':'ცეცხლი','ცეცხლი':'მიწა','მიწა':'ლითონი','ლითონი':'წყალი'};
+const EL_CONTROLS={'წყალი':'ცეცხლი','ცეცხლი':'ლითონი','ლითონი':'ხე','ხე':'მიწა','მიწა':'წყალი'};
+function _resOf(el){for(const k in EL_PRODUCES)if(EL_PRODUCES[k]===el)return k;}
+function _ctrlBy(el){for(const k in EL_CONTROLS)if(EL_CONTROLS[k]===el)return k;}
+function _sw(list){return list.map(([n,c])=>`<span class="sw" style="background:${c}" title="${n}"></span><span class="sw-name">${n}</span>`).join('');}
+function renderColors(k){
+  const el=KUA_EL[k];
+  const res=_resOf(el);            // element that feeds yours
+  const wealth=EL_CONTROLS[el];    // element you control = wealth
+  const avoid=_ctrlBy(el);         // element controlling you
+  const own=EL_DATA[el],rs=EL_DATA[res],we=EL_DATA[wealth],av=EL_DATA[avoid];
+  const nums=[...own.nums,...rs.nums,k].filter((v,i,a)=>a.indexOf(v)===i).sort();
+  document.getElementById('colors-out').innerHTML=`
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:8px">თქვენი ელემენტი: <b style="color:#e8d5a0">${el}</b> · მკვებავი: <b style="color:#2fae7d">${res}</b> · სიმდიდრის ელემენტი: <b style="color:#c9a84c">${wealth}</b> · მოსარიდებელი: <b style="color:#c0503a">${avoid}</b></div>
+    <div class="cl-row"><div class="cl-label">👛 საფულის ფერი</div>
+      <div class="cl-sw">${_sw(own.colors)}${_sw(rs.colors)}
+      <div class="cl-note">ძირითადი ფერი — თქვენი (${el}) ან მკვებავი (${res}) ელემენტისა. სიმდიდრის აქცენტად (სარჩული, დეტალები) — ${wealth}: ${we.colors.map(c=>c[0]).join(', ')}.</div></div></div>
+    <div class="cl-row"><div class="cl-label">👗 ტანსაცმელი</div>
+      <div class="cl-sw">${_sw(own.colors)}${_sw(rs.colors)}
+      <div class="cl-note">მნიშვნელოვან დღეებში — მკვებავი ელემენტის ფერები ენერგიის გასაძლიერებლად.</div></div></div>
+    <div class="cl-row"><div class="cl-label">🏠 ინტერიერი / აქცენტები</div>
+      <div class="cl-sw">${_sw(we.colors)}
+      <div class="cl-note">სიმდიდრის ზონაში (სამხ-აღმ) და სამუშაო მაგიდაზე — ${wealth} ელემენტის აქცენტები.</div></div></div>
+    <div class="cl-row"><div class="cl-label">🚫 მოსარიდებელი ფერები</div>
+      <div class="cl-sw">${_sw(av.colors)}
+      <div class="cl-note">${avoid} აკონტროლებს თქვენს ელემენტს — დიდი რაოდენობით ასუსტებს (საფულეში განსაკუთრებით).</div></div></div>
+    <div class="cl-row" style="border-bottom:none"><div class="cl-label">🔢 იღბლიანი რიცხვები</div>
+      <div class="cl-sw">${nums.map(n=>`<span class="num-chip">${n}</span>`).join('')}
+      <div class="cl-note">გუას რიცხვი + თქვენი და მკვებავი ელემენტების რიცხვები — ტელეფონის ნომრისთვის, ბინის/მანქანისთვის.</div></div></div>`;
+  document.getElementById('colors-panel').style.display='block';
 }
 const ZOO=[['ვირთხა','🐀'],['ხარი','🐂'],['ვეფხვი','🐅'],['კურდღელი','🐇'],['დრაკონი','🐉'],['გველი','🐍'],['ცხენი','🐎'],['თხა','🐐'],['მაიმუნი','🐒'],['მამალი','🐓'],['ძაღლი','🐕'],['ღორი','🐖']];
 const ZEL=['ლითონი','ლითონი','წყალი','წყალი','ხე','ხე','ცეცხლი','ცეცხლი','მიწა','მიწა'];
