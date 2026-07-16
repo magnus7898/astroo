@@ -2089,7 +2089,7 @@ function drawSkyChart(bodies){
     const cvt=([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];};
     window._skyEC2={
       stars:SKY_STARS.map(cvt).filter(s=>Math.abs(s[1])<=LATMAX),
-      lines:SKY_LINES.map(seg=>seg.map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LATMAX+3)).filter(s=>s.length>=2),
+      lines:SKY_LINES.map(e=>e[1].map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LATMAX+3)).filter(s=>s.length>=2),
       labels:SKY_LABELS.map(([ra,de,nm])=>{const[l,b]=eq2ec(ra,de);return[l,b,nm];}).filter(s=>Math.abs(s[1])<=LATMAX-3)
     };
   }
@@ -2202,73 +2202,74 @@ async function drawSkyPoster(){
   if(!window._skyData)return;
   const bodies=window._skyData.bodies;
   try{await document.fonts.load('400 60px Cinzel');await document.fonts.load('700 60px Cinzel');}catch(e){}
-  const W=2400,H=1560;                        // landscape print rectangle
+  const W=1800,H=2400;                         // portrait rectangle frame
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const g=cv.getContext('2d');
   const D2R=Math.PI/180;
-  // ---- ecliptic-coordinate star set for the band (built once) ----
-  if(!window._skyECP){
+  // ecliptic + near-ecliptic constellations only, drawn fully
+  const NEAR=new Set(['Ari','Tau','Gem','Cnc','Leo','Vir','Lib','Sco','Oph','Sgr','Cap','Aqr','Psc',
+                      'Cet','Ori','Aql','Ser','Sct','Sex','Crt','Crv','Hya','CMi','Del','Peg','PsA']);
+  const LATMAX=48;
+  if(!window._skyECR){
     const EPS=23.4367*D2R;
     const eq2ec=(raD,deD)=>{const ra=raD*D2R,de=deD*D2R;
       const lat=Math.asin(Math.sin(de)*Math.cos(EPS)-Math.cos(de)*Math.sin(EPS)*Math.sin(ra));
       const lon=Math.atan2(Math.sin(ra)*Math.cos(EPS)+Math.tan(de)*Math.sin(EPS),Math.cos(ra));
       return [((lon/D2R)+360)%360,lat/D2R];};
-    const LB=55;
-    window._skyECP={
-      stars:SKY_STARS.map(([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];}).filter(s=>Math.abs(s[1])<=LB),
-      lines:SKY_LINES.map(seg=>seg.map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LB+3)).filter(s=>s.length>=2)};
+    window._skyECR={
+      stars:SKY_STARS.map(([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];}).filter(s=>Math.abs(s[1])<=LATMAX),
+      lines:SKY_LINES.filter(e=>NEAR.has(e[0]))
+        .map(e=>e[1].map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LATMAX)).filter(s=>s.length>=2)};
   }
-  const EC=window._skyECP;
-  // ---- background ----
+  const EC=window._skyECR;
+  // ---- background + outer rectangular frame ----
   g.fillStyle='#070b18';g.fillRect(0,0,W,H);
-  // ---- rectangular sky panel ----
-  const PX=90,PY=80,PW=W-180;
-  const LATB=55, PH=Math.round(PW*(2*LATB)/360);   // undistorted at ecliptic
-  const X=lon=>PX+PW*(1-(lon%360)/360);
-  const Y=lat=>PY+PH*(LATB-lat)/(2*LATB);
+  g.strokeStyle='rgba(212,178,106,.45)';g.lineWidth=2;
+  g.strokeRect(60,60,W-120,H-120);             // hairline rectangle frame
+  // ---- round ecliptic sky disc ----
+  const CX=W/2,CY=W/2+120;
+  const RMAX=W*0.40;
+  const R0=RMAX/(1+LATMAX*D2R);
+  const XY=(lon,lat)=>{const r=R0*(1-lat*D2R);const a=(-lon+90)*D2R;
+    return [CX+r*Math.sin(a),CY-r*Math.cos(a)];};
+  const bg=g.createRadialGradient(CX,CY,0,CX,CY,RMAX);
+  bg.addColorStop(0,'rgba(16,25,58,.9)');bg.addColorStop(1,'rgba(8,12,30,.9)');
   g.save();
-  g.beginPath();g.rect(PX,PY,PW,PH);g.clip();
-  const bgp=g.createLinearGradient(0,PY,0,PY+PH);
-  bgp.addColorStop(0,'#0a1130');bgp.addColorStop(.5,'#0e1840');bgp.addColorStop(1,'#0a1130');
-  g.fillStyle=bgp;g.fillRect(PX,PY,PW,PH);
-  // hairline constellation lines (split at wrap)
-  g.strokeStyle='rgba(210,220,255,.13)';g.lineWidth=1.4;g.lineCap='round';
+  g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.clip();
+  g.fillStyle=bg;g.fillRect(CX-RMAX,CY-RMAX,2*RMAX,2*RMAX);
+  // constellation figures — ecliptic band only, fully drawn
+  g.strokeStyle='rgba(210,220,255,.17)';g.lineWidth=1.6;g.lineCap='round';
   for(const seg of EC.lines){
-    g.beginPath();let pv=null;
-    for(const [l,b] of seg){
-      const x=X(l),y=Y(b);
-      if(pv!==null&&Math.abs(pv-x)>PW/2){g.stroke();g.beginPath();g.moveTo(x,y);}
-      else if(pv===null)g.moveTo(x,y);else g.lineTo(x,y);
-      pv=x;
-    }
+    g.beginPath();
+    seg.forEach(([l,b],i)=>{const[x,y]=XY(l,b);i?g.lineTo(x,y):g.moveTo(x,y);});
     g.stroke();
   }
   // stars
   for(const [l,b,m] of EC.stars){
     if(m>4.9)continue;
-    const x=X(l),y=Y(b);
+    const[x,y]=XY(l,b);
     g.fillStyle=m<2?'rgba(255,255,255,.95)':'rgba(235,240,255,.6)';
     g.beginPath();g.arc(x,y,Math.max(1.0,(5.1-m)*1.1),0,6.2832);g.fill();
   }
-  // planets — colorful
+  // planets — colorful, text names
   const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
     jupiter:'#f0b070',saturn:'#d8c890',uranus:'#80d0e0',neptune:'#6090f0',pluto:'#c07090',chiron:'#90e0b0'};
   g.textAlign='center';
   for(const bd of bodies){
-    const x=X(bd.ecl_lon),y=Y(Math.max(-LATB+4,Math.min(LATB-4,bd.ecl_lat)));
+    const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+4,Math.min(LATMAX-4,bd.ecl_lat)));
     const c=PCOL[bd.key]||'#fff';
-    const r=bd.key==='sun'?12:(bd.key==='moon'?10:7);
-    g.shadowColor=c;g.shadowBlur=22;
+    const r=bd.key==='sun'?11:(bd.key==='moon'?9.5:6.5);
+    g.shadowColor=c;g.shadowBlur=20;
     g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();
     g.shadowBlur=0;
-    g.font='27px Cinzel, Georgia, serif';
+    g.font='26px Cinzel, Georgia, serif';
     g.fillStyle=c;
-    g.fillText(bd.name_ka,x,y-r-14);
+    g.fillText(bd.name_ka,x,y-r-12);
   }
   g.restore();
-  // hairline frame around the panel
+  // disc rim
   g.strokeStyle='rgba(212,178,106,.5)';g.lineWidth=2;
-  g.strokeRect(PX,PY,PW,PH);
+  g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.stroke();
   // ---- caption block ----
   const req=window._cindReq||{};
   const name=(req.name||'').trim();
@@ -2276,28 +2277,29 @@ async function drawSkyPoster(){
   const tm=`${String(req.hour??12).padStart(2,'0')}:${String(req.minute??0).padStart(2,'0')}`;
   const la=req.lat!=null?Math.abs(req.lat).toFixed(4)+'°'+(req.lat>=0?' N':' S'):'';
   const lo=req.lon!=null?Math.abs(req.lon).toFixed(4)+'°'+(req.lon>=0?' E':' W'):'';
-  let cy=PY+PH+130;
+  let cy=CY+RMAX+170;
   g.textAlign='center';
   try{g.letterSpacing='14px';}catch(e){}
-  g.font='400 66px Cinzel, Georgia, serif';g.fillStyle='#e6d5a8';
-  g.fillText(name||'ჩემი ცა',W/2,cy);
+  g.font='400 72px Cinzel, Georgia, serif';g.fillStyle='#e6d5a8';
+  g.fillText(name||'ჩემი ცა',CX,cy);
   try{g.letterSpacing='6px';}catch(e){}
-  cy+=74;
-  g.font='400 36px Cinzel, Georgia, serif';g.fillStyle='rgba(200,190,165,.75)';
-  g.fillText(`${dt} · ${tm}   ·   ${la}  ${lo}`,W/2,cy);
-  // divider + branding
-  cy+=76;
+  cy+=84;
+  g.font='400 38px Cinzel, Georgia, serif';g.fillStyle='rgba(200,190,165,.75)';
+  g.fillText(`${dt} · ${tm}`,CX,cy);
+  cy+=58;
+  g.font='32px Georgia, serif';g.fillStyle='rgba(155,168,184,.6)';
+  g.fillText(`${la}   ${lo}`,CX,cy);
+  cy+=84;
   g.strokeStyle='rgba(212,178,106,.35)';g.lineWidth=1.5;
-  g.beginPath();g.moveTo(W/2-240,cy);g.lineTo(W/2-24,cy);g.stroke();
-  g.beginPath();g.moveTo(W/2+24,cy);g.lineTo(W/2+240,cy);g.stroke();
-  g.save();g.translate(W/2,cy);g.rotate(Math.PI/4);
-  g.fillStyle='rgba(212,178,106,.6)';g.fillRect(-5,-5,10,10);g.restore();
-  cy+=62;
+  g.beginPath();g.moveTo(CX-250,cy);g.lineTo(CX-25,cy);g.stroke();
+  g.beginPath();g.moveTo(CX+25,cy);g.lineTo(CX+250,cy);g.stroke();
+  g.save();g.translate(CX,cy);g.rotate(Math.PI/4);
+  g.fillStyle='rgba(212,178,106,.6)';g.fillRect(-5.5,-5.5,11,11);g.restore();
+  cy+=70;
   try{g.letterSpacing='12px';}catch(e){}
-  g.font='300 26px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
-  g.fillText('M A G N U S',W/2,cy);
+  g.font='300 28px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
+  g.fillText('M A G N U S',CX,cy);
   try{g.letterSpacing='0px';}catch(e){}
-  // ---- download ----
   cv.toBlob(b=>{
     const a=document.createElement('a');
     a.href=URL.createObjectURL(b);
