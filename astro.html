@@ -1,9 +1,9 @@
-<!DOCTYPE html> 
-<html lang="ka"> 
+<!DOCTYPE html>
+<html lang="ka">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ასტროლოგია</title> 
+<title>ასტროლოგია</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400&family=Cinzel:wght@300;400;600&family=IM+Fell+English:ital@0;1&family=Noto+Sans+Georgian:wght@300;400&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2202,77 +2202,73 @@ async function drawSkyPoster(){
   if(!window._skyData)return;
   const bodies=window._skyData.bodies;
   try{await document.fonts.load('400 60px Cinzel');await document.fonts.load('700 60px Cinzel');}catch(e){}
-  const W=1800,H=2400;
+  const W=2400,H=1560;                        // landscape print rectangle
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const g=cv.getContext('2d');
   const D2R=Math.PI/180;
-  // ---- background: near-black navy, faint radial breath ----
-  g.fillStyle='#070b18';g.fillRect(0,0,W,H);
-  const CX=W/2,CY=W/2+60;                    // disc in upper square
-  const bg=g.createRadialGradient(CX,CY,0,CX,CY,W*0.62);
-  bg.addColorStop(0,'rgba(20,30,64,.5)');bg.addColorStop(1,'rgba(7,11,24,0)');
-  g.fillStyle=bg;g.fillRect(0,0,W,H);
-  // ---- projection (same annular, cleaner) ----
-  const LATMAX=42;
-  const RMAX=W*0.415;
-  const R0=RMAX/(1+LATMAX*D2R);
-  const XY=(lon,lat)=>{const r=R0*(1-lat*D2R);const a=(-lon+90)*D2R;
-    return [CX+r*Math.sin(a),CY-r*Math.cos(a)];};
-  if(!window._skyEC2){
+  // ---- ecliptic-coordinate star set for the band (built once) ----
+  if(!window._skyECP){
     const EPS=23.4367*D2R;
     const eq2ec=(raD,deD)=>{const ra=raD*D2R,de=deD*D2R;
       const lat=Math.asin(Math.sin(de)*Math.cos(EPS)-Math.cos(de)*Math.sin(EPS)*Math.sin(ra));
       const lon=Math.atan2(Math.sin(ra)*Math.cos(EPS)+Math.tan(de)*Math.sin(EPS),Math.cos(ra));
       return [((lon/D2R)+360)%360,lat/D2R];};
-    window._skyEC2={
-      stars:SKY_STARS.map(([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];}).filter(s=>Math.abs(s[1])<=LATMAX),
-      lines:SKY_LINES.map(seg=>seg.map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LATMAX+3)).filter(s=>s.length>=2),
-      labels:[]};
+    const LB=55;
+    window._skyECP={
+      stars:SKY_STARS.map(([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];}).filter(s=>Math.abs(s[1])<=LB),
+      lines:SKY_LINES.map(seg=>seg.map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LB+3)).filter(s=>s.length>=2)};
   }
-  const EC=window._skyEC2;                   // converted & cropped
+  const EC=window._skyECP;
+  // ---- background ----
+  g.fillStyle='#070b18';g.fillRect(0,0,W,H);
+  // ---- rectangular sky panel ----
+  const PX=90,PY=80,PW=W-180;
+  const LATB=55, PH=Math.round(PW*(2*LATB)/360);   // undistorted at ecliptic
+  const X=lon=>PX+PW*(1-(lon%360)/360);
+  const Y=lat=>PY+PH*(LATB-lat)/(2*LATB);
   g.save();
-  g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.clip();
-  // hairline constellation lines
-  g.strokeStyle='rgba(210,220,255,.12)';g.lineWidth=1.4;g.lineCap='round';
+  g.beginPath();g.rect(PX,PY,PW,PH);g.clip();
+  const bgp=g.createLinearGradient(0,PY,0,PY+PH);
+  bgp.addColorStop(0,'#0a1130');bgp.addColorStop(.5,'#0e1840');bgp.addColorStop(1,'#0a1130');
+  g.fillStyle=bgp;g.fillRect(PX,PY,PW,PH);
+  // hairline constellation lines (split at wrap)
+  g.strokeStyle='rgba(210,220,255,.13)';g.lineWidth=1.4;g.lineCap='round';
   for(const seg of EC.lines){
-    g.beginPath();
-    seg.forEach(([l,b],i)=>{const[x,y]=XY(l,b);i?g.lineTo(x,y):g.moveTo(x,y);});
+    g.beginPath();let pv=null;
+    for(const [l,b] of seg){
+      const x=X(l),y=Y(b);
+      if(pv!==null&&Math.abs(pv-x)>PW/2){g.stroke();g.beginPath();g.moveTo(x,y);}
+      else if(pv===null)g.moveTo(x,y);else g.lineTo(x,y);
+      pv=x;
+    }
     g.stroke();
   }
-  // stars — tiny, pure white
+  // stars
   for(const [l,b,m] of EC.stars){
     if(m>4.9)continue;
-    const[x,y]=XY(l,b);
+    const x=X(l),y=Y(b);
     g.fillStyle=m<2?'rgba(255,255,255,.95)':'rgba(235,240,255,.6)';
-    g.beginPath();g.arc(x,y,Math.max(1.1,(5.1-m)*1.15),0,6.2832);g.fill();
+    g.beginPath();g.arc(x,y,Math.max(1.0,(5.1-m)*1.1),0,6.2832);g.fill();
   }
-  g.restore();
-  // ecliptic — hairline gold dashed
-  g.strokeStyle='rgba(212,178,106,.55)';g.lineWidth=1.6;g.setLineDash([10,9]);
-  g.beginPath();g.arc(CX,CY,R0,0,6.2832);g.stroke();g.setLineDash([]);
-  // zodiac glyphs — whisper-subtle on the ring inner side
-  g.font='34px serif';g.fillStyle='rgba(212,178,106,.4)';g.textAlign='center';
-  const GLYPH=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
-  for(let s=0;s<12;s++){
-    const[gx,gy]=XY(s*30+15,LATMAX-6);
-    g.fillText(GLYPH[s],gx,gy+12);
-  }
-  // outer ring — single hairline
-  g.strokeStyle='rgba(212,178,106,.5)';g.lineWidth=2;
-  g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.stroke();
-  // planets — ivory-gold dots with small caps labels, leader dot
+  // planets — colorful
+  const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
+    jupiter:'#f0b070',saturn:'#d8c890',uranus:'#80d0e0',neptune:'#6090f0',pluto:'#c07090',chiron:'#90e0b0'};
   g.textAlign='center';
   for(const bd of bodies){
-    const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+2,Math.min(LATMAX-2,bd.ecl_lat)));
-    const r=bd.key==='sun'?11:(bd.key==='moon'?9:6.5);
-    g.fillStyle=bd.key==='sun'?'#e8c987':'#f2ede0';
-    g.shadowColor='rgba(240,215,150,.8)';g.shadowBlur=16;
-    g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();
+    const x=X(bd.ecl_lon),y=Y(Math.max(-LATB+4,Math.min(LATB-4,bd.ecl_lat)));
+    const c=PCOL[bd.key]||'#fff';
+    const r=bd.key==='sun'?12:(bd.key==='moon'?10:7);
+    g.shadowColor=c;g.shadowBlur=22;
+    g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();
     g.shadowBlur=0;
-    g.font='26px Cinzel, Georgia, serif';
-    g.fillStyle='rgba(240,228,200,.9)';
-    g.fillText(bd.name_ka,x,y-r-12);
+    g.font='27px Cinzel, Georgia, serif';
+    g.fillStyle=c;
+    g.fillText(bd.name_ka,x,y-r-14);
   }
+  g.restore();
+  // hairline frame around the panel
+  g.strokeStyle='rgba(212,178,106,.5)';g.lineWidth=2;
+  g.strokeRect(PX,PY,PW,PH);
   // ---- caption block ----
   const req=window._cindReq||{};
   const name=(req.name||'').trim();
@@ -2280,29 +2276,26 @@ async function drawSkyPoster(){
   const tm=`${String(req.hour??12).padStart(2,'0')}:${String(req.minute??0).padStart(2,'0')}`;
   const la=req.lat!=null?Math.abs(req.lat).toFixed(4)+'°'+(req.lat>=0?' N':' S'):'';
   const lo=req.lon!=null?Math.abs(req.lon).toFixed(4)+'°'+(req.lon>=0?' E':' W'):'';
-  let cy=CY+RMAX+150;
+  let cy=PY+PH+130;
   g.textAlign='center';
   try{g.letterSpacing='14px';}catch(e){}
-  g.font='400 74px Cinzel, Georgia, serif';g.fillStyle='#e6d5a8';
-  g.fillText(name||'ჩემი ცა',CX,cy);
+  g.font='400 66px Cinzel, Georgia, serif';g.fillStyle='#e6d5a8';
+  g.fillText(name||'ჩემი ცა',W/2,cy);
   try{g.letterSpacing='6px';}catch(e){}
-  cy+=86;
-  g.font='400 40px Cinzel, Georgia, serif';g.fillStyle='rgba(200,190,165,.75)';
-  g.fillText(`${dt} · ${tm}`,CX,cy);
-  cy+=62;
-  g.font='34px Georgia, serif';g.fillStyle='rgba(155,168,184,.6)';
-  g.fillText(`${la}   ${lo}`,CX,cy);
-  // divider with diamond
-  cy+=88;
-  g.strokeStyle='rgba(212,178,106,.35)';g.lineWidth=1.5;
-  g.beginPath();g.moveTo(CX-260,cy);g.lineTo(CX-26,cy);g.stroke();
-  g.beginPath();g.moveTo(CX+26,cy);g.lineTo(CX+260,cy);g.stroke();
-  g.save();g.translate(CX,cy);g.rotate(Math.PI/4);
-  g.fillStyle='rgba(212,178,106,.6)';g.fillRect(-6,-6,12,12);g.restore();
+  cy+=74;
+  g.font='400 36px Cinzel, Georgia, serif';g.fillStyle='rgba(200,190,165,.75)';
+  g.fillText(`${dt} · ${tm}   ·   ${la}  ${lo}`,W/2,cy);
+  // divider + branding
   cy+=76;
+  g.strokeStyle='rgba(212,178,106,.35)';g.lineWidth=1.5;
+  g.beginPath();g.moveTo(W/2-240,cy);g.lineTo(W/2-24,cy);g.stroke();
+  g.beginPath();g.moveTo(W/2+24,cy);g.lineTo(W/2+240,cy);g.stroke();
+  g.save();g.translate(W/2,cy);g.rotate(Math.PI/4);
+  g.fillStyle='rgba(212,178,106,.6)';g.fillRect(-5,-5,10,10);g.restore();
+  cy+=62;
   try{g.letterSpacing='12px';}catch(e){}
-  g.font='300 30px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
-  g.fillText('M A G N U S',CX,cy);
+  g.font='300 26px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
+  g.fillText('M A G N U S',W/2,cy);
   try{g.letterSpacing='0px';}catch(e){}
   // ---- download ----
   cv.toBlob(b=>{
