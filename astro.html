@@ -2113,20 +2113,50 @@ async function drawSkyPoster(){
     g.fillStyle=m<2?'rgba(255,255,255,.95)':'rgba(235,240,255,.6)';
     g.beginPath();g.arc(x,y,Math.max(1.0,(5.1-m)*1.1),0,6.2832);g.fill();
   }
-  // planets — colorful, text names
+  // planets — colorful dots + astro glyphs with collision avoidance
   const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
     jupiter:'#f0b070',saturn:'#d8c890',uranus:'#80d0e0',neptune:'#6090f0',pluto:'#c07090',chiron:'#90e0b0'};
-  g.textAlign='center';
-  for(const bd of bodies){
+  const PGLYPH={sun:'☉',moon:'☽',mercury:'☿',venus:'♀',mars:'♂',jupiter:'♃',saturn:'♄',
+    uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷'};
+  const pts=bodies.map(bd=>{
     const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+4,Math.min(LATMAX-4,bd.ecl_lat)));
-    const c=PCOL[bd.key]||'#fff';
-    const r=bd.key==='sun'?11:(bd.key==='moon'?9.5:6.5);
-    g.shadowColor=c;g.shadowBlur=20;
-    g.fillStyle=c;g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();
+    return {bd,x,y,gx:x,gy:y-(bd.key==='sun'?11:(bd.key==='moon'?9.5:6.5))-26,
+            c:PCOL[bd.key]||'#fff',r:bd.key==='sun'?11:(bd.key==='moon'?9.5:6.5)};
+  });
+  // glyph collision resolution: iterative repulsion
+  const MIN=46;
+  for(let it=0;it<60;it++){
+    let moved=false;
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const a=pts[i],b=pts[j];
+      let dx=b.gx-a.gx,dy=b.gy-a.gy;
+      let d=Math.hypot(dx,dy);
+      if(d<MIN){
+        if(d<0.01){dx=1;dy=0;d=1;}
+        const push=(MIN-d)/2/d;
+        a.gx-=dx*push;a.gy-=dy*push;
+        b.gx+=dx*push;b.gy+=dy*push;
+        moved=true;
+      }
+    }
+    if(!moved)break;
+  }
+  g.textAlign='center';
+  for(const p of pts){
+    // leader line if glyph displaced far from its dot
+    const disp=Math.hypot(p.gx-p.x,p.gy-p.y);
+    if(disp>44){
+      g.strokeStyle='rgba(220,220,235,.3)';g.lineWidth=1.2;
+      g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.gx,p.gy+12);g.stroke();
+    }
+    g.shadowColor=p.c;g.shadowBlur=20;
+    g.fillStyle=p.c;g.beginPath();g.arc(p.x,p.y,p.r,0,6.2832);g.fill();
     g.shadowBlur=0;
-    g.font='26px Cinzel, Georgia, serif';
-    g.fillStyle=c;
-    g.fillText(bd.name_ka,x,y-r-12);
+    g.font='36px serif';
+    g.fillStyle=p.c;
+    g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=6;
+    g.fillText(PGLYPH[p.bd.key]||'•',p.gx,p.gy+12);
+    g.shadowBlur=0;
   }
   g.restore();
   // disc rim
