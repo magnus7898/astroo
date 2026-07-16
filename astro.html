@@ -2094,11 +2094,9 @@ async function drawSkyPoster(){
   const R0=RMAX/(1+LATMAX*D2R);
   const XY=(lon,lat)=>{const r=R0*(1-lat*D2R);const a=(-lon+90)*D2R;
     return [CX+r*Math.sin(a),CY-r*Math.cos(a)];};
-  const bg=g.createRadialGradient(CX,CY,0,CX,CY,RMAX);
-  bg.addColorStop(0,'rgba(16,25,58,.9)');bg.addColorStop(1,'rgba(8,12,30,.9)');
   g.save();
   g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.clip();
-  g.fillStyle=bg;g.fillRect(CX-RMAX,CY-RMAX,2*RMAX,2*RMAX);
+  g.fillStyle='#0a0f24';g.fillRect(CX-RMAX,CY-RMAX,2*RMAX,2*RMAX);
   // constellation figures — ecliptic band only, fully drawn
   g.strokeStyle='rgba(210,220,255,.17)';g.lineWidth=1.6;g.lineCap='round';
   for(const seg of EC.lines){
@@ -2120,11 +2118,11 @@ async function drawSkyPoster(){
     uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷'};
   const pts=bodies.map(bd=>{
     const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+4,Math.min(LATMAX-4,bd.ecl_lat)));
-    return {bd,x,y,gx:x,gy:y-(bd.key==='sun'?11:(bd.key==='moon'?9.5:6.5))-26,
-            c:PCOL[bd.key]||'#fff',r:bd.key==='sun'?11:(bd.key==='moon'?9.5:6.5)};
+    return {bd,x,y,gx:x,gy:y-(bd.key==='sun'?6:(bd.key==='moon'?5:4))-17,
+            c:PCOL[bd.key]||'#fff',r:bd.key==='sun'?6:(bd.key==='moon'?5:4)};
   });
   // glyph collision resolution: iterative repulsion
-  const MIN=46;
+  const MIN=30;
   for(let it=0;it<60;it++){
     let moved=false;
     for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
@@ -2145,18 +2143,14 @@ async function drawSkyPoster(){
   for(const p of pts){
     // leader line if glyph displaced far from its dot
     const disp=Math.hypot(p.gx-p.x,p.gy-p.y);
-    if(disp>44){
-      g.strokeStyle='rgba(220,220,235,.3)';g.lineWidth=1.2;
-      g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.gx,p.gy+12);g.stroke();
+    if(disp>30){
+      g.strokeStyle='rgba(220,220,235,.25)';g.lineWidth=1;
+      g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.gx,p.gy+8);g.stroke();
     }
-    g.shadowColor=p.c;g.shadowBlur=20;
     g.fillStyle=p.c;g.beginPath();g.arc(p.x,p.y,p.r,0,6.2832);g.fill();
-    g.shadowBlur=0;
-    g.font='36px serif';
+    g.font='24px serif';
     g.fillStyle=p.c;
-    g.shadowColor='rgba(0,0,0,.9)';g.shadowBlur=6;
-    g.fillText(PGLYPH[p.bd.key]||'•',p.gx,p.gy+12);
-    g.shadowBlur=0;
+    g.fillText(PGLYPH[p.bd.key]||'•',p.gx,p.gy+8);
   }
   g.restore();
   // disc rim
