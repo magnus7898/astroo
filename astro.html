@@ -687,9 +687,9 @@ tr:hover td{background:rgba(19,16,58,.6)}
   </div>
 
   <div class="data-card" id="skychart-card" style="display:none;margin-top:14px">
-    <div class="data-card-title">🌌 ცის რუკა</div>
+    <div class="data-card-title">🖼 ცის პოსტერი</div>
     <div id="skychart-body" style="padding:12px 14px">
-      <button id="skc-btn" onclick="runSkyChart()" style="background:linear-gradient(90deg,#0a2a4a,#2a6a9a);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ ცის დახატვა — პლანეტები თანავარსკვლავედებში</button>
+      <button id="skc-btn" onclick="runSkyPoster()" style="background:linear-gradient(90deg,#0a2a4a,#2a6a9a);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">🖼 პოსტერის შექმნა — შენი მომენტის ცა</button>
     </div>
   </div>
 
@@ -2032,16 +2032,16 @@ async function runSkymap(){
   }
 }
 
-/* ===== Sky chart drawing ===== */
+/* ===== Sky poster (on-screen preview + download) ===== */
 function setupSkyChartCard(){
   const c=document.getElementById('skychart-card');if(!c)return;
   if(window._cindReq&&typeof SKY_STARS!=='undefined'){
     c.style.display='block';
     document.getElementById('skychart-body').innerHTML=`
-      <button id="skc-btn" onclick="runSkyChart()" style="background:linear-gradient(90deg,#0a2a4a,#2a6a9a);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ ცის დახატვა — პლანეტები თანავარსკვლავედებში</button>`;
+      <button id="skc-btn" onclick="runSkyPoster()" style="background:linear-gradient(90deg,#0a2a4a,#2a6a9a);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">🖼 პოსტერის შექმნა — შენი მომენტის ცა</button>`;
   }else c.style.display='none';
 }
-async function runSkyChart(){
+async function runSkyPoster(){
   const body=document.getElementById('skychart-body');
   const btn=document.getElementById('skc-btn');
   if(!window._cindReq||!btn)return;
@@ -2053,147 +2053,9 @@ async function runSkyChart(){
       if(!res.ok)throw new Error('server');
       window._skyData=await res.json();
     }
-    body.innerHTML=`<canvas id="sky-canvas" style="width:100%;border-radius:10px;border:1px solid rgba(58,138,192,.3)"></canvas>
-      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ეკლიპტიკური წრე = ოქროსფერი · მასშტაბი: ბორბალი/ორი თითი · გადაადგილება: გადათრევა · ორმაგი დაწკაპუნება = საწყისი ხედი</div>
-      <button onclick="drawSkyPoster()" style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:8px;padding:8px 16px;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:1px;margin-top:10px">🖼 პოსტერი ბეჭდვისთვის (PNG)</button>`;
-    drawSkyChart(window._skyData.bodies);
+    await drawSkyPoster();
   }catch(e){
     body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა ('+e.message+')</div>';
-  }
-}
-function drawSkyChart(bodies){
-  const cv=document.getElementById('sky-canvas');if(!cv)return;
-  const W=cv.parentElement.clientWidth||700,H=Math.round(W*1.0);
-  const dpr=window.devicePixelRatio||1;
-  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';
-  const g=cv.getContext('2d');
-  const EPS=23.4367*Math.PI/180,D2R=Math.PI/180;
-  function eq2ec(raD,deD){
-    const ra=raD*D2R,de=deD*D2R;
-    const lat=Math.asin(Math.sin(de)*Math.cos(EPS)-Math.cos(de)*Math.sin(EPS)*Math.sin(ra));
-    const lon=Math.atan2(Math.sin(ra)*Math.cos(EPS)+Math.tan(de)*Math.sin(EPS),Math.cos(ra));
-    return [((lon/D2R)+360)%360,lat/D2R];
-  }
-  // annular projection: locally conformal at the ecliptic (1° lat = 1° lon arc)
-  const LATMAX=42;
-  const RMAX=Math.min(W,H)/2*0.97;
-  const R0=RMAX/(1+LATMAX*D2R);            // ecliptic radius
-  const RIN=R0*(1-LATMAX*D2R);
-  const CX=W/2,CY=H/2;
-  function XY(lon,lat){
-    const r=R0*(1-lat*D2R);
-    const a=(-lon+90)*D2R;                  // 0° Aries at top, CCW
-    return [CX+r*Math.sin(a),CY-r*Math.cos(a)];
-  }
-  if(!window._skyEC2){
-    const cvt=([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];};
-    window._skyEC2={
-      stars:SKY_STARS.map(cvt).filter(s=>Math.abs(s[1])<=LATMAX),
-      lines:SKY_LINES.map(e=>e[1].map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LATMAX+3)).filter(s=>s.length>=2),
-      labels:SKY_LABELS.map(([ra,de,nm])=>{const[l,b]=eq2ec(ra,de);return[l,b,nm];}).filter(s=>Math.abs(s[1])<=LATMAX-3)
-    };
-  }
-  const EC=window._skyEC2;
-  const view=window._skyView=window._skyView||{k:1,tx:0,ty:0};
-  const GLYPH=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
-  const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
-    jupiter:'#f0b070',saturn:'#d8c890',uranus:'#80d0e0',neptune:'#6090f0',pluto:'#c07090',chiron:'#90e0b0'};
-
-  function render(){
-    const k=view.k;
-    g.setTransform(dpr,0,0,dpr,0,0);
-    g.fillStyle='#04060f';g.fillRect(0,0,W,H);
-    g.save();
-    g.translate(view.tx,view.ty);g.scale(k,k);
-    // round sky disc, clipped
-    g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.clip();
-    const bg=g.createRadialGradient(CX,CY,RIN*.2,CX,CY,RMAX);
-    bg.addColorStop(0,'#0a1130');bg.addColorStop(.55,'#0d1740');bg.addColorStop(.85,'#0a1234');bg.addColorStop(1,'#060a20');
-    g.fillStyle=bg;g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.fill();
-    // constellation lines
-    g.strokeStyle='rgba(125,150,235,.34)';g.lineWidth=.85/k;g.lineCap='round';
-    for(const seg of EC.lines){
-      g.beginPath();
-      seg.forEach(([l,b],i)=>{const[x,y]=XY(l,b);i?g.lineTo(x,y):g.moveTo(x,y);});
-      g.stroke();
-    }
-    // stars with glow for bright ones
-    for(const [l,b,m] of EC.stars){
-      const[x,y]=XY(l,b);
-      const r=Math.max(.32,(5.3-m)*.52)/Math.sqrt(k);
-      if(m<1.7){g.shadowColor='rgba(200,215,255,.9)';g.shadowBlur=7/k;}
-      g.fillStyle=m<2?'rgba(255,255,255,.97)':(m<3.4?'rgba(222,230,255,.78)':'rgba(200,212,245,.5)');
-      g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();
-      g.shadowBlur=0;
-    }
-    // constellation labels
-    g.font=`italic ${9.5/k}px Georgia,serif`;g.fillStyle='rgba(155,180,240,.6)';g.textAlign='center';
-    for(const [l,b,nm] of EC.labels){const[x,y]=XY(l,b);g.fillText(nm,x,y);}
-    // ecliptic ring
-    g.strokeStyle='rgba(240,201,107,.8)';g.lineWidth=1.4/k;g.setLineDash([7/k,5/k]);
-    g.beginPath();g.arc(CX,CY,R0,0,6.2832);g.stroke();g.setLineDash([]);
-    // sign glyph band just inside the inner edge
-    g.strokeStyle='rgba(240,201,107,.12)';g.lineWidth=.7/k;
-    for(let s=0;s<12;s++){
-      const[x1,y1]=XY(s*30,LATMAX-1),[x2,y2]=XY(s*30,-LATMAX+1);
-      g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();
-    }
-    g.font=`${13/k}px serif`;g.fillStyle='rgba(240,201,107,.72)';
-    for(let s=0;s<12;s++){
-      const[gx,gy]=XY(s*30+15,LATMAX-6);
-      g.fillText(GLYPH[s],gx,gy+4/k);
-    }
-    // outer rim
-    g.strokeStyle='rgba(240,201,107,.4)';g.lineWidth=1.6/k;
-    g.beginPath();g.arc(CX,CY,RMAX-1/k,0,6.2832);g.stroke();
-    // planets
-    g.textAlign='center';
-    for(const bd of bodies){
-      const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+2,Math.min(LATMAX-2,bd.ecl_lat)));
-      const c=PCOL[bd.key]||'#fff';
-      g.shadowColor=c;g.shadowBlur=10/k;
-      g.fillStyle=c;g.beginPath();
-      g.arc(x,y,(bd.key==='sun'?5.2:(bd.key==='moon'?4.6:3.5))/Math.sqrt(k),0,6.2832);g.fill();
-      g.shadowBlur=0;
-      g.font=`bold ${10.5/k}px sans-serif`;
-      g.strokeStyle='rgba(0,0,0,.7)';g.lineWidth=2.6/k;
-      g.strokeText(bd.name_ka+(bd.retrograde?' ℞':''),x,y-10/k);
-      g.fillText(bd.name_ka+(bd.retrograde?' ℞':''),x,y-10/k);
-    }
-    g.restore();
-  }
-  render();
-  if(!cv._skyEvents){
-    cv._skyEvents=true;
-    const toLocal=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
-    function zoomAt(mx,my,f){
-      const nk=Math.min(9,Math.max(1,view.k*f));          // min zoom = 1
-      const rf=nk/view.k;
-      view.tx=mx-(mx-view.tx)*rf;view.ty=my-(my-view.ty)*rf;view.k=nk;
-      if(view.k===1){view.tx=0;view.ty=0;}
-      requestAnimationFrame(render);
-    }
-    cv.addEventListener('wheel',e=>{e.preventDefault();const[mx,my]=toLocal(e);zoomAt(mx,my,e.deltaY<0?1.15:1/1.15);},{passive:false});
-    let drag=null,pinch=null;
-    cv.addEventListener('pointerdown',e=>{drag=[e.clientX-view.tx,e.clientY-view.ty];cv.setPointerCapture(e.pointerId);});
-    cv.addEventListener('pointermove',e=>{if(drag&&!pinch&&view.k>1){view.tx=e.clientX-drag[0];view.ty=e.clientY-drag[1];requestAnimationFrame(render);}});
-    cv.addEventListener('pointerup',()=>{drag=null;});
-    cv.addEventListener('touchstart',e=>{if(e.touches.length===2){
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      pinch={d,k:view.k};}},{passive:true});
-    cv.addEventListener('touchmove',e=>{if(pinch&&e.touches.length===2){
-      e.preventDefault();
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      const r=cv.getBoundingClientRect();
-      const mx=(e.touches[0].clientX+e.touches[1].clientX)/2-r.left;
-      const my=(e.touches[0].clientY+e.touches[1].clientY)/2-r.top;
-      const nk=Math.min(9,Math.max(1,pinch.k*d/pinch.d));
-      const rf=nk/view.k;
-      view.tx=mx-(mx-view.tx)*rf;view.ty=my-(my-view.ty)*rf;view.k=nk;
-      if(view.k===1){view.tx=0;view.ty=0;}
-      requestAnimationFrame(render);}},{passive:false});
-    cv.addEventListener('touchend',()=>{pinch=null;});
-    cv.addEventListener('dblclick',()=>{view.k=1;view.tx=0;view.ty=0;requestAnimationFrame(render);});
   }
 }
 
@@ -2300,13 +2162,17 @@ async function drawSkyPoster(){
   g.font='300 28px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
   g.fillText('M A G N U S',CX,cy);
   try{g.letterSpacing='0px';}catch(e){}
-  cv.toBlob(b=>{
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(b);
-    a.download=`sky-${req.year||''}${String(req.month||'').padStart(2,'0')}${String(req.day||'').padStart(2,'0')}.png`;
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  },'image/png');
+  // ---- on-screen preview + download ----
+  const url=cv.toDataURL('image/png');
+  const fname=`sky-${req.year||''}${String(req.month||'').padStart(2,'0')}${String(req.day||'').padStart(2,'0')}.png`;
+  const body=document.getElementById('skychart-body');
+  if(body){
+    body.innerHTML=`
+      <img src="${url}" style="width:100%;max-width:520px;display:block;margin:0 auto;border-radius:8px;box-shadow:0 8px 34px rgba(0,0,0,.6)" alt="sky poster">
+      <div style="text-align:center;margin-top:12px">
+        <a href="${url}" download="${fname}" style="display:inline-block;background:linear-gradient(90deg,#8a6a20,#c9a84c);color:#0a0810;text-decoration:none;padding:9px 22px;border-radius:8px;font-size:12px;letter-spacing:1px;font-weight:600">⬇ გადმოწერა PNG (ბეჭდვისთვის)</a>
+      </div>`;
+  }
 }
 
 /* ===== Hard/negative transit periods ===== */
