@@ -2104,12 +2104,28 @@ async function drawSkyPoster(){
     seg.forEach(([l,b],i)=>{const[x,y]=XY(l,b);i?g.lineTo(x,y):g.moveTo(x,y);});
     g.stroke();
   }
-  // stars
+  // stars — sparkle ✦ shape for bright, dots for faint
+  function sparkle(x,y,r){
+    const ri=r*0.32;
+    g.beginPath();
+    for(let i=0;i<8;i++){
+      const ang=i*Math.PI/4-Math.PI/2;
+      const rr=i%2===0?r:ri;
+      const px=x+rr*Math.cos(ang),py=y+rr*Math.sin(ang);
+      i?g.lineTo(px,py):g.moveTo(px,py);
+    }
+    g.closePath();g.fill();
+  }
   for(const [l,b,m] of EC.stars){
     if(m>4.9)continue;
     const[x,y]=XY(l,b);
-    g.fillStyle=m<2?'rgba(255,255,255,.95)':'rgba(235,240,255,.6)';
-    g.beginPath();g.arc(x,y,Math.max(1.0,(5.1-m)*1.1),0,6.2832);g.fill();
+    if(m<2.6){
+      g.fillStyle='rgba(255,255,255,.95)';
+      sparkle(x,y,(3.4-m)*3.2+3);
+    }else{
+      g.fillStyle='rgba(235,240,255,.6)';
+      g.beginPath();g.arc(x,y,Math.max(1.0,(5.1-m)*1.1),0,6.2832);g.fill();
+    }
   }
   // planets — colorful dots + astro glyphs with collision avoidance
   const PCOL={sun:'#ffb340',moon:'#e8e8f0',mercury:'#b0a0e0',venus:'#f0e0a0',mars:'#f07050',
@@ -2118,11 +2134,11 @@ async function drawSkyPoster(){
     uranus:'♅',neptune:'♆',pluto:'♇',chiron:'⚷'};
   const pts=bodies.map(bd=>{
     const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+4,Math.min(LATMAX-4,bd.ecl_lat)));
-    return {bd,x,y,gx:x,gy:y-(bd.key==='sun'?6:(bd.key==='moon'?5:4))-17,
-            c:PCOL[bd.key]||'#fff',r:bd.key==='sun'?6:(bd.key==='moon'?5:4)};
+    const r=bd.key==='sun'?15:(bd.key==='moon'?12:9);
+    return {bd,x,y,gx:x,gy:y-r-13,c:PCOL[bd.key]||'#fff',r};
   });
   // glyph collision resolution: iterative repulsion
-  const MIN=30;
+  const MIN=22;
   for(let it=0;it<60;it++){
     let moved=false;
     for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
@@ -2143,14 +2159,31 @@ async function drawSkyPoster(){
   for(const p of pts){
     // leader line if glyph displaced far from its dot
     const disp=Math.hypot(p.gx-p.x,p.gy-p.y);
-    if(disp>30){
+    if(disp>34){
       g.strokeStyle='rgba(220,220,235,.25)';g.lineWidth=1;
-      g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.gx,p.gy+8);g.stroke();
+      g.beginPath();g.moveTo(p.x,p.y);g.lineTo(p.gx,p.gy+6);g.stroke();
     }
-    g.fillStyle=p.c;g.beginPath();g.arc(p.x,p.y,p.r,0,6.2832);g.fill();
-    g.font='24px serif';
+    // 3D sphere shading: light from upper-left
+    const mix=(hex,t,to)=>{               // t 0..1 toward `to` (255=white,0=black)
+      const n=parseInt(hex.slice(1),16);
+      const ch=s=>Math.round(((n>>s)&255)*(1-t)+to*t);
+      return `rgb(${ch(16)},${ch(8)},${ch(0)})`;};
+    const sp=g.createRadialGradient(p.x-p.r*0.38,p.y-p.r*0.38,p.r*0.12,p.x,p.y,p.r);
+    if(p.bd.key==='sun'){
+      sp.addColorStop(0,'#fff3c8');sp.addColorStop(.5,p.c);sp.addColorStop(1,mix(p.c,.35,0));
+    }else{
+      sp.addColorStop(0,mix(p.c,.55,255));sp.addColorStop(.55,p.c);sp.addColorStop(1,mix(p.c,.55,0));
+    }
+    g.fillStyle=sp;g.beginPath();g.arc(p.x,p.y,p.r,0,6.2832);g.fill();
+    if(p.bd.key==='saturn'){               // ring
+      g.save();g.translate(p.x,p.y);g.rotate(-0.35);
+      g.strokeStyle='rgba(216,200,144,.75)';g.lineWidth=1.8;
+      g.beginPath();g.ellipse(0,0,p.r*1.75,p.r*0.55,0,0,6.2832);g.stroke();
+      g.restore();
+    }
+    g.font='15px serif';
     g.fillStyle=p.c;
-    g.fillText(PGLYPH[p.bd.key]||'•',p.gx,p.gy+8);
+    g.fillText(PGLYPH[p.bd.key]||'•',p.gx,p.gy+6);
   }
   g.restore();
   // disc rim
