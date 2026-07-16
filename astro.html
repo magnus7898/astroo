@@ -2054,7 +2054,8 @@ async function runSkyChart(){
       window._skyData=await res.json();
     }
     body.innerHTML=`<canvas id="sky-canvas" style="width:100%;border-radius:10px;border:1px solid rgba(58,138,192,.3)"></canvas>
-      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ეკლიპტიკური წრე = ოქროსფერი · მასშტაბი: ბორბალი/ორი თითი · გადაადგილება: გადათრევა · ორმაგი დაწკაპუნება = საწყისი ხედი</div>`;
+      <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:6px;letter-spacing:1px">ეკლიპტიკური წრე = ოქროსფერი · მასშტაბი: ბორბალი/ორი თითი · გადაადგილება: გადათრევა · ორმაგი დაწკაპუნება = საწყისი ხედი</div>
+      <button onclick="drawSkyPoster()" style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:8px;padding:8px 16px;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:1px;margin-top:10px">🖼 პოსტერი ბეჭდვისთვის (PNG)</button>`;
     drawSkyChart(window._skyData.bodies);
   }catch(e){
     body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა ('+e.message+')</div>';
@@ -2194,6 +2195,123 @@ function drawSkyChart(bodies){
     cv.addEventListener('touchend',()=>{pinch=null;});
     cv.addEventListener('dblclick',()=>{view.k=1;view.tx=0;view.ty=0;requestAnimationFrame(render);});
   }
+}
+
+/* ===== Minimal printable sky poster ===== */
+async function drawSkyPoster(){
+  if(!window._skyData)return;
+  const bodies=window._skyData.bodies;
+  try{await document.fonts.load('400 60px Cinzel');await document.fonts.load('700 60px Cinzel');}catch(e){}
+  const W=1800,H=2400;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const g=cv.getContext('2d');
+  const D2R=Math.PI/180;
+  // ---- background: near-black navy, faint radial breath ----
+  g.fillStyle='#070b18';g.fillRect(0,0,W,H);
+  const CX=W/2,CY=W/2+60;                    // disc in upper square
+  const bg=g.createRadialGradient(CX,CY,0,CX,CY,W*0.62);
+  bg.addColorStop(0,'rgba(20,30,64,.5)');bg.addColorStop(1,'rgba(7,11,24,0)');
+  g.fillStyle=bg;g.fillRect(0,0,W,H);
+  // ---- projection (same annular, cleaner) ----
+  const LATMAX=42;
+  const RMAX=W*0.415;
+  const R0=RMAX/(1+LATMAX*D2R);
+  const XY=(lon,lat)=>{const r=R0*(1-lat*D2R);const a=(-lon+90)*D2R;
+    return [CX+r*Math.sin(a),CY-r*Math.cos(a)];};
+  if(!window._skyEC2){
+    const EPS=23.4367*D2R;
+    const eq2ec=(raD,deD)=>{const ra=raD*D2R,de=deD*D2R;
+      const lat=Math.asin(Math.sin(de)*Math.cos(EPS)-Math.cos(de)*Math.sin(EPS)*Math.sin(ra));
+      const lon=Math.atan2(Math.sin(ra)*Math.cos(EPS)+Math.tan(de)*Math.sin(EPS),Math.cos(ra));
+      return [((lon/D2R)+360)%360,lat/D2R];};
+    window._skyEC2={
+      stars:SKY_STARS.map(([ra,de,m])=>{const[l,b]=eq2ec(ra,de);return[l,b,m];}).filter(s=>Math.abs(s[1])<=LATMAX),
+      lines:SKY_LINES.map(seg=>seg.map(([ra,de])=>eq2ec(ra,de)).filter(p=>Math.abs(p[1])<=LATMAX+3)).filter(s=>s.length>=2),
+      labels:[]};
+  }
+  const EC=window._skyEC2;                   // converted & cropped
+  g.save();
+  g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.clip();
+  // hairline constellation lines
+  g.strokeStyle='rgba(210,220,255,.12)';g.lineWidth=1.4;g.lineCap='round';
+  for(const seg of EC.lines){
+    g.beginPath();
+    seg.forEach(([l,b],i)=>{const[x,y]=XY(l,b);i?g.lineTo(x,y):g.moveTo(x,y);});
+    g.stroke();
+  }
+  // stars — tiny, pure white
+  for(const [l,b,m] of EC.stars){
+    if(m>4.9)continue;
+    const[x,y]=XY(l,b);
+    g.fillStyle=m<2?'rgba(255,255,255,.95)':'rgba(235,240,255,.6)';
+    g.beginPath();g.arc(x,y,Math.max(1.1,(5.1-m)*1.15),0,6.2832);g.fill();
+  }
+  g.restore();
+  // ecliptic — hairline gold dashed
+  g.strokeStyle='rgba(212,178,106,.55)';g.lineWidth=1.6;g.setLineDash([10,9]);
+  g.beginPath();g.arc(CX,CY,R0,0,6.2832);g.stroke();g.setLineDash([]);
+  // zodiac glyphs — whisper-subtle on the ring inner side
+  g.font='34px serif';g.fillStyle='rgba(212,178,106,.4)';g.textAlign='center';
+  const GLYPH=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+  for(let s=0;s<12;s++){
+    const[gx,gy]=XY(s*30+15,LATMAX-6);
+    g.fillText(GLYPH[s],gx,gy+12);
+  }
+  // outer ring — single hairline
+  g.strokeStyle='rgba(212,178,106,.5)';g.lineWidth=2;
+  g.beginPath();g.arc(CX,CY,RMAX,0,6.2832);g.stroke();
+  // planets — ivory-gold dots with small caps labels, leader dot
+  g.textAlign='center';
+  for(const bd of bodies){
+    const[x,y]=XY(bd.ecl_lon,Math.max(-LATMAX+2,Math.min(LATMAX-2,bd.ecl_lat)));
+    const r=bd.key==='sun'?11:(bd.key==='moon'?9:6.5);
+    g.fillStyle=bd.key==='sun'?'#e8c987':'#f2ede0';
+    g.shadowColor='rgba(240,215,150,.8)';g.shadowBlur=16;
+    g.beginPath();g.arc(x,y,r,0,6.2832);g.fill();
+    g.shadowBlur=0;
+    g.font='26px Cinzel, Georgia, serif';
+    g.fillStyle='rgba(240,228,200,.9)';
+    g.fillText(bd.name_ka,x,y-r-12);
+  }
+  // ---- caption block ----
+  const req=window._cindReq||{};
+  const name=(req.name||'').trim();
+  const dt=`${String(req.day).padStart(2,'0')}.${String(req.month).padStart(2,'0')}.${req.year}`;
+  const tm=`${String(req.hour??12).padStart(2,'0')}:${String(req.minute??0).padStart(2,'0')}`;
+  const la=req.lat!=null?Math.abs(req.lat).toFixed(4)+'°'+(req.lat>=0?' N':' S'):'';
+  const lo=req.lon!=null?Math.abs(req.lon).toFixed(4)+'°'+(req.lon>=0?' E':' W'):'';
+  let cy=CY+RMAX+150;
+  g.textAlign='center';
+  try{g.letterSpacing='14px';}catch(e){}
+  g.font='400 74px Cinzel, Georgia, serif';g.fillStyle='#e6d5a8';
+  g.fillText(name||'ჩემი ცა',CX,cy);
+  try{g.letterSpacing='6px';}catch(e){}
+  cy+=86;
+  g.font='400 40px Cinzel, Georgia, serif';g.fillStyle='rgba(200,190,165,.75)';
+  g.fillText(`${dt} · ${tm}`,CX,cy);
+  cy+=62;
+  g.font='34px Georgia, serif';g.fillStyle='rgba(155,168,184,.6)';
+  g.fillText(`${la}   ${lo}`,CX,cy);
+  // divider with diamond
+  cy+=88;
+  g.strokeStyle='rgba(212,178,106,.35)';g.lineWidth=1.5;
+  g.beginPath();g.moveTo(CX-260,cy);g.lineTo(CX-26,cy);g.stroke();
+  g.beginPath();g.moveTo(CX+26,cy);g.lineTo(CX+260,cy);g.stroke();
+  g.save();g.translate(CX,cy);g.rotate(Math.PI/4);
+  g.fillStyle='rgba(212,178,106,.6)';g.fillRect(-6,-6,12,12);g.restore();
+  cy+=76;
+  try{g.letterSpacing='12px';}catch(e){}
+  g.font='300 30px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
+  g.fillText('M A G N U S',CX,cy);
+  try{g.letterSpacing='0px';}catch(e){}
+  // ---- download ----
+  cv.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=`sky-${req.year||''}${String(req.month||'').padStart(2,'0')}${String(req.day||'').padStart(2,'0')}.png`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  },'image/png');
 }
 
 /* ===== Hard/negative transit periods ===== */
