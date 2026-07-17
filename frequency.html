@@ -479,7 +479,7 @@ function startTone() {
     gainNode.connect(analyser); analyser.connect(audioCtx.destination);
     document.getElementById('status').textContent = '— ' + selectedChakras.size + ' ტონის აკორდი —';
   } else {
-    oscillator = audioCtx.createOscillator();
+    oscillator = audioCtx.createOscillator(); 
     oscillator.type = wave;
     oscillator.frequency.setValueAtTime(+document.getElementById('freqInput').value, audioCtx.currentTime);
     oscillator.connect(gainNode);
