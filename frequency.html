@@ -192,6 +192,29 @@
 
   <hr>
 
+  <div class="section-label">პირადი სიხშირე · Human Design</div>
+  <div class="controls-panel" style="margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:12px;align-items:end">
+      <div><div class="control-label">დღე</div><input type="number" id="pf-day" min="1" max="31" value="15"></div>
+      <div><div class="control-label">თვე</div><input type="number" id="pf-month" min="1" max="12" value="5"></div>
+      <div><div class="control-label">წელი</div><input type="number" id="pf-year" min="1900" max="2035" value="1990"></div>
+      <div><div class="control-label">საათი</div><input type="number" id="pf-hour" min="0" max="23" value="12"></div>
+      <div><div class="control-label">წუთი</div><input type="number" id="pf-min" min="0" max="59" value="0"></div>
+      <div><div class="control-label">UTC ოფსეტი</div><input type="number" id="pf-tz" min="-12" max="14" step="0.5" value="4"></div>
+    </div>
+    <button class="btn-play" style="margin-top:16px" onclick="calcPersonalFreq()">✦ &nbsp; ჩ ე მ ი &nbsp; ს ი ხ შ ი რ ე</button>
+    <div id="pf-out" style="display:none;margin-top:20px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="pf-cards"></div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="neutral-btn" style="min-width:180px" onclick="playPersonalChord()">▶ პირადი აკორდი (ორივე ტონი)</button>
+      </div>
+      <div style="font-size:10px;opacity:.45;margin-top:10px;text-align:center;line-height:1.7">
+        მზის ზუსტი გრადუსი მანდალაზე → უნიკალური მიკროტონი ომ-ოქტავაში (136.10–272.20 Hz).<br>
+        პიროვნება = დაბადების მზე · დიზაინი = მზე 88°-ით ადრე
+      </div>
+    </div>
+  </div>
+
   <div class="controls-panel">
     <div class="control-row">
       <div class="control-label">სიხშირე <span class="control-value" id="freqVal">432 Hz</span></div>
@@ -325,6 +348,58 @@ BINAURAL.forEach(b => {
 });
 
 // ── State ─────────────────────────────────────────────────────────────────
+/* ── Personal frequency (Human Design mandala microtones) ── */
+const HD_GATES=[41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];
+const HD_START=302.0;                     // gate 41 begins at 02°00' Aquarius
+const OM=136.10;
+function _sunLon(jd){                     // apparent solar longitude, ±0.01°
+  const n=jd-2451545.0;
+  const L=(280.460+0.9856474*n)%360;
+  const g=(357.528+0.9856003*n)*Math.PI/180;
+  return ((L+1.915*Math.sin(g)+0.020*Math.sin(2*g))%360+360)%360;
+}
+function _gateLine(lon){
+  const off=((lon-HD_START)%360+360)%360;
+  const gi=Math.floor(off/5.625);
+  const line=Math.floor((off%5.625)/0.9375)+1;
+  return {gate:HD_GATES[gi],line,off};
+}
+function _toneOf(off){ return +(OM*Math.pow(2,off/360)).toFixed(2); }
+let _pfTones=null;
+function calcPersonalFreq(){
+  const y=+document.getElementById('pf-year').value,m=+document.getElementById('pf-month').value,
+        d=+document.getElementById('pf-day').value,hh=+document.getElementById('pf-hour').value,
+        mi=+document.getElementById('pf-min').value,tz=+document.getElementById('pf-tz').value;
+  if(!y||!m||!d)return;
+  const a=Math.floor((14-m)/12),yy=y+4800-a,mm=m+12*a-3;
+  let jd=d+Math.floor((153*mm+2)/5)+365*yy+Math.floor(yy/4)-Math.floor(yy/100)+Math.floor(yy/400)-32045;
+  jd=jd-0.5+(hh-tz)/24+mi/1440;
+  const lonP=_sunLon(jd);
+  const lonD=((lonP-88)%360+360)%360;
+  const P=_gateLine(lonP),D=_gateLine(lonD);
+  const fP=_toneOf(P.off),fD=_toneOf(D.off);
+  _pfTones=[fP,fD];
+  const card=(t,g,f,col)=>`<div style="background:rgba(20,15,45,.6);border:1px solid ${col}44;border-radius:12px;padding:16px;text-align:center">
+    <div style="font-size:9px;letter-spacing:3px;opacity:.6;margin-bottom:6px">${t}</div>
+    <div style="font-size:20px;color:${col}">კარიბჭე ${g.gate}.${g.line}</div>
+    <div style="font-size:26px;color:${col};margin:6px 0">${f} Hz</div>
+    <button class="neutral-btn" onclick="setFreq(${f},'${t} · კარიბჭე ${g.gate}.${g.line}',null);if(!isPlaying)startTone();">▶ მოსმენა</button></div>`;
+  document.getElementById('pf-cards').innerHTML=
+    card('პიროვნება ☀',P,fP,'#f0c96b')+card('დიზაინი ◐',D,fD,'#a78bfa');
+  document.getElementById('pf-out').style.display='block';
+}
+function playPersonalChord(){
+  if(!_pfTones)return;
+  stopTone();
+  binauralBeat=null;
+  selectedChakras.clear();
+  document.querySelectorAll('.chakra-btn.active,.neutral-btn.active').forEach(b=>b.classList.remove('active'));
+  selectedChakras.set(_pfTones[0],'პიროვნება');
+  selectedChakras.set(_pfTones[1],'დიზაინი');
+  document.getElementById('freqName').textContent='პირადი აკორდი · '+_pfTones[0]+' + '+_pfTones[1]+' Hz';
+  startTone();
+}
+
 let audioCtx = null, gainNode = null;
 let oscillator = null;            // single-tone mode
 let oscL = null, oscR = null;     // binaural mode
