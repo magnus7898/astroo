@@ -239,6 +239,7 @@
 <script src="matrix_combos.js"></script>
 <script src="matrix_boxes_addon.js"></script>
 
+<script src="matrix-combo.js" onerror="void 0"></script>
 <script>
 // ── ENERGIES — 8=სამართლიანობა, 11=სიძლიერე ──────────────────────────
 const ENERGIES = {
@@ -287,6 +288,113 @@ function showAgeRow(ageLabel, energy){
 function r22(n){while(n>22)n=String(n).split('').reduce((a,d)=>a+parseInt(d),0);return n;}
 const GEO={'ა':1,'ბ':2,'გ':3,'დ':4,'ე':5,'ვ':6,'ზ':7,'ჱ':8,'თ':9,'ი':1,'კ':2,'ლ':3,'მ':4,'ნ':5,'ჲ':6,'ო':7,'პ':8,'ჟ':9,'რ':1,'ს':2,'ტ':3,'უ':4,'ფ':5,'ქ':6,'ღ':7,'ყ':8,'შ':9,'ჩ':1,'ც':2,'ძ':3,'წ':4,'ჭ':5,'ხ':6,'ჯ':7,'ჰ':8};
 function geoNum(s){if(!s)return 0;return r22([...s].reduce((a,c)=>a+(GEO[c]||0),0));}
+
+/* ── circle combos: display explanations + auto-collect on backend ── */
+const MATRIX_BACKEND='https://astrology-production-b165.up.railway.app';
+const COMBO_POS_KA={L:'მარცხენა ხაზი (მამის)',T:'ზედა ხაზი (დედის)',R:'მარჯვენა ხაზი',B:'ქვედა ხაზი',
+  TL:'დიაგონალი ↖ (სულიერი)',TR:'დიაგონალი ↗',BR:'დიაგონალი ↘',BL:'დიაგონალი ↙',
+  C:'ცენტრალური სამეული',LV:'💗 სიყვარულის ხაზი',MN:'💰 ფულის ხაზი'};
+let _loggedCombos=new Set();
+function comboKey(pos,a,b,c){
+  const v=[a,b,c].filter(x=>x>0).sort((x,y)=>x-y);
+  return v.length===3?pos+'_'+v.join('-'):null;
+}
+function buildCombos(v){
+  const list=[
+    ['L',v.L3,v.L2,v.L1],['T',v.T3,v.T2,v.T1],['R',v.R3,v.R2,v.R1],['B',v.B3,v.B2,v.B1],
+    ['TL',v.TL3,v.TL1,v.TL2],['TR',v.TR3,v.TR1,v.TR2],['BR',v.BR3,v.BR1,v.BR2],['BL',v.BL3,v.BL1,v.BL2],
+    ['C',v.Cv,v.G1,v.G2],['LV',v.B1,v.W1,v.W2],['MN',v.R1,v.W3,v.W2]];
+  return list.map(([p,a,b,c])=>({pos:p,key:comboKey(p,a,b,c),vals:[a,b,c]}))
+             .filter(x=>x.key);
+}
+function renderCombos(v){
+  const combos=buildCombos(v);
+  if(!combos.length)return;
+  const db=(typeof MATRIX_COMBOS!=='undefined')?MATRIX_COMBOS:{};
+  let panel=document.getElementById('combo-panel');
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='combo-panel';
+    panel.style.cssText='max-width:640px;margin:18px auto 0;background:rgba(18,10,45,.85);border:1px solid rgba(140,110,255,.3);border-radius:14px;padding:16px 18px;position:relative;z-index:1';
+    document.getElementById('diagram').parentNode.appendChild(panel);
+  }
+  panel.innerHTML='<div style="font-size:11px;letter-spacing:3px;color:rgba(180,160,255,.8);text-align:center;margin-bottom:10px">✦ წრეების კომბინაციები ✦</div>'+
+    combos.map(c=>{
+      const txt=db[c.key];
+      return `<div style="border-bottom:1px solid rgba(140,110,255,.14);padding:8px 2px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:#b8a8ff">${COMBO_POS_KA[c.pos]}</span>
+          <span style="font-family:'Cinzel',serif;font-size:15px;color:#e8d5a0">${c.vals.join(' · ')}</span>
+        </div>
+        ${txt?`<div style="font-size:12px;color:#cfd4e2;line-height:1.8;margin-top:5px">${txt}</div>`
+             :`<div style="font-size:10.5px;color:rgba(155,168,184,.45);font-style:italic;margin-top:3px">ინტერპრეტაცია მალე დაემატება</div>`}
+      </div>`;
+    }).join('');
+  // auto-collect: send unseen keys once per session
+  const fresh=combos.map(c=>c.key).filter(k=>!_loggedCombos.has(k));
+  if(fresh.length){
+    fresh.forEach(k=>_loggedCombos.add(k));
+    fetch(MATRIX_BACKEND+'/api/combo/log',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({keys:fresh})}).catch(()=>{});
+  }
+}
+
+/* ── shareable code: URL auto-updates, link auto-rebuilds the matrix ── */
+function _v(sel){const e=document.querySelector(sel);return e?e.value.trim():'';}
+function updateShareCode(){
+  const p=new URLSearchParams();
+  p.set('m',CUR);
+  if(CUR===4){
+    p.set('d',_v('#c1-dd')+'.'+_v('#c1-mm')+'.'+_v('#c1-yyyy'));
+    p.set('d2',_v('#c2-dd')+'.'+_v('#c2-mm')+'.'+_v('#c2-yyyy'));
+  }else{
+    p.set('d',_v('[name=dd]')+'.'+_v('[name=mm]')+'.'+_v('[name=yyyy]'));
+    if(CUR===3){
+      const n=[_v('#m3-gvari'),_v('#m3-saxeli'),_v('#m3-mamis'),_v('#m3-dedis')].join('|');
+      if(n!=='|||')p.set('n',n);
+    }
+  }
+  history.replaceState(null,'','?'+p.toString());
+  let bar=document.getElementById('share-bar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='share-bar';
+    bar.style.cssText='text-align:center;margin:10px 0 4px;position:relative;z-index:1';
+    const dg=document.getElementById('diagram');
+    dg.parentNode.insertBefore(bar,dg);
+  }
+  bar.innerHTML='<button onclick="copyShareCode(this)" style="background:none;border:1px solid rgba(167,139,250,.45);color:#a78bfa;border-radius:8px;padding:6px 16px;font-size:11px;cursor:pointer;font-family:inherit;letter-spacing:1px">🔗 ბმულის კოპირება</button>';
+}
+function copyShareCode(btn){
+  navigator.clipboard.writeText(location.href).then(()=>{
+    btn.textContent='✓ დაკოპირდა';
+    setTimeout(()=>{btn.innerHTML='🔗 ბმულის კოპირება';},1600);
+  }).catch(()=>{prompt('დააკოპირეთ ბმული:',location.href);});
+}
+function loadFromCode(){
+  const q=new URLSearchParams(location.search);
+  const d=q.get('d');if(!d)return;
+  const m=Math.min(4,Math.max(1,parseInt(q.get('m')||'1',10)));
+  setMethod(m);
+  const put=(sel,v)=>{const e=document.querySelector(sel);if(e)e.value=v;};
+  if(m===4){
+    const a=d.split('.'),b=(q.get('d2')||'').split('.');
+    if(a.length===3){put('#c1-dd',a[0]);put('#c1-mm',a[1]);put('#c1-yyyy',a[2]);}
+    if(b.length===3){put('#c2-dd',b[0]);put('#c2-mm',b[1]);put('#c2-yyyy',b[2]);}
+    calculateCompat();
+  }else{
+    const a=d.split('.');
+    if(a.length===3){put('[name=dd]',a[0]);put('[name=mm]',a[1]);put('[name=yyyy]',a[2]);}
+    if(m===3&&q.get('n')){
+      const n=q.get('n').split('|');
+      put('#m3-gvari',n[0]||'');put('#m3-saxeli',n[1]||'');put('#m3-mamis',n[2]||'');put('#m3-dedis',n[3]||'');
+      if(typeof m3Preview==='function')m3Preview();
+    }
+    calculate();
+  }
+}
+window.addEventListener('DOMContentLoaded',loadFromCode);
 
 let CUR=1;
 function setMethod(m){
@@ -345,6 +453,8 @@ function calculate(){
   const TL1=r22(TL3+dCv),TL2=r22(TL1+TL3),TR1=r22(TR3+dCv),TR2=r22(TR1+TR3),BR1=r22(BR3+dCv),BR2=r22(BR1+BR3),BL1=r22(BL3+dCv),BL2=r22(BL1+BL3);
   const W2=r22(B1+R1),W1=r22(B1+W2),W3=r22(R1+W2);
   draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1,TL2,TR1,TR2,BR1,BR2,BL1,BL2,W1,W2,W3,showRC:CUR!==2,m3Cv2,compat:false,age:_age});
+  updateShareCode();
+  renderCombos({L3,T3,R3,B3,L1,L2,T1,T2,R1,R2,B1,B2,TL3,TR3,BR3,BL3,TL1,TL2,TR1,TR2,BR1,BR2,BL1,BL2,Cv,G1,G2,W1,W2,W3});
   if(typeof buildMatrixBoxes==='function'){
     buildMatrixBoxes({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,RC1,RC2,TL3,TL2,TL1,TR3,TR2,TR1,BR3,BR2,BR1,BL3,BL2,BL1,W1,W2,W3},CUR);
   }else{
@@ -377,6 +487,8 @@ function calculateCompat(){
   const TL3=r22(r22(v1.T3+v1.L3)+r22(v2.T3+v2.L3)),TR3=r22(r22(v1.T3+v1.R3)+r22(v2.T3+v2.R3)),BR3=r22(r22(v1.B3+v1.R3)+r22(v2.B3+v2.R3)),BL3=r22(r22(v1.B3+v1.L3)+r22(v2.B3+v2.L3));
   const RC1=r22(TL3+TR3+BR3+BL3),RC2=r22(RC1+Cv),B1=r22(Cv+B3),B2=r22(B1+B3),R1=r22(Cv+R3),R2=r22(R1+R3),L1=r22(Cv+L3),L2=r22(L1+L3),T1=r22(Cv+T3),T2=r22(T1+T3),G1=r22(L1+Cv),G2=r22(T1+Cv),W2=r22(B1+R1),W1=r22(B1+W2),W3=r22(R1+W2);
   draw({L3,T3,R3,B3,Cv,B1,B2,R1,R2,L1,L2,T1,T2,G1,G2,TL3,TR3,BR3,BL3,RC1,RC2,TL1:0,TL2:0,TR1:0,TR2:0,BR1:0,BR2:0,BL1:0,BL2:0,W1,W2,W3,showRC:false,m3Cv2:0,compat:true,age:null});
+  updateShareCode();
+  renderCombos({L3,T3,R3,B3,L1,L2,T1,T2,R1,R2,B1,B2,TL3,TR3,BR3,BL3,TL1:0,TL2:0,TR1:0,TR2:0,BR1:0,BR2:0,BL1:0,BL2:0,Cv,G1,G2,W1,W2,W3});
   document.getElementById('extra-panels').style.display='none';
   document.getElementById('chakra-panel').style.display='none';
   {const ap=document.getElementById('age-row-panel');if(ap)ap.style.display='none';}
