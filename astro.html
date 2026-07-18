@@ -2823,17 +2823,6 @@ function drawWheel(data1,data2,dualAsp){
 }
 
 // ── TABLES ──
-/* ===== clickable placements & aspects -> article pages ===== */
-const LAT_P={'მზე':'sun','მთვარე':'moon','მერკური':'mercury','ვენერა':'venus','მარსი':'mars',
- 'იუპიტერი':'jupiter','სატურნი':'saturn','ურანი':'uranus','ნეპტუნი':'neptune','პლუტონი':'pluto',
- 'ქირონი':'chiron','ლილიტი':'lilith','ჩრდ. კვანძი':'node','სამხ. კვანძი':'snode','AC':'ac','MC':'mc'};
-const LAT_S=['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
-const LAT_A={'შეერთება':'con','ოპოზიცია':'opp','ტრინი':'tri','კვადრატი':'squ','სექსტილი':'sex','კვინკონსი':'qcx'};
-function kaIn(sign){return sign.endsWith('ი')?sign.slice(0,-1)+'ში':sign+'ში';}
-function openArticle(key,title){
-  const w=window.open('article.html?k='+encodeURIComponent(key)+'&t='+encodeURIComponent(title),'magnus_article');
-  if(w)w.focus();
-}
 function drawPlanetTable(planets,isB,tbodyId){
   const tbody=document.getElementById(tbodyId);
   tbody.innerHTML='';
@@ -2850,13 +2839,6 @@ function drawPlanetTable(planets,isB,tbodyId){
     const symCell=name==='მზე'?sunSVG(18):name==='მთვარე'?'<span class="moon-sym" style="font-size:16px">☽</span>':`<span class="p-sym" style="color:${isB?'#a78bfa':info.color};font-size:16px;font-family:serif">${info.sym}</span>`;
     const tr=document.createElement('tr');
     tr.innerHTML=`<td>${symCell}</td><td style="color:${isB?'#a78bfa':info.color};font-size:11px;white-space:nowrap">${name}</td><td class="deg-val">${fmtDeg(d.degree)}</td><td><span class="${sc}" style="font-size:13px;font-family:serif">${si>=0?ZSYM[si]:''}</span> <span style="font-size:10px;color:${sCol}">${d.sign}</span></td><td><span class="house-badge" style="${isB?'border-color:rgba(167,139,250,.4);color:#a78bfa':''}">H${d.house||'?'}</span></td><td>${d.retrograde?'<span class="retro">℞</span>':''}</td>`;
-    if(LAT_P[name]&&si>=0){
-      tr.style.cursor='pointer';
-      tr.title='დაწკაპეთ ინტერპრეტაციისთვის';
-      const key=`p_${LAT_P[name]}_${LAT_S[si]}`;
-      const title=`${name} ${kaIn(d.sign)}${d.house?` · ${d.house} სახლი`:''}${d.retrograde?' ℞':''}`;
-      tr.onclick=()=>openArticle(key,title);
-    }
     tbody.appendChild(tr);
   }
 }
@@ -2900,14 +2882,6 @@ function drawAspectTable(aspects,tbodyId='aspect-tbody',titleId,titleText,isB){
     const s1=asp.p1==='მზე'?sunSVG(15):`<span style="color:${c1};font-size:14px;font-family:serif">${i1.sym}</span>`;
     const s2=asp.p2==='მზე'?sunSVG(15):`<span style="color:${c2};font-size:14px;font-family:serif">${i2.sym}</span>`;
     const tr=document.createElement('tr');
-    if(LAT_P[asp.p1]&&LAT_P[asp.p2]&&LAT_A[asp.type]){
-      tr.style.cursor='pointer';
-      tr.title='დაწკაპეთ ინტერპრეტაციისთვის';
-      const pl=[LAT_P[asp.p1],LAT_P[asp.p2]].sort();
-      const key=`a_${pl[0]}_${LAT_A[asp.type]}_${pl[1]}`;
-      const title=`${asp.p1} ${asp.sym} ${asp.p2} — ${asp.type}`;
-      tr.onclick=()=>openArticle(key,title);
-    }
     tr.innerHTML=`<td>${s1} <span style="font-size:10px;color:${c1}">${asp.p1}</span></td><td><span class="asp-sym" style="color:${asp.color}">${asp.sym}</span></td><td>${s2} <span style="font-size:10px;color:${c2}">${asp.p2}</span></td><td style="color:${asp.color};font-size:10px;white-space:nowrap">${asp.type}</td><td style="color:rgba(140,100,200,.7);font-size:10px">${asp.orb}°</td>`;
     tbody.appendChild(tr);
   }
@@ -2928,4 +2902,3 @@ setToday('pd');
 </script>
 </body>
 </html>
- 
