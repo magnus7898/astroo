@@ -112,6 +112,11 @@
   <div id="num-out"></div>
 </div>
 
+<div class="panel" id="p-loshu" style="display:none">
+  <div class="ptitle">◻ ლო შუს კვადრატი — დაკარგული ენერგიები</div>
+  <div id="loshu-out"></div>
+</div>
+
 <div class="panel" id="p-zod" style="display:none">
   <div class="ptitle">♈ ზოდიაქოს ქვა</div>
   <div id="zod-out"></div>
@@ -123,12 +128,12 @@
 </div>
 
 <div class="panel" id="p-chart" style="display:none">
-  <div class="ptitle">🌌 ნატალური რუკის ქვები (სრული ანალიზი)</div>
+  <div class="ptitle">🌌 ნატალური რუკა — სუსტი პლანეტების შევსება</div>
   <div id="chart-out"><div class="note">⏳ იტვირთება…</div></div>
 </div>
 
 <div class="panel" id="p-hd" style="display:none">
-  <div class="ptitle">⚡ Human Design მინერალი</div>
+  <div class="ptitle">⚡ Human Design — ღია ცენტრების დაბალანსება</div>
   <div id="hd-out"><div class="note">⏳ იტვირთება…</div></div>
 </div>
 
@@ -143,7 +148,7 @@
 </div>
 
 <div class="panel" id="p-syn" style="display:none">
-  <div class="ptitle">💎 შენი ქვების სინთეზი — ყველა სისტემის ჯამი</div>
+  <div class="ptitle">💎 დამაბალანსებელი ქვების სინთეზი</div>
   <div id="syn-out"></div>
 </div>
 
@@ -192,6 +197,19 @@ const HD_MINERAL={'Generator':['კარნეოლი, წითელი ი
  'Projector':['ამეთვისტო, მთის ბროლი','სიცხადე და აღიარების მოლოდინის სიმშვიდე'],
  'Manifestor':['გრანატი, შავი ობსიდიანი','ინიციატივის ძალა და დაცვა'],
  'Reflector':['მთვარის ქვა, ლაბრადორიტი','მთვარის ციკლთან რეზონანსი']};
+const ELEMENT_STONE={fire:['კარნეოლი, გრანატი','#d05030','ცეცხლი'],
+ earth:['მწვანე იასპი, ჰემატიტი, ხის აქატი','#a08040','მიწა'],
+ air:['ციტრინი, ფლუორიტი, თეთრი კვარცი','#c0c8d8','ჰაერი'],
+ water:['მთვარის ქვა, აქვამარინი','#4090c0','წყალი']};
+const CN_EL_STONE={'წყალი':'შავი ობსიდიანი, სოდალითი','მიწა':'ციტრინი, ვეფხვის თვალი','ხე':'მწვანე ავანტიურინი, მალაქიტი','ლითონი':'მთის ბროლი, პირიტი','ცეცხლი':'კარნეოლი, წითელი იასპი'};
+const NUM_EL={1:'წყალი',2:'მიწა',3:'ხე',4:'ხე',5:'მიწა',6:'ლითონი',7:'ლითონი',8:'მიწა',9:'ცეცხლი'};
+const CENTER_STONE={'Head':['მთის ბროლი','#e8e8f0'],'Ajna':['ამეთვისტო','#8050c0'],
+ 'Throat':['აქვამარინი, ლურჯი აქატი','#50a0d0'],'G':['ვარდისფერი კვარცი','#e090b0'],
+ 'Heart':['ვეფხვის თვალი','#c08030'],'Sacral':['კარნეოლი','#d05030'],
+ 'Spleen':['მალაქიტი','#30a060'],'Solar Plexus':['ციტრინი, მზის ქვა','#e0b030'],
+ 'Root':['შავი ტურმალინი, ჰემატიტი','#606068']};
+const CENTER_KA2={'Head':'თავი','Ajna':'აჯნა','Throat':'ყელი','G':'G ცენტრი','Heart':'ეგო/გული',
+ 'Sacral':'საკრალი','Spleen':'ელენთა','Solar Plexus':'მზის წნული','Root':'ფესვი'};
 let _syn=[];  // collected {stone,src,col}
 function synAdd(stone,src,col){_syn.push({stone,src,col});}
 function renderSyn(){
@@ -214,57 +232,57 @@ function renderSyn(){
 async function fetchChartGems(payload){
   const out=document.getElementById('chart-out');
   try{
-    const [dR,cR]=await Promise.all([
-      fetch(BACKEND+'/api/dominants',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),
-      fetch(BACKEND+'/chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})]);
-    if(!dR.ok||!cR.ok)throw 0;
-    const dom=await dR.json(),ch=await cR.json();
-    const dp=dom.dominant_planet, dp2=(dom.planets[1]||{}).key;
-    const ascSi=Math.floor((ch.asc||0)/30);
-    const lord=SIGN_LORD[ascSi];
-    let html='';
-    if(PLANET_GEM[lord]){
-      const[g,c]=PLANET_GEM[lord];
+    const dR=await fetch(BACKEND+'/api/dominants',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!dR.ok)throw 0;
+    const dom=await dR.json();
+    // weakest = bottom of the power ranking (the energies the person LACKS)
+    const ranked=dom.planets.filter(p=>PLANET_GEM[p.key]);
+    const weak=ranked.slice(-2).reverse();
+    const weakEl=(dom.elements||[]).slice(-1)[0];
+    let html='<div style="font-size:11px;color:var(--silver);margin-bottom:10px">ქვა ავსებს იმას, რაც აკლია — სუსტი პლანეტის ქვის ტარება მის ენერგიას აძლიერებს (ვედური რემედიალური პრინციპი)</div>';
+    for(const p of weak){
+      const[g,c]=PLANET_GEM[p.key];
       html+=`<div style="border-left:3px solid ${c};background:rgba(20,15,40,.55);border-radius:4px;padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:10px;letter-spacing:2px;color:var(--silver)">ასცენდენტის მმართველი — ${PLANET_KA2[lord]}</div>
-        <div style="font-size:16px;color:${c};margin-top:4px">💎 ${g}</div>
-        <div style="font-size:10.5px;color:var(--silver);margin-top:3px">კლასიკური მიდგომა: ლაგნას მმართველის ქვა ყველაზე უსაფრთხო და გამაძლიერებელია</div></div>`;
-      synAdd(g,'ასცენდენტი',c);
-    }
-    if(PLANET_GEM[dp]){
-      const[g,c]=PLANET_GEM[dp];
-      html+=`<div style="border-left:3px solid ${c};background:rgba(20,15,40,.55);border-radius:4px;padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:10px;letter-spacing:2px;color:var(--silver)">დომინანტი პლანეტა — ${PLANET_KA2[dp]} (Pullen ანალიზი)</div>
+        <div style="font-size:10px;letter-spacing:2px;color:var(--silver)">სუსტი პლანეტა — ${PLANET_KA2[p.key]} <span style="opacity:.5">(ძალა ${p.power??p.percent??''})</span></div>
         <div style="font-size:16px;color:${c};margin-top:4px">💎 ${g}</div></div>`;
-      synAdd(g,'დომინანტი',c);
+      synAdd(g,'სუსტი '+PLANET_KA2[p.key],c);
     }
-    if(PLANET_GEM[dp2]&&dp2!==dp&&dp2!==lord){
-      const[g,c]=PLANET_GEM[dp2];
-      html+=`<div style="font-size:11px;color:var(--silver)">მეორადი დომინანტი ${PLANET_KA2[dp2]}: ${g}</div>`;
-      synAdd(g,'მეორადი',c);
+    if(weakEl&&ELEMENT_STONE[weakEl.key]){
+      const[st,c,ka]=ELEMENT_STONE[weakEl.key];
+      html+=`<div style="border-left:3px solid ${c};background:rgba(20,15,40,.55);border-radius:4px;padding:12px 14px">
+        <div style="font-size:10px;letter-spacing:2px;color:var(--silver)">დეფიციტური ელემენტი — ${ka}</div>
+        <div style="font-size:14px;color:${c};margin-top:4px">💎 ${st}</div></div>`;
+      st.split(',').slice(0,1).forEach(s=>synAdd(s.trim(),'ელემენტი '+ka,c));
     }
-    out.innerHTML=html||'<div class="note">ვერ განისაზღვრა</div>';
+    out.innerHTML=html;
     renderSyn();
   }catch(e){out.innerHTML='<div class="note">⚠ სრული ანალიზი ვერ ჩაიტვირთა — შეამოწმეთ ქალაქი ან სცადეთ მოგვიანებით</div>';}
-}
-async function fetchHDMineral(dateStr,timeStr,place){
+}async function fetchHDMineral(dateStr,timeStr,place){
   const out=document.getElementById('hd-out');
   try{
     const r=await fetch(BACKEND+'/hd',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({date:dateStr,time:timeStr,place})});
     if(!r.ok)throw 0;
     const hd=await r.json();
-    const M=HD_MINERAL[hd.type];
-    if(!M)throw 0;
-    out.innerHTML=`<div style="font-size:11px;color:var(--silver)">ტიპი: <b style="color:var(--gold)">${hd.type}</b>${hd.profile?` · პროფილი ${hd.profile}`:''}</div>
-      <div style="font-size:16px;color:#b070e0;margin:8px 0 4px">💎 ${M[0]}</div>
-      <div style="font-size:11px;color:var(--silver)">${M[1]}</div>
-      <div class="note">Human Design-ის ორთოდოქსულ სისტემაში ქვები არ არსებობს — ეს ტიპზე დაფუძნებული თანამედროვე ასოციაციაა.</div>`;
-    synAdd(M[0],'HD ტიპი','#b070e0');
+    const defined=new Set(hd.defined_centers||[]);
+    const open=Object.keys(CENTER_STONE).filter(c=>!defined.has(c));
+    let html=`<div style="font-size:11px;color:var(--silver);margin-bottom:8px">ტიპი: <b style="color:var(--gold)">${hd.type}</b> · ღია ცენტრი — სადაც ღიაა და კონდიცირებადი, ქვა ანქორის (დამამიწებლის) როლს ასრულებს</div>`;
+    if(!open.length){
+      html+='<div class="note">ყველა ცენტრი განსაზღვრულია — დაბალანსება არ სჭირდება</div>';
+    }else{
+      html+=open.map(c=>{
+        const[st,col]=CENTER_STONE[c];
+        return `<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid rgba(201,168,76,.1);flex-wrap:wrap">
+          <span style="font-size:12px;color:${col}">○ ${CENTER_KA2[c]}</span>
+          <span style="font-size:12px;color:#d7dde6">💎 ${st}</span></div>`;
+      }).join('');
+      open.slice(0,3).forEach(c=>synAdd(CENTER_STONE[c][0].split(',')[0],'ღია '+CENTER_KA2[c],CENTER_STONE[c][1]));
+    }
+    html+='<div class="note">Human Design-ის ორთოდოქსულ სისტემაში ქვები არ არსებობს — ეს ცენტრი↔ჩაკრა თანამედროვე ასოციაციაა.</div>';
+    out.innerHTML=html;
     renderSyn();
   }catch(e){out.innerHTML='<div class="note">⚠ HD ანალიზი ვერ ჩაიტვირთა</div>';}
-}
-function gemCard(title,n,note){
+}function gemCard(title,n,note){
   const G=GEMS[n];
   return `<div style="border-left:3px solid ${G.col};background:rgba(20,15,40,.55);border-radius:4px;padding:12px 14px;margin-bottom:12px">
     <div style="font-size:10px;letter-spacing:2px;color:var(--silver)">${title} — რიცხვი <b style="color:var(--gold)">${n}</b> · ${G.gr}</div>
@@ -310,8 +328,34 @@ function calcStones(){
     </div>
     <div class="note">უნივერსალურები: სიმდიდრე — ციტრინი და პირიტი სამხ-აღმ ზონაში · სიყვარული — ვარდისფერი კვარცი სამხ-დას ზონაში (წყვილად)</div>`;
   document.getElementById('p-feng').style.display='block';
+  // ── Lo Shu square: missing digits = missing energies ──
+  const digits=(String(d)+String(m)+String(y)).split('').map(Number).filter(n=>n>0);
+  const cnt={};digits.forEach(n=>cnt[n]=(cnt[n]||0)+1);
+  const missing=[];for(let n=1;n<=9;n++)if(!cnt[n])missing.push(n);
+  const LOSHU_POS=[[4,9,2],[3,5,7],[8,1,6]];
+  let lsHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:260px;margin:0 auto 14px">'+
+    LOSHU_POS.flat().map(n=>{
+      const c=cnt[n]||0;
+      return `<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;border:1px solid ${c?'rgba(201,168,76,.35)':'rgba(192,80,58,.55)'};background:${c?'rgba(20,15,40,.55)':'rgba(60,15,15,.4)'}">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:20px;color:${c?'var(--gold)':'rgba(192,80,58,.9)'}">${n}</div>
+        <div style="font-size:9px;color:var(--silver)">${c?('×'+c):'აკლია'}</div></div>`;
+    }).join('')+'</div>';
+  if(missing.length){
+    lsHTML+='<div style="font-size:11px;color:var(--silver);margin-bottom:8px">დაკარგული რიცხვი = დაკარგული გრაჰას/ელემენტის ენერგია — ქვა ავსებს მას:</div>'+
+      missing.map(n=>{
+        const G=GEMS[n],ce=NUM_EL[n];
+        return `<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 4px;border-bottom:1px solid rgba(201,168,76,.1);flex-wrap:wrap">
+          <span style="font-size:12px;color:${G.col}">${n} — ${G.gr}</span>
+          <span style="font-size:12px;color:#d7dde6">💎 ${G.gem} <span style="opacity:.5;font-size:10px">· ${ce}: ${CN_EL_STONE[ce]}</span></span></div>`;
+      }).join('');
+  }else{
+    lsHTML+='<div class="note">ყველა რიცხვი წარმოდგენილია — ლო შუს კვადრატი სავსეა ✓</div>';
+  }
+  document.getElementById('loshu-out').innerHTML=lsHTML;
+  document.getElementById('p-loshu').style.display='block';
   // collect base recommendations into synthesis
   _syn=[];
+  missing.slice(0,3).forEach(n=>synAdd(GEMS[n].gem,'აკლია '+n,GEMS[n].col));
   synAdd(GEMS[mulank].gem,'მულანკი',GEMS[mulank].col);
   if(lp!==mulank)synAdd(GEMS[lp].gem,'ბჰაგიანკი',GEMS[lp].col);
   synAdd(ZODSTONE[zi][1],'ზოდიაქო',ZODSTONE[zi][2]);
