@@ -235,8 +235,11 @@
 
 <p class="footer-text">✦ სამყაროს რიცხვები · ენერგიის ნიმუში ✦</p>
 
-<!-- Interpretation boxes: titles+articles DB (matrix_combos.js) MUST load before the addon -->
-<script src="matrix_combos.js"></script>
+<!-- Interpretation boxes DB: loaded from backend so auto-collected codes
+     appear as empty stubs automatically. Falls back to the static repo file
+     if the backend is unreachable. MUST load before the addon. -->
+<script src="https://astrology-production-b165.up.railway.app/matrix_combos.js"
+        onerror="var s=document.createElement('script');s.src='matrix_combos.js';document.head.appendChild(s);"></script>
 <script src="matrix_boxes_addon.js"></script>
 
 <script src="matrix-combo.js" onerror="void 0"></script>
