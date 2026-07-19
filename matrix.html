@@ -537,11 +537,12 @@ function draw(v){
   // Each point owns [its own age .. the next point's age); ages over 80 recycle.
   if(!isCompat && v.age!=null && v.age>=0){
     let a=v.age%80; if(a<0)a+=80;
-    const loOf=ap=>parseFloat(String(ap.ageLabel).split('-')[0].replace(',','.'));
-    const pts=agePoints.slice().sort((p,q)=>loOf(p)-loOf(q));
+    // match by each point's TRUE age (ageNum) — same value used to place it —
+    // so the glow lands on the point whose interval actually contains the age.
+    const pts=agePoints.slice().sort((p,q)=>p.ageNum-q.ageNum);
     let best=null;
     for(let i=0;i<pts.length;i++){
-      const start=loOf(pts[i]), end=(i+1<pts.length)?loOf(pts[i+1]):80;
+      const start=pts[i].ageNum, end=(i+1<pts.length)?pts[i+1].ageNum:80;
       if(a>=start && a<end){best=pts[i];break;}
     }
     if(!best) best=pts[pts.length-1];
