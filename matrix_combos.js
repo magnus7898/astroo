@@ -160,8 +160,26 @@ const MATRIX_DB = {
 /* join numbers into a code, e.g. [10,11,4] -> "10-11-4" */
 function comboKey(nums){ return nums.map(n => String(n)).join('-'); }
 
+/* auto-collect every 3-number combo once, send to backend (deduped there) */
+const _COMBO_BACKEND='https://astrology-production-b165.up.railway.app';
+const _comboSeen=new Set(); let _comboQ=[], _comboT=null;
+function _comboCollect(position, nums){
+  if(!nums || nums.length!==3) return;                 // combos only
+  const key=position+':'+nums.join('-');
+  if(_comboSeen.has(key)) return;
+  _comboSeen.add(key); _comboQ.push(key);
+  clearTimeout(_comboT);
+  _comboT=setTimeout(()=>{
+    const batch=_comboQ.splice(0);
+    if(batch.length) fetch(_COMBO_BACKEND+'/api/combo/log',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({keys:batch})}).catch(()=>{});
+  },800);
+}
+
 /* unified lookup. position = box id, nums = [n] or [a,b,c]. returns {title?,text} or null */
 function lookup(position, nums){
+  try{ _comboCollect(position, nums); }catch(e){}
   const zone = MATRIX_DB[position];
   if(!zone) return null;
   if(nums.length === 1){
