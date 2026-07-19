@@ -157,24 +157,45 @@ const MATRIX_DB = {
 
 };
 
-/* join numbers into a code, e.g. [10,11,4] -> "10-11-4" */
+/* ============================================================
+   KEY NORMALIZATION
+   ------------------------------------------------------------
+   Most zones: a combo equals its REVERSE only.
+     8-8-18  ==  18-8-8   (reverse)      → same key, same text
+     8-18-8  !=  8-8-18                   → different
+   karmic_tail is EXACT-ORDER: every arrangement is its own code.
+     18-9-9  !=  9-9-18                   → different keys
+   (Both may still share a title/name — that's up to your text.)
+   ============================================================ */
+const EXACT_ORDER_ZONES = new Set(['karmic_tail']);
+
+/* raw code, order kept as-is */
 function comboKey(nums){ return nums.map(n => String(n)).join('-'); }
 
-/* auto-collect every 3-number combo once, send to backend (deduped there) */
-const _COMBO_BACKEND='https://astrology-production-b165.up.railway.app';
-const _comboSeen=new Set(); let _comboQ=[], _comboT=null;
+/* canonical code for a zone: reverse-equivalent, unless exact-order zone */
+function canonKey(position, nums){
+  if(nums.length !== 3) return comboKey(nums);
+  if(EXACT_ORDER_ZONES.has(position)) return comboKey(nums);   // exact
+  const rev = [...nums].reverse();
+  const a = comboKey(nums), b = comboKey(rev);
+  return a <= b ? a : b;                                       // pick one of the pair
+}
+
+/* ── auto-collect every 3-number combo once, send to backend (deduped there) ── */
+const _COMBO_BACKEND = 'https://astrology-production-b165.up.railway.app';
+const _comboSeen = new Set(); let _comboQ = [], _comboT = null;
 function _comboCollect(position, nums){
-  if(!nums || nums.length!==3) return;                 // combos only
-  const key=position+':'+nums.join('-');
+  if(!nums || nums.length !== 3) return;                       // combos only
+  const key = position + ':' + canonKey(position, nums);       // same normalization as lookup
   if(_comboSeen.has(key)) return;
   _comboSeen.add(key); _comboQ.push(key);
   clearTimeout(_comboT);
-  _comboT=setTimeout(()=>{
-    const batch=_comboQ.splice(0);
-    if(batch.length) fetch(_COMBO_BACKEND+'/api/combo/log',{method:'POST',
+  _comboT = setTimeout(() => {
+    const batch = _comboQ.splice(0);
+    if(batch.length) fetch(_COMBO_BACKEND + '/api/combo/log', {method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({keys:batch})}).catch(()=>{});
-  },800);
+  }, 800);
 }
 
 /* unified lookup. position = box id, nums = [n] or [a,b,c]. returns {title?,text} or null */
@@ -186,14 +207,19 @@ function lookup(position, nums){
     return (zone.singles && zone.singles[String(nums[0])]) || null;
   }
   if(zone.combos){
+    // 1) exact order as written
     const exact = zone.combos[comboKey(nums)];
     if(exact) return exact;
-    const sorted = zone.combos[comboKey([...nums].sort((a,b)=>a-b))];
-    if(sorted) return sorted;
+    // 2) reverse (skip for exact-order zones like karmic_tail)
+    if(!EXACT_ORDER_ZONES.has(position)){
+      const rev = zone.combos[comboKey([...nums].reverse())];
+      if(rev) return rev;
+    }
   }
   return null;
 }
 
-window.MATRIX_DB = MATRIX_DB;
-window.lookup    = lookup;
-window.comboKey  = comboKey;
+window.MATRIX_DB   = MATRIX_DB;
+window.lookup      = lookup;
+window.comboKey    = comboKey;
+window.canonKey    = canonKey;
