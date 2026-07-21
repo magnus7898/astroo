@@ -681,7 +681,8 @@ function _pLabel(n){ // short label + color + retro
   const info=PI[n]||{sym:'?',color:'#fff'};
   const short={Sun:'Su',Moon:'Mo',Mars:'Ma',Mercury:'Me',Jupiter:'Ju',Venus:'Ve',
     Saturn:'Sa',Rahu:'Ra',Ketu:'Ke',Uranus:'Ur',Neptune:'Ne'}[n]||n;
-  return{t:short+(p.retrograde?'℞':''),c:info.color};
+  const retro=(p.retrograde===true||p.retrograde==='true')&&n!=='Sun'&&n!=='Moon';
+  return{t:short+(retro?'℞':''),c:info.color};
 }
 /* North Indian: houses fixed, H1 top-center diamond, counterclockwise */
 const NI_POS=[[[200,55],[200,102]],[[100,28],[100,64]],[[28,100],[52,114]],[[142,200],[96,200]],
@@ -689,7 +690,7 @@ const NI_POS=[[[200,55],[200,102]],[[100,28],[100,64]],[[28,100],[52,114]],[[142
  [[372,300],[348,288]],[[258,200],[304,200]],[[372,100],[348,114]],[[300,28],[300,64]]];
 function niChartSVG(vd){
   const asc=vd.asc_sign_idx,by=_hplanets(vd);
-  let s=`<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  let s=`<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;aspect-ratio:1/1;display:block">
    <rect x="2" y="2" width="396" height="396" fill="rgba(8,6,20,.8)" stroke="rgba(201,168,76,.55)" stroke-width="1.5" rx="4"/>
    <path d="M2 2 L398 398 M398 2 L2 398 M200 2 L2 200 M200 2 L398 200 M2 200 L200 398 M398 200 L200 398"
      fill="none" stroke="rgba(201,168,76,.45)" stroke-width="1"/>`;
@@ -715,7 +716,7 @@ function siChartSVG(vd){
   const asc=vd.asc_sign_idx,C=97;
   const bySign={};
   for(const n of PORDER){const p=vd.planets[n];if(!p)continue;(bySign[p.sign_idx]=bySign[p.sign_idx]||[]).push(n);}
-  let s=`<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+  let s=`<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;aspect-ratio:1/1;display:block">
     <rect x="2" y="2" width="396" height="396" fill="rgba(8,6,20,.8)" stroke="rgba(201,168,76,.55)" stroke-width="1.5" rx="4"/>`;
   for(const[sign,[cx,cy]]of Object.entries(SI_CELLS)){
     const x=2+cx*C,y=2+cy*C,sn=+sign;
