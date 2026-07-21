@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ნუმეროლოგია · MAGNUS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Georgian:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#070b1c; --navy2:#0c1330; --panel:#101a3d; --panel2:#0e1734;
+    --gold:#c9a227; --gold-bright:#e8c65a; --gold-dim:#8a7326;
+    --ink:#e7e3d4; --ink-dim:#9a9683; --line:rgba(201,162,39,.22);
+    --friend:#5db07a; --enemy:#c65a5a; --neutral:#6f7bb0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(1200px 700px at 78% -8%, rgba(201,162,39,.10), transparent 55%),
+      radial-gradient(900px 600px at 8% 108%, rgba(80,110,220,.10), transparent 55%),
+      var(--navy);
+    color:var(--ink);
+    font-family:"Noto Serif Georgian",Georgia,serif;
+    line-height:1.55; min-height:100vh; padding:clamp(16px,4vw,48px);
+  }
+  .wrap{max-width:940px;margin:0 auto}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:6px}
+  .eyebrow{font-family:"Cormorant Garamond",serif;letter-spacing:.38em;
+    text-transform:uppercase;font-size:12px;color:var(--gold);opacity:.85}
+  h1{font-family:"Cormorant Garamond",serif;font-weight:600;
+    font-size:clamp(34px,6vw,58px);letter-spacing:.01em;line-height:1.02;
+    color:var(--ink);margin:6px 0 2px}
+  h1 .glow{color:var(--gold-bright)}
+  .sub{color:var(--ink-dim);font-size:14px}
+
+  /* tabs */
+  nav.tabs{display:flex;flex-wrap:wrap;gap:2px;margin:26px 0 20px}
+  .tab{appearance:none;background:transparent;border:1px solid transparent;
+    border-bottom:1px solid var(--line);color:var(--ink-dim);
+    font-family:inherit;font-size:14px;padding:11px 16px;cursor:pointer;
+    transition:.18s;white-space:nowrap;flex:1 1 auto}
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--gold-bright);
+    border:1px solid var(--line);border-bottom-color:transparent;
+    background:linear-gradient(180deg,rgba(201,162,39,.08),transparent)}
+  .tab:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* inputs */
+  .controls{display:flex;flex-wrap:wrap;gap:14px;align-items:end;
+    background:var(--panel2);border:1px solid var(--line);border-radius:2px;
+    padding:18px;margin-bottom:22px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  label{font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold);opacity:.8}
+  input,select{background:#080d22;border:1px solid var(--line);color:var(--ink);
+    font-family:inherit;font-size:15px;padding:9px 12px;border-radius:2px;min-width:150px}
+  input:focus,select:focus{outline:none;border-color:var(--gold)}
+  button.calc{background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    color:#1a1405;border:none;font-family:inherit;font-weight:600;font-size:14px;
+    letter-spacing:.08em;padding:11px 26px;border-radius:2px;cursor:pointer;
+    transition:.18s;text-transform:uppercase}
+  button.calc:hover{filter:brightness(1.08)}
+  button.calc:focus-visible{outline:2px solid var(--gold-bright);outline-offset:3px}
+
+  /* panels */
+  section.method{display:none;animation:rise .4s ease both}
+  section.method.active{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));
+    border:1px solid var(--line);border-radius:2px;padding:20px;position:relative}
+  .card .k{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);opacity:.8}
+  .card .big{font-family:"Cormorant Garamond",serif;font-size:52px;line-height:1;
+    color:var(--gold-bright);margin:8px 0 4px}
+  .card .meta{font-size:14px;color:var(--ink-dim)}
+  .card .meta b{color:var(--ink);font-weight:500}
+  .trigram{position:absolute;top:16px;right:18px;font-size:30px;color:var(--gold);opacity:.55}
+
+  .rel{display:inline-block;padding:2px 10px;border-radius:2px;font-size:13px;
+    border:1px solid currentColor}
+  .rel.friend{color:var(--friend)} .rel.enemy{color:var(--enemy)}
+  .rel.neutral{color:var(--neutral)} .rel.same{color:var(--gold-bright)}
+
+  .hint{font-size:12.5px;color:var(--ink-dim);margin-top:14px;
+    border-left:2px solid var(--gold-dim);padding-left:12px}
+
+  /* psychomatrix signature */
+  .matrix-wrap{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start}
+  .matrix{position:relative;width:270px;height:270px;flex:0 0 auto}
+  .msvg{position:absolute;inset:0;pointer-events:none}
+  .mcell{position:absolute;width:82px;height:82px;display:flex;align-items:center;
+    justify-content:center;flex-direction:column;
+    border:1px solid var(--line);border-radius:2px;background:var(--panel2)}
+  .mcell .digit{font-family:"Cormorant Garamond",serif;font-size:26px;color:var(--ink-dim)}
+  .mcell.on .digit{color:var(--gold-bright)}
+  .mcell .rep{font-size:12px;color:var(--gold);letter-spacing:.1em;min-height:14px}
+  .arrow-list{flex:1 1 240px;min-width:220px}
+  .arrow-item{display:flex;justify-content:space-between;gap:10px;
+    padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .arrow-item .tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+  .tag.str{color:var(--friend)} .tag.les{color:var(--enemy)}
+
+  table.gem{width:100%;border-collapse:collapse;margin-top:4px}
+  table.gem td{padding:10px 8px;border-bottom:1px solid var(--line);font-size:15px}
+  table.gem td:first-child{color:var(--gold);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;width:45%}
+  table.gem td:last-child{font-family:"Cormorant Garamond",serif;font-size:22px;color:var(--gold-bright)}
+
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--ink-dim);letter-spacing:.04em}
+  @media (max-width:560px){.matrix{width:246px;height:246px}.mcell{width:74px;height:74px}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">MAGNUS · ეზოთერული ნუმეროლოგია</div>
+    <h1>რიცხვთა <span class="glow">ხუთი</span> სისტემა</h1>
+    <p class="sub">ცხრა ვარსკვლავი ქი · პითაგორას ისრები · ანკ ჯიოტიშ · გემატრია/აბჯადი · ქალდეური</p>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs">
+    <button class="tab" role="tab" data-m="ki"       aria-selected="true">ცხრა ვარსკვლავი</button>
+    <button class="tab" role="tab" data-m="arrows"    aria-selected="false">ისრები</button>
+    <button class="tab" role="tab" data-m="ank"       aria-selected="false">ანკ ჯიოტიშ</button>
+    <button class="tab" role="tab" data-m="gematria"  aria-selected="false">გემატრია</button>
+    <button class="tab" role="tab" data-m="chaldean"  aria-selected="false">ქალდეური</button>
+  </nav>
+
+  <div class="controls">
+    <div class="field">
+      <label for="dob">დაბადების თარიღი</label>
+      <input type="date" id="dob" value="1988-03-23">
+    </div>
+    <div class="field" id="name-field">
+      <label for="name">სახელი</label>
+      <input type="text" id="name" value="Alex" placeholder="Alex / ალექს">
+    </div>
+    <div class="field" id="gem-field" style="display:none">
+      <label for="gemsys">დამწერლობა</label>
+      <select id="gemsys">
+        <option value="hebrew">ებრაული · גימטריה</option>
+        <option value="greek">ბერძნული · ισοψηφία</option>
+        <option value="arabic">არაბული · أبجد</option>
+      </select>
+    </div>
+    <button class="calc" id="go">გამოთვლა</button>
+  </div>
+
+  <!-- NINE STAR KI -->
+  <section class="method active" id="ki">
+    <div class="grid2" id="ki-out"></div>
+    <p class="hint">საზღვრები ~4 თებ. რიშუნზეა და მიახლოებითი მზის ტერმინებით. ზუსტი გათვლისთვის შეცვალე მზის გრძედი swisseph-იდან (იგივე, რაც ტიტჰიზე).</p>
+  </section>
+
+  <!-- ARROWS -->
+  <section class="method" id="arrows">
+    <div class="matrix-wrap">
+      <div class="matrix" id="matrix"></div>
+      <div class="arrow-list" id="arrow-list"></div>
+    </div>
+    <p class="hint">მხოლოდ თარიღის ციფრებით ბევრი უჯრა ცარიელია — სახელის/ბედის ჯაჭვის ციფრებს თუ სისტემა ითვლის, გადმოეცი <code>extraWorking</code>.</p>
+  </section>
+
+  <!-- ANK JYOTISH -->
+  <section class="method" id="ank">
+    <div class="grid2" id="ank-out"></div>
+  </section>
+
+  <!-- GEMATRIA -->
+  <section class="method" id="gematria">
+    <div class="card" style="max-width:440px">
+      <table class="gem" id="gem-out"></table>
+    </div>
+  </section>
+
+  <!-- CHALDEAN -->
+  <section class="method" id="chaldean">
+    <div class="grid2" id="chal-out"></div>
+    <p class="hint">შედგენილი რიცხვი (10–52) ცალკე ინტერპრეტაცია აქვს ერთნიშნასგან განსხვავებით — ორივე ინახება.</p>
+  </section>
+
+  <footer>MAGNUS · გამოთვლის ბირთვი Python-თან ჯვარედინად ვალიდირებულია</footer>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════
+   ENGINE — faithful port of esoteric_numerology.py (values must match)
+   ══════════════════════════════════════════════════════════════════════ */
+const digitSum = n => String(Math.abs(n)).split('').reduce((a,c)=>a+ +c,0);
+function reduceNum(n){ n=Math.abs(Math.trunc(n)); while(n>9) n=digitSum(n); return n; }
+
+/* 1 · Nine Star Ki */
+const STAR_META = {
+ 1:{el:'წყალი',elEn:'Water',tri:'☵ Kan',color:'White'},
+ 2:{el:'მიწა',elEn:'Earth',tri:'☷ Kon',color:'Black'},
+ 3:{el:'ხე',elEn:'Wood',tri:'☳ Shin',color:'Jade'},
+ 4:{el:'ხე',elEn:'Wood',tri:'☴ Son',color:'Green'},
+ 5:{el:'მიწა',elEn:'Earth',tri:'—',color:'Yellow'},
+ 6:{el:'ლითონი',elEn:'Metal',tri:'☰ Ken',color:'White'},
+ 7:{el:'ლითონი',elEn:'Metal',tri:'☱ Da',color:'Red'},
+ 8:{el:'მიწა',elEn:'Earth',tri:'☶ Gon',color:'White'},
+ 9:{el:'ცეცხლი',elEn:'Fire',tri:'☲ Ri',color:'Purple'}
+};
+const MONTH_STAR = {
+ '147':[8,7,6,5,4,3,2,1,9,8,7,6],
+ '258':[2,1,9,8,7,6,5,4,3,2,1,9],
+ '369':[5,4,3,2,1,9,8,7,6,5,4,3]
+};
+const MONTH_BOUNDS = [[2,4],[3,6],[4,5],[5,6],[6,6],[7,7],[8,8],[9,8],[10,8],[11,7],[12,7],[1,6]];
+const ymd = d => ({y:d.getFullYear(),m:d.getMonth()+1,d:d.getDate()});
+function solarMonthIndex(d){
+  const {y}=ymd(d);
+  if (d < new Date(y,1,4)) return 11;            // before ~Feb 4 -> Jan block
+  let idx=0;
+  MONTH_BOUNDS.forEach(([m,day],i)=>{
+    const yy = (m===1)? y+1 : y;
+    if (d >= new Date(yy, m-1, day)) idx=i;
+  });
+  return idx;
+}
+function yearStar(sy){ let s=reduceNum(digitSum(sy)); let st=11-s; if(st===10)st=1; return st; }
+function nineStarKi(d){
+  const {y}=ymd(d);
+  const sy = (d < new Date(y,1,4)) ? y-1 : y;
+  const ys = yearStar(sy);
+  const grp = [1,4,7].includes(ys)?'147':[2,5,8].includes(ys)?'258':'369';
+  const mi = solarMonthIndex(d);
+  const ms = MONTH_STAR[grp][mi];
+  return {year:{n:ys,...STAR_META[ys]}, month:{n:ms,...STAR_META[ms]}, solarYear:sy};
+}
+
+/* 2 · Arrows of Pythagoras  (grid 3 6 9 / 2 5 8 / 1 4 7) */
+const ARROW_LINES = [
+ {line:[3,6,9],theme:'ინტელექტი / გონება'},
+ {line:[2,5,8],theme:'ემოცია / ბალანსი'},
+ {line:[1,4,7],theme:'პრაქტიკა / ფიზიკა'},
+ {line:[1,2,3],theme:'დამგეგმავი'},
+ {line:[4,5,6],theme:'ნება / სიმტკიცე'},
+ {line:[7,8,9],theme:'მოქმედება'},
+ {line:[1,5,9],theme:'გადაწყვეტილება'},
+ {line:[3,5,7],theme:'სულიერება'}
+];
+function digitCounts(d, extra=[]){
+  const c={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+  const {y,m,d:dd}=ymd(d);
+  const blob = String(dd).padStart(2,'0')+String(m).padStart(2,'0')+String(y);
+  for(const ch of blob){ const n=+ch; if(n)c[n]++; }
+  for(const w of extra) for(const ch of String(Math.abs(w))){ const n=+ch; if(n)c[n]++; }
+  return c;
+}
+function arrows(d, extra=[]){
+  const c=digitCounts(d,extra), strength=[], lesson=[];
+  for(const a of ARROW_LINES){
+    const present=a.line.every(n=>c[n]>0), absent=a.line.every(n=>c[n]===0);
+    if(present) strength.push(a); else if(absent) lesson.push(a);
+  }
+  return {counts:c, strength, lesson};
+}
+
+/* 3 · Ank Jyotish */
+const NUM_GRAHA={1:'Sun',2:'Moon',3:'Jupiter',4:'Rahu',5:'Mercury',6:'Venus',7:'Ketu',8:'Saturn',9:'Mars'};
+const GRAHA_KA={Sun:'მზე',Moon:'მთვარე',Jupiter:'იუპიტერი',Rahu:'რაჰუ',Mercury:'მერკური',Venus:'ვენერა',Ketu:'კეტუ',Saturn:'სატურნი',Mars:'მარსი'};
+const FRIENDS={Sun:['Moon','Mars','Jupiter'],Moon:['Sun','Mercury'],Mars:['Sun','Moon','Jupiter'],Mercury:['Sun','Venus'],Jupiter:['Sun','Moon','Mars'],Venus:['Mercury','Saturn'],Saturn:['Mercury','Venus']};
+const ENEMIES={Sun:['Venus','Saturn'],Moon:[],Mars:['Mercury'],Mercury:['Moon'],Jupiter:['Mercury','Venus'],Venus:['Sun','Moon'],Saturn:['Sun','Moon','Mars']};
+const node = g => ({Rahu:'Saturn',Ketu:'Mars'}[g]||g);
+const RELKA={friend:'მეგობარი',enemy:'მტერი',neutral:'ნეიტრალური',same:'იგივე'};
+function grahaRelation(a,b){
+  a=node(a);b=node(b);
+  if(a===b)return'same';
+  if((FRIENDS[a]||[]).includes(b))return'friend';
+  if((ENEMIES[a]||[]).includes(b))return'enemy';
+  return'neutral';
+}
+const LETTER_PLANET={1:'AIJQY',2:'BKR',3:'CGLS',4:'DMT',5:'EHNX',6:'UVW',7:'OZ',8:'FP'};
+function naamankValue(name){
+  let t=0;
+  for(const ch of name.toUpperCase())
+    for(const v in LETTER_PLANET) if(LETTER_PLANET[v].includes(ch)){ t+=+v; break; }
+  return t;
+}
+function ankJyotish(d,name=''){
+  const {y,m,d:dd}=ymd(d);
+  const moolank=reduceNum(dd);
+  const bhagyank=reduceNum(+(String(dd).padStart(2,'0')+String(m).padStart(2,'0')+String(y)));
+  const out={
+    moolank:{n:moolank,graha:NUM_GRAHA[moolank],ka:GRAHA_KA[NUM_GRAHA[moolank]]},
+    bhagyank:{n:bhagyank,graha:NUM_GRAHA[bhagyank],ka:GRAHA_KA[NUM_GRAHA[bhagyank]]},
+    mbRel:grahaRelation(NUM_GRAHA[moolank],NUM_GRAHA[bhagyank])
+  };
+  if(name.trim()){
+    const raw=naamankValue(name), na=reduceNum(raw);
+    out.naamank={n:na,raw,graha:NUM_GRAHA[na],ka:GRAHA_KA[NUM_GRAHA[na]]};
+    out.nameRel=grahaRelation(NUM_GRAHA[na],NUM_GRAHA[moolank]);
+  }
+  return out;
+}
+
+/* 4 · Gematria / Abjad / Isopsephy */
+const HEBREW={'א':1,'ב':2,'ג':3,'ד':4,'ה':5,'ו':6,'ז':7,'ח':8,'ט':9,'י':10,'כ':20,'ל':30,'מ':40,'נ':50,'ס':60,'ע':70,'פ':80,'צ':90,'ק':100,'ר':200,'ש':300,'ת':400,'ך':500,'ם':600,'ן':700,'ף':800,'ץ':900};
+const GREEK={'α':1,'β':2,'γ':3,'δ':4,'ε':5,'ϝ':6,'ζ':7,'η':8,'θ':9,'ι':10,'κ':20,'λ':30,'μ':40,'ν':50,'ξ':60,'ο':70,'π':80,'ϙ':90,'ρ':100,'σ':200,'ς':200,'τ':300,'υ':400,'φ':500,'χ':600,'ψ':700,'ω':800,'ϡ':900};
+const ARABIC={'ا':1,'ب':2,'ج':3,'د':4,'ه':5,'و':6,'ز':7,'ح':8,'ط':9,'ي':10,'ك':20,'ل':30,'م':40,'ن':50,'س':60,'ع':70,'ف':80,'ص':90,'ق':100,'ر':200,'ش':300,'ت':400,'ث':500,'خ':600,'ذ':700,'ض':800,'ظ':900,'غ':1000,'أ':1,'إ':1,'آ':1,'ء':1,'ة':5,'ى':10};
+function gematria(text,system='hebrew'){
+  const T={hebrew:HEBREW,greek:GREEK,arabic:ARABIC}[system];
+  const norm=text.normalize('NFC');
+  let total=0; for(const ch of norm) total+=T[ch]||0;
+  return {system,value:total,reduced:total?reduceNum(total):0,root9:total?(total%9||9):0};
+}
+
+/* 5 · Chaldean */
+const CHALDEAN={};
+Object.entries({1:'AIJQY',2:'BKR',3:'CGLS',4:'DMT',5:'EHNX',6:'UVW',7:'OZ',8:'FP'})
+  .forEach(([v,ls])=>{for(const l of ls)CHALDEAN[l]=+v;});
+function chaldeanName(name){
+  let t=0; for(const ch of name.toUpperCase()) if(/[A-Z]/.test(ch)) t+=CHALDEAN[ch]||0;
+  return {compound:t, single:t?reduceNum(t):0};
+}
+
+/* expose for cross-validation harness */
+if (typeof module!=='undefined') module.exports={nineStarKi,arrows,ankJyotish,gematria,chaldeanName,reduceNum};
+
+/* ══════════════════════════════════════════════════════════════════════
+   UI
+   ══════════════════════════════════════════════════════════════════════ */
+if (typeof document!=='undefined'){
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const parseDOB=()=>{const v=$('#dob').value; const[y,m,d]=v.split('-').map(Number); return new Date(y,m-1,d);};
+
+  const relSpan=r=>`<span class="rel ${r}">${RELKA[r]}</span>`;
+  const starCard=(k,s)=>`<div class="card"><div class="trigram">${s.tri}</div>
+    <div class="k">${k}</div><div class="big">${s.n}</div>
+    <div class="meta"><b>${s.el}</b> · ${s.elEn} · ${s.color}</div></div>`;
+
+  function renderKi(d){
+    const r=nineStarKi(d);
+    $('#ki-out').innerHTML = starCard('წლის ვარსკვლავი',r.year)+starCard('თვის ვარსკვლავი',r.month);
+  }
+
+  function renderArrows(d){
+    const r=arrows(d);
+    // grid layout positions (row,col) for digits
+    const pos={3:[0,0],6:[0,1],9:[0,2],2:[1,0],5:[1,1],8:[1,2],1:[2,0],4:[2,1],7:[2,2]};
+    const cell=(x,y)=>[8+y*90, 8+x*90]; // px left/top for 82px cells w/ 8 gap
+    const centers={};
+    let cells='';
+    for(const n in pos){
+      const[x,y]=pos[n]; const[left,top]=cell(x,y);
+      centers[n]=[left+41,top+41];
+      const cnt=r.counts[n];
+      cells+=`<div class="mcell ${cnt?'on':''}" style="left:${left}px;top:${top}px">
+        <span class="digit">${n}</span><span class="rep">${cnt?String(n).repeat(cnt):''}</span></div>`;
+    }
+    let lines='';
+    r.strength.forEach(a=>{
+      const p1=centers[a.line[0]], p3=centers[a.line[2]];
+      lines+=`<line x1="${p1[0]}" y1="${p1[1]}" x2="${p3[0]}" y2="${p3[1]}"
+        stroke="var(--gold-bright)" stroke-width="2.5" opacity=".85"/>`;
+    });
+    $('#matrix').innerHTML=`<svg class="msvg" viewBox="0 0 270 270">${lines}</svg>${cells}`;
+    const items=[
+      ...r.strength.map(a=>({...a,tag:'str',lab:'ძალა'})),
+      ...r.lesson.map(a=>({...a,tag:'les',lab:'გაკვეთილი'}))
+    ];
+    $('#arrow-list').innerHTML = items.length
+      ? items.map(a=>`<div class="arrow-item"><span>${a.theme} <span style="color:var(--ink-dim)">(${a.line.join('-')})</span></span>
+          <span class="tag ${a.tag}">${a.lab}</span></div>`).join('')
+      : `<p style="color:var(--ink-dim);font-size:14px">სრული/ცარიელი ხაზი არაა.</p>`;
+  }
+
+  function renderAnk(d,name){
+    const r=ankJyotish(d,name);
+    let html=`<div class="card"><div class="k">მულანკი · ფსიქიკური</div><div class="big">${r.moolank.n}</div>
+      <div class="meta"><b>${r.moolank.ka}</b> · ${r.moolank.graha}</div></div>
+      <div class="card"><div class="k">ბჰაგიანკი · ბედი</div><div class="big">${r.bhagyank.n}</div>
+      <div class="meta"><b>${r.bhagyank.ka}</b> · ${r.bhagyank.graha}<br>მულ.↔ბჰაგ. ${relSpan(r.mbRel)}</div></div>`;
+    if(r.naamank) html+=`<div class="card"><div class="k">ნაამანკი · სახელი</div><div class="big">${r.naamank.n}</div>
+      <div class="meta"><b>${r.naamank.ka}</b> · ${r.naamank.graha} <span style="color:var(--ink-dim)">(${r.naamank.raw})</span><br>სახელი↔ბედი ${relSpan(r.nameRel)}</div></div>`;
+    $('#ank-out').innerHTML=html;
+  }
+
+  const GEM_SAMPLE={hebrew:'שלום',greek:'λογος',arabic:'محمد'};
+  function renderGematria(text,sys){
+    const src=(text&&text.trim())?text.trim():GEM_SAMPLE[sys];
+    const r=gematria(src,sys);
+    const hint = r.value===0
+      ? `<tr><td colspan="2" style="color:var(--enemy);font-size:12.5px;letter-spacing:0;text-transform:none">
+           ${sys} ცხრილს ეს ასოები არ ერგება — აკრიფე მშობლიური დამწერლობით.</td></tr>` : '';
+    $('#gem-out').innerHTML=`
+      <tr><td>ტექსტი</td><td style="font-family:'Noto Serif Georgian';font-size:18px;color:var(--ink)">${src}</td></tr>
+      <tr><td>მნიშვნელობა</td><td>${r.value}</td></tr>
+      <tr><td>დაყვანილი (1–9)</td><td>${r.reduced}</td></tr>
+      <tr><td>ფესვი mod 9</td><td>${r.root9}</td></tr>${hint}`;
+  }
+
+  function renderChaldean(name){
+    const r=chaldeanName(name);
+    $('#chal-out').innerHTML=`<div class="card"><div class="k">შედგენილი</div><div class="big">${r.compound}</div>
+      <div class="meta">ინტერპრეტირდება 10–52</div></div>
+      <div class="card"><div class="k">ერთნიშნა</div><div class="big">${r.single}</div>
+      <div class="meta">დაყვანილი ვიბრაცია</div></div>`;
+  }
+
+  function run(){
+    const d=parseDOB(), name=$('#name').value||'', sys=$('#gemsys').value;
+    renderKi(d); renderArrows(d); renderAnk(d,name);
+    renderGematria(name, sys);   // Latin name -> falls back to native sample
+    renderChaldean(name);
+  }
+
+  // tab switching
+  $('#tabs').addEventListener('click',e=>{
+    const b=e.target.closest('.tab'); if(!b)return;
+    $$('.tab').forEach(t=>t.setAttribute('aria-selected', t===b));
+    $$('.method').forEach(s=>s.classList.toggle('active', s.id===b.dataset.m));
+    $('#gem-field').style.display = b.dataset.m==='gematria'?'flex':'none';
+  });
+  $('#go').addEventListener('click',run);
+  ['#dob','#name','#gemsys'].forEach(s=>$(s).addEventListener('change',run));
+  run();
+}
+</script>
+</body>
+</html>
