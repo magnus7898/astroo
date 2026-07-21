@@ -2466,7 +2466,20 @@ function displayLunarBadge(L){
   const show=(day,pctTxt)=>{
     document.getElementById('lunar-day').textContent=`მთვარის მე-${day} დღე`;
     document.getElementById('lunar-pct').textContent=pctTxt;
-    document.getElementById('lunar-badge').style.display='block';
+    const badge=document.getElementById('lunar-badge');
+    badge.style.display='block';
+    badge.style.cursor='pointer';
+    badge.title='მთვარის ფაზის სრული გვერდი';
+    badge.onclick=()=>{
+      const q=window._lastChartReq;
+      let url='moon.html';
+      if(q&&q.year){
+        const date=`${q.year}-${String(q.month).padStart(2,'0')}-${String(q.day).padStart(2,'0')}`;
+        const time=`${String(q.hour).padStart(2,'0')}:${String(q.minute).padStart(2,'0')}`;
+        url+=`?date=${date}&time=${time}&tz=${encodeURIComponent(q.tz_name||'UTC')}`;
+      }
+      window.open(url,'_blank');
+    };
   };
   const nextStr=(hrs)=>{
     if(hrs==null)return null;
