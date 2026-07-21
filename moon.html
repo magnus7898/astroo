@@ -445,6 +445,30 @@ async function calculate() {
     btn.disabled = false;
   }
 }
+
+// ── Deep-link from astro.html lunar badge: moon.html?date=YYYY-MM-DD&time=HH:MM&tz=Zone ──
+(function(){
+  const p = new URLSearchParams(location.search);
+  const date = p.get('date');
+  if (!date) return;
+  const [y, m, d] = date.split('-');
+  if (!(y && m && d)) return;
+  document.getElementById('year').value  = y;
+  document.getElementById('month').value = String(+m);
+  document.getElementById('day').value   = String(+d);
+  const time = p.get('time');
+  if (time) {
+    const [h, mi] = time.split(':');
+    document.getElementById('hour').value   = String(+h);
+    document.getElementById('minute').value = String(+mi);
+  }
+  const tz = p.get('tz');
+  if (tz) {
+    document.getElementById('tz_name').value = tz;
+    document.getElementById('tz-display').textContent = '🕐 ' + tz;
+  }
+  calculate();
+})();
 </script>
 </body>
 </html>
