@@ -65,6 +65,10 @@ tr:hover td{background:rgba(19,16,58,.6)}
 .varga-name{font-size:11px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .varga-meaning{font-size:9px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .main-badge{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;opacity:.7}
+/* chart view toggle */
+.vt-btn{background:rgba(10,8,30,.7);border:1px solid rgba(61,42,138,.6);border-radius:8px;color:var(--dim);padding:6px 14px;font-size:11px;font-family:'Cinzel',serif;letter-spacing:1px;cursor:pointer;transition:.2s}
+.vt-btn:hover{color:var(--txt);border-color:var(--purple)}
+.vt-btn.active{color:var(--gold-l);border-color:rgba(201,168,76,.6);background:rgba(45,31,110,.35)}
 
 </style>
 </head>
@@ -118,7 +122,14 @@ tr:hover td{background:rgba(19,16,58,.6)}
 <div id="chart-area" style="display:none">
   <div id="ayanamsa-bar" style="text-align:center;font-size:11px;color:rgba(201,168,76,.5);margin-bottom:6px;font-family:'Cinzel',serif;letter-spacing:1px"></div>
   <div class="sec-title">D1 · ვედური ბორბალი · Rashi Chakra</div>
-  <div style="position:relative;"><svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg><div id="planet-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div></div>
+  <div id="view-toggle" style="display:flex;justify-content:center;gap:6px;margin-bottom:10px">
+    <button class="vt-btn active" data-v="wheel" onclick="setChartView('wheel')">◉ ბორბალი</button>
+    <button class="vt-btn" data-v="ni" onclick="setChartView('ni')">◇ ჩრდილოეთი</button>
+    <button class="vt-btn" data-v="si" onclick="setChartView('si')">▦ სამხრეთი</button>
+  </div>
+  <div style="position:relative;" id="wheel-wrap"><svg id="wheel" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg"></svg><div id="planet-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div></div>
+  <div id="ni-wrap" style="display:none;max-width:540px;margin:0 auto"></div>
+  <div id="si-wrap" style="display:none;max-width:540px;margin:0 auto"></div>
 
   <div class="sec-title">გრჰები · Grahas</div>
   <div class="tables-wrap">
@@ -474,8 +485,7 @@ async function generate(){
     _chartData=data;
     document.getElementById('chart-area').style.display='block';
     document.getElementById('ayanamsa-bar').textContent=`Lahiri Ayanamsa: ${data.ayanamsa.toFixed(4)}° · Lagna: ${data.asc_sign} ${fmtDeg(data.asc)}`;
-    drawWheel(data,'wheel');
-    setTimeout(setupPlanetHover,50);
+    window._lastVd=data;renderChartView(data);
     drawPlanetTable(data);
     drawHouseTable(data);
     calcAndDrawAspects(data);
@@ -635,12 +645,93 @@ function showVarga(N){
   // Update sec-title above wheel
   document.querySelector('.sec-title').textContent=`D${N} · ${v?.ka} · ${v?.name} — ${v?.meaning}`;
   // Update MAIN wheel
-  drawWheel(vd,'wheel');
+  window._lastVd=vd;
+  renderChartView(vd);
   // Update main planet table + aspect table
   drawPlanetTable(vd);
   drawHouseTable(vd);
   calcAndDrawAspects(vd);
-  document.getElementById('wheel').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('wheel-wrap').parentNode&&document.querySelector('.sec-title').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ══ CHART VIEW TOGGLE — wheel / North Indian diamond / South Indian grid ══ */
+let CHART_VIEW='wheel';
+function setChartView(v){
+  CHART_VIEW=v;
+  document.querySelectorAll('.vt-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  if(window._lastVd)renderChartView(window._lastVd);
+}
+function renderChartView(vd){
+  const ww=document.getElementById('wheel-wrap'),ni=document.getElementById('ni-wrap'),si=document.getElementById('si-wrap');
+  ww.style.display=CHART_VIEW==='wheel'?'block':'none';
+  ni.style.display=CHART_VIEW==='ni'?'block':'none';
+  si.style.display=CHART_VIEW==='si'?'block':'none';
+  if(CHART_VIEW==='wheel'){drawWheel(vd,'wheel');setTimeout(setupPlanetHover,50);}
+  else if(CHART_VIEW==='ni')ni.innerHTML=niChartSVG(vd);
+  else si.innerHTML=siChartSVG(vd);
+}
+function _hplanets(vd){ // {houseIdx0..11:[names]} from sign placements vs lagna
+  const asc=vd.asc_sign_idx,by={};
+  for(const n of PORDER){const p=vd.planets[n];if(!p)continue;
+    const h=((p.sign_idx-asc)+12)%12;(by[h]=by[h]||[]).push(n);}
+  return by;
+}
+function _pLabel(n){ // short label + color + retro
+  const p=window._lastVd?.planets?.[n]||{};
+  const info=PI[n]||{sym:'?',color:'#fff'};
+  const short={Sun:'Su',Moon:'Mo',Mars:'Ma',Mercury:'Me',Jupiter:'Ju',Venus:'Ve',
+    Saturn:'Sa',Rahu:'Ra',Ketu:'Ke',Uranus:'Ur',Neptune:'Ne'}[n]||n;
+  return{t:short+(p.retrograde?'℞':''),c:info.color};
+}
+/* North Indian: houses fixed, H1 top-center diamond, counterclockwise */
+const NI_POS=[[[200,55],[200,102]],[[100,28],[100,64]],[[28,100],[52,114]],[[142,200],[96,200]],
+ [[28,300],[52,288]],[[100,372],[100,338]],[[200,345],[200,300]],[[300,372],[300,338]],
+ [[372,300],[348,288]],[[258,200],[304,200]],[[372,100],[348,114]],[[300,28],[300,64]]];
+function niChartSVG(vd){
+  const asc=vd.asc_sign_idx,by=_hplanets(vd);
+  let s=`<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+   <rect x="2" y="2" width="396" height="396" fill="rgba(8,6,20,.8)" stroke="rgba(201,168,76,.55)" stroke-width="1.5" rx="4"/>
+   <path d="M2 2 L398 398 M398 2 L2 398 M200 2 L2 200 M200 2 L398 200 M2 200 L200 398 M398 200 L200 398"
+     fill="none" stroke="rgba(201,168,76,.45)" stroke-width="1"/>`;
+  for(let h=0;h<12;h++){
+    const sign=(asc+h)%12,[[sx,sy],[px,py]]=NI_POS[h];
+    s+=`<text x="${sx}" y="${sy}" text-anchor="middle" font-size="12" fill="${RCOL[sign]}" opacity=".8"
+       font-family="Cinzel,serif">${sign+1}</text>`;
+    if(h===0)s+=`<text x="${px}" y="${py-16}" text-anchor="middle" font-size="9" fill="#e8c06e" font-family="Cinzel,serif">Lg</text>`;
+    const pl=by[h]||[],rows=[];
+    for(let i=0;i<pl.length;i+=3)rows.push(pl.slice(i,i+3));
+    rows.forEach((r,i)=>{
+      let x=px-(r.length-1)*16;
+      r.forEach(n=>{const L=_pLabel(n);
+        s+=`<text x="${x}" y="${py+i*15}" text-anchor="middle" font-size="12.5" fill="${L.c}"
+           font-family="Cinzel,serif">${L.t}</text>`;x+=32;});
+    });
+  }
+  return s+'</svg>';
+}
+/* South Indian: signs fixed (Pisces top-left, clockwise), lagna marked */
+const SI_CELLS={11:[0,0],0:[1,0],1:[2,0],2:[3,0],3:[3,1],4:[3,2],5:[3,3],6:[2,3],7:[1,3],8:[0,3],9:[0,2],10:[0,1]};
+function siChartSVG(vd){
+  const asc=vd.asc_sign_idx,C=97;
+  const bySign={};
+  for(const n of PORDER){const p=vd.planets[n];if(!p)continue;(bySign[p.sign_idx]=bySign[p.sign_idx]||[]).push(n);}
+  let s=`<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+    <rect x="2" y="2" width="396" height="396" fill="rgba(8,6,20,.8)" stroke="rgba(201,168,76,.55)" stroke-width="1.5" rx="4"/>`;
+  for(const[sign,[cx,cy]]of Object.entries(SI_CELLS)){
+    const x=2+cx*C,y=2+cy*C,sn=+sign;
+    s+=`<rect x="${x}" y="${y}" width="${C}" height="${C}" fill="none" stroke="rgba(201,168,76,.35)"/>
+       <text x="${x+8}" y="${y+14}" font-size="10" fill="${RCOL[sn]}" opacity=".75" font-family="Cinzel,serif">${ZSYM[sn]}</text>`;
+    if(sn===asc)s+=`<line x1="${x+4}" y1="${y+22}" x2="${x+24}" y2="${y+4}" stroke="#e8c06e" stroke-width="1.6"/>`;
+    const pl=bySign[sn]||[],rows=[];
+    for(let i=0;i<pl.length;i+=2)rows.push(pl.slice(i,i+2));
+    rows.forEach((r,i)=>{
+      let px=x+C/2-(r.length-1)*18;
+      r.forEach(n=>{const L=_pLabel(n);
+        s+=`<text x="${px}" y="${y+40+i*16}" text-anchor="middle" font-size="12" fill="${L.c}"
+           font-family="Cinzel,serif">${L.t}</text>`;px+=36;});
+    });
+  }
+  return s+'</svg>';
 }
 </script>
 </body>
