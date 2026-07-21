@@ -2476,7 +2476,13 @@ function displayLunarBadge(L){
       if(q&&q.year){
         const date=`${q.year}-${String(q.month).padStart(2,'0')}-${String(q.day).padStart(2,'0')}`;
         const time=`${String(q.hour).padStart(2,'0')}:${String(q.minute).padStart(2,'0')}`;
-        url+=`?date=${date}&time=${time}&tz=${encodeURIComponent(q.tz_name||'UTC')}`;
+        const tz=q.tz_name||'UTC';
+        url+=`?date=${date}&time=${time}&tz=${encodeURIComponent(tz)}`;
+        // hand over the already-fetched payload so moon.html renders instantly
+        const mp=window._moonPayload;
+        if(mp&&mp.date===date&&mp.tz===tz){
+          try{localStorage.setItem('magnus_moon_handoff',JSON.stringify({ts:Date.now(),date,tz,payload:mp.payload}));}catch(e){}
+        }
       }
       window.open(url,'_blank');
     };
@@ -2504,7 +2510,10 @@ function displayLunarBadge(L){
     fetch(`${BACKEND}/api/moon?date=${date}&time=${time}&timezone=${encodeURIComponent(q.tz_name||'UTC')}`)
       .then(r=>r.json())
       .then(d=>{
-        if(d&&d.tithi!=null)show(d.tithi,(d.tithi_pct!=null)?`${(+d.tithi_pct).toFixed(1)}% გასული`:'');
+        if(d&&d.tithi!=null){
+          window._moonPayload={date,tz:q.tz_name||'UTC',payload:d}; // handoff cache for moon.html
+          show(d.tithi,(d.tithi_pct!=null)?`${(+d.tithi_pct).toFixed(1)}% გასული`:'');
+        }
         else synodic();
       })
       .catch(synodic);
