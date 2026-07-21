@@ -403,7 +403,17 @@ async function calculate() {
     const r = await fetch(`${BACKEND}/api/moon?date=${date}&time=${time}&timezone=${encodeURIComponent(tz)}`);
     const d = await r.json();
     if (d.error) { alert('შეცდომა: ' + d.error); return; }
+    renderMoon(d);
 
+  } catch(e) {
+    alert('შეცდომა: ' + e.message);
+  } finally {
+    btn.textContent = '🌙 მთვარის გამოთვლა';
+    btn.disabled = false;
+  }
+}
+
+function renderMoon(d) {
     document.getElementById('moonEmoji').textContent   = d.emoji;
     document.getElementById('moonPhase').textContent   = PHASES_KA[d.phase] || d.phase;
 
@@ -437,16 +447,10 @@ async function calculate() {
 
     document.getElementById('result-area').style.display = 'block';
     document.getElementById('result-area').scrollIntoView({behavior:'smooth', block:'start'});
-
-  } catch(e) {
-    alert('შეცდომა: ' + e.message);
-  } finally {
-    btn.textContent = '🌙 მთვარის გამოთვლა';
-    btn.disabled = false;
-  }
 }
 
 // ── Deep-link from astro.html lunar badge: moon.html?date=YYYY-MM-DD&time=HH:MM&tz=Zone ──
+// If astro.html stashed the already-fetched /api/moon payload, render it instantly (no fetch).
 (function(){
   const p = new URLSearchParams(location.search);
   const date = p.get('date');
@@ -462,12 +466,29 @@ async function calculate() {
     document.getElementById('hour').value   = String(+h);
     document.getElementById('minute').value = String(+mi);
   }
-  const tz = p.get('tz');
-  if (tz) {
-    document.getElementById('tz_name').value = tz;
-    document.getElementById('tz-display').textContent = '🕐 ' + tz;
-  }
-  calculate();
+  const tz = p.get('tz') || 'UTC';
+  document.getElementById('tz_name').value = tz;
+  document.getElementById('tz-display').textContent = '🕐 ' + tz;
+
+  // 1) instant path — payload handed over by astro.html via localStorage
+  try {
+    const raw = localStorage.getItem('magnus_moon_handoff');
+    if (raw) {
+      const h = JSON.parse(raw);
+      localStorage.removeItem('magnus_moon_handoff');
+      const fresh = h.ts && (Date.now() - h.ts) < 5*60*1000;
+      if (fresh && h.date === date && h.tz === tz && h.payload) {
+        renderMoon(h.payload);
+        return;
+      }
+    }
+  } catch(e){}
+
+  // 2) fetch directly (skip calculate() — it demands a city, which a deep link doesn't carry)
+  fetch(`${BACKEND}/api/moon?date=${date}&time=${time||'12:00'}:00&timezone=${encodeURIComponent(tz)}`.replace('::',':'))
+    .then(r => r.json())
+    .then(d => { if (d && !d.error) renderMoon(d); })
+    .catch(()=>{});
 })();
 </script>
 </body>
