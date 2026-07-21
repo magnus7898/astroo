@@ -1093,6 +1093,7 @@ function getPersonData(prefix){
   };
 }
 async function fetchChart(data){
+  window._lastChartReq=data; // tithi badge reuses this date/time/tz for /api/moon
   const r=await fetch(`${BACKEND}/chart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const raw=await r.text();
   let d;try{d=JSON.parse(raw);}catch(e){throw new Error('Backend error: '+raw.slice(0,200));}
@@ -2462,12 +2463,39 @@ function showOwnAspects(d1,d2,name1,name2){
 
 function displayLunarBadge(L){
   if(!L)return;
-  const hrs=L.hours_to_next;
-  const h=Math.floor(hrs),m=Math.round((hrs-h)*60);
-  const nextStr=hrs<1?`${Math.round(hrs*60)} წთ-ში`:m>0?`${h} სთ ${m} წთ-ში`:`${h} სთ-ში`;
-  document.getElementById('lunar-day').textContent=`მთვარის მე-${L.lunar_day} დღე`;
-  document.getElementById('lunar-pct').textContent=`შემდეგი ${nextStr} · ${L.pct_elapsed}% გასული`;
-  document.getElementById('lunar-badge').style.display='block';
+  const show=(day,pctTxt)=>{
+    document.getElementById('lunar-day').textContent=`მთვარის მე-${day} დღე`;
+    document.getElementById('lunar-pct').textContent=pctTxt;
+    document.getElementById('lunar-badge').style.display='block';
+  };
+  const nextStr=(hrs)=>{
+    if(hrs==null)return null;
+    const h=Math.floor(hrs),m=Math.round((hrs-h)*60);
+    return hrs<1?`${Math.round(hrs*60)} წთ-ში`:m>0?`${h} სთ ${m} წთ-ში`:`${h} სთ-ში`;
+  };
+  const synodic=()=>{
+    const ns=nextStr(L.hours_to_next);
+    show(L.lunar_day, ns?`შემდეგი ${ns} · ${L.pct_elapsed}% გასული`:`${L.pct_elapsed}% გასული`);
+  };
+  // ZET convention: lunar day = tithi (elongation/12°), not synodic — same source as moon.html
+  if(L.tithi!=null){
+    const ns=nextStr(L.hours_to_next);
+    const pct=(L.tithi_pct!=null)?`${(+L.tithi_pct).toFixed(1)}% გასული`:'';
+    show(L.tithi, ns?`შემდეგი ${ns}${pct?' · '+pct:''}`:pct);
+    return;
+  }
+  const q=window._lastChartReq;
+  if(q&&q.year){
+    const date=`${q.year}-${String(q.month).padStart(2,'0')}-${String(q.day).padStart(2,'0')}`;
+    const time=`${String(q.hour).padStart(2,'0')}:${String(q.minute).padStart(2,'0')}`;
+    fetch(`${BACKEND}/api/moon?date=${date}&time=${time}&timezone=${encodeURIComponent(q.tz_name||'UTC')}`)
+      .then(r=>r.json())
+      .then(d=>{
+        if(d&&d.tithi!=null)show(d.tithi,(d.tithi_pct!=null)?`${(+d.tithi_pct).toFixed(1)}% გასული`:'');
+        else synodic();
+      })
+      .catch(synodic);
+  }else synodic();
 }
 
 
