@@ -630,31 +630,6 @@ tr:hover td{background:rgba(19,16,58,.6)}
     <span style="color:rgba(150,120,220,.5);margin:0 6px">·</span>
     <span id="lunar-pct" style="font-size:11px;color:rgba(180,150,255,.65)"></span>
   </div>
-  <!-- FUTURE DRAGON -->
-  <div id="fd-sec" style="display:none;margin:14px auto;max-width:560px;text-align:center">
-    <button id="fd-btn" onclick="futureDragon()" style="background:none;border:1px solid rgba(201,168,76,.45);
-      border-radius:10px;color:#c9a84c;padding:8px 18px;font-family:'Cinzel',serif;font-size:11px;
-      letter-spacing:2px;cursor:pointer">☊ მომავლის დრაკონი</button>
-    <div id="fd-out" style="display:none;margin-top:12px;background:rgba(8,6,20,.85);
-      border:1px solid rgba(201,168,76,.35);border-radius:12px;padding:16px;text-align:left">
-      <div id="fd-date" style="font-family:'Cinzel',serif;font-size:22px;color:#f0d080;text-align:center;letter-spacing:2px"></div>
-      <div id="fd-mech" style="font-size:11px;color:var(--dim);text-align:center;margin:6px 0 12px;line-height:1.7"></div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead><tr>
-          <th>პლანეტა</th><th>ნატალი</th><th></th><th>როტირებული</th>
-        </tr></thead>
-        <tbody id="fd-tbody"></tbody>
-      </table>
-      <div style="text-align:center;margin-top:12px">
-        <button id="fd-wheel-btn" onclick="futureDragonWheel()" style="background:linear-gradient(135deg,#8a6a20,#c9a84c);
-          border:none;color:#0a0810;padding:8px 20px;border-radius:8px;cursor:pointer;font-family:'Cinzel',serif;
-          font-size:11px;letter-spacing:2px;font-weight:600">✦ როტირებული ბორბალი ✦</button>
-      </div>
-      <p style="font-size:9.5px;color:var(--dim);margin-top:10px;line-height:1.6">
-        მიმდინარე პლუტონი → მომდევნო რაჰუ-გადაკვეთა → ნატალი ბრუნავს Δ=(♇−ნატ.☊) რკალით.
-        MAGNUS-ის სიმეტრიული გაფართოება წარსული ინკარნაციის მეთოდისა.</p>
-    </div>
-  </div>
   <div class="sec-title">პლანეტები</div>
   <div class="tables-wrap">
     <div class="data-card">
@@ -1119,7 +1094,6 @@ function getPersonData(prefix){
 }
 async function fetchChart(data){
   window._lastChartReq=data; // tithi badge reuses this date/time/tz for /api/moon
-  var _fd=document.getElementById('fd-sec');if(_fd)_fd.style.display='block';
   const r=await fetch(`${BACKEND}/chart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   const raw=await r.text();
   let d;try{d=JSON.parse(raw);}catch(e){throw new Error('Backend error: '+raw.slice(0,200));}
@@ -2246,40 +2220,29 @@ async function drawSkyPoster(){
   g.font='300 28px Cinzel, Georgia, serif';g.fillStyle='rgba(212,178,106,.4)';
   g.fillText('M A G N U S',CX,cy);
   try{g.letterSpacing='0px';}catch(e){}
-  // ---- on // ---- on-screen preview + download ----
-  const body=document.getElementById('skychart-body');
+  // ---- on-screen preview + download ----
   const url=cv.toDataURL('image/png');
-  body.innerHTML=`
-    <img src="${url}" style="width:100%;max-width:420px;display:block;margin:0 auto 10px;border-radius:8px;border:1px solid rgba(212,178,106,.3)">
-    <div style="text-align:center">
-      <a href="${url}" download="magnus-sky-${req.year||''}.png"
-        style="display:inline-block;background:linear-gradient(90deg,#0a2a4a,#2a6a9a);color:#fff;padding:9px 20px;border-radius:8px;font-size:12px;letter-spacing:1px;text-decoration:none">⬇ გადმოწერა PNG (1800×2400)</a>
-      <button onclick="runSkyPoster()" style="background:none;border:1px solid rgba(100,65,200,.5);color:#a78bfa;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;margin-left:8px">↻ თავიდან</button>
-    </div>`;
-  const btn2=document.getElementById('skc-btn');if(btn2){btn2.disabled=false;}
+  const fname=`sky-${req.year||''}${String(req.month||'').padStart(2,'0')}${String(req.day||'').padStart(2,'0')}.png`;
+  const body=document.getElementById('skychart-body');
+  if(body){
+    body.innerHTML=`
+      <img src="${url}" style="width:100%;max-width:520px;display:block;margin:0 auto;border-radius:8px;box-shadow:0 8px 34px rgba(0,0,0,.6)" alt="sky poster">
+      <div style="text-align:center;margin-top:12px">
+        <a href="${url}" download="${fname}" style="display:inline-block;background:linear-gradient(90deg,#8a6a20,#c9a84c);color:#0a0810;text-decoration:none;padding:9px 22px;border-radius:8px;font-size:12px;letter-spacing:1px;font-weight:600">⬇ გადმოწერა PNG (ბეჭდვისთვის)</a>
+      </div>`;
+  }
 }
 
-/* ===== Cinderella gates ===== */
-async function runCinderella(){
-  const body=document.getElementById('cinderella-body');
-  const btn=document.getElementById('cind-btn');
-  if(!window._cindReq||!btn)return;
-  btn.disabled=true;btn.textContent='⏳ სკანირება...';
-  try{
-    const res=await fetch(`${BACKEND}/api/cinderella`,{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify(window._cindReq)});
-    if(!res.ok)throw new Error('server');
-    const r=await res.json();
-    const rows=(r.gates||[]).map(gt=>`<tr>
-      <td style="color:#f0c96b;font-family:Cinzel,serif;font-size:11px;white-space:nowrap">${gt.from} — ${gt.to}</td>
-      <td style="font-size:11px;color:#c8b8f0">${gt.planets}</td>
-      <td style="color:#30c890;font-size:11px">${gt.score}</td></tr>`).join('');
-    body.innerHTML=rows?`<table style="width:100%"><thead><tr><th>პერიოდი</th><th>პლანეტები</th><th>ქულა</th></tr></thead><tbody>${rows}</tbody></table>`
-      :'<div style="color:#9ba8b8;font-size:12px">კარიბჭეები ვერ მოიძებნა</div>';
-  }catch(e){body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა — სცადეთ მოგვიანებით</div>';}
+/* ===== Hard/negative transit periods ===== */
+function setupHardPeriodsCard(){
+  const c=document.getElementById('hardperiods-card');if(!c)return;
+  if(window._cindReq){
+    c.style.display='block';
+    document.getElementById('hardperiods-body').innerHTML=`
+      <button id="hp-btn" onclick="runHardPeriods()" style="background:linear-gradient(90deg,#8a2020,#e84040);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">⚡ გამოთვლა — 100 წელი დაბადებიდან</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">სატურნი · პლუტონი · ურანი · ნეპტუნი · მარსი — მრავალი მძიმე ასპექტის ერთდროული პერიოდები</div>`;
+  }else c.style.display='none';
 }
-
-/* ===== Hard periods ===== */
 async function runHardPeriods(){
   const body=document.getElementById('hardperiods-body');
   const btn=document.getElementById('hp-btn');
@@ -2287,19 +2250,217 @@ async function runHardPeriods(){
   btn.disabled=true;btn.textContent='⏳ სკანირება...';
   try{
     const res=await fetch(`${BACKEND}/api/hardperiods`,{method:'POST',
-      headers:{'Content-Type':'application/json'},body:JSON.stringify(window._cindReq)});
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...window._cindReq,years:100})});
     if(!res.ok)throw new Error('server');
-    const r=await res.json();
-    const rows=(r.periods||[]).map(p=>`<tr>
-      <td style="color:#e84040;font-family:Cinzel,serif;font-size:11px;white-space:nowrap">${p.from} — ${p.to}</td>
-      <td style="font-size:11px;color:#c8b8f0">${p.aspects}</td>
-      <td style="color:#e89040;font-size:11px">${p.severity}</td></tr>`).join('');
-    body.innerHTML=rows?`<table style="width:100%"><thead><tr><th>პერიოდი</th><th>ასპექტები</th><th>სიმძიმე</th></tr></thead><tbody>${rows}</tbody></table>`
-      :'<div style="color:#9ba8b8;font-size:12px">მძიმე პერიოდები ვერ მოიძებნა</div>';
-  }catch(e){body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა — სცადეთ მოგვიანებით</div>';}
+    renderHardPeriods(await res.json());
+  }catch(e){
+    body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა გამოთვლა — სცადეთ მოგვიანებით</div>';
+  }
+}
+function renderHardPeriods(r){
+  const body=document.getElementById('hardperiods-body');
+  const P=r.periods||[];
+  const marks=P.map(p=>{
+    const l=(p.age/(r.years_scanned||100)*100).toFixed(2);
+    const hgt=p.marks.length*5+4;
+    return `<div title="${p.peak} · ${p.marks}" style="position:absolute;left:${l}%;bottom:0;width:3px;height:${hgt}px;background:${p.marks.length>=3?'#e84040':'#c77b4a'};border-radius:2px"></div>`;
+  }).join('');
+  const rows=P.map(p=>{
+    const ln=p.links.map(l=>`ტ.${l.t_ka} ${l.aspect} ნ.${l.n_ka} (${l.orb}°)`).join(', ');
+    return `<details style="border-bottom:1px solid rgba(200,60,60,.15);padding:5px 0">
+      <summary style="cursor:pointer;font-size:11.5px;color:#d7dde6;display:flex;gap:8px;align-items:baseline;list-style:none">
+        <span style="color:#e84040;width:38px;display:inline-block">${p.marks}</span>
+        <span style="min-width:150px">${p.start} — ${p.end}</span>
+        <span style="color:#9ba8b8">ასაკი ${p.age}</span>
+        <span style="color:rgba(155,168,184,.5);font-size:10px">${p.days}დღ</span>
+      </summary>
+      <div style="font-size:11px;color:#f0a04b;padding:4px 0 6px 46px">პიკი ${p.peak}: ${ln}</div>
+    </details>`;
+  }).join('');
+  body.innerHTML=`
+    <div style="position:relative;height:22px;background:rgba(90,20,20,.25);border-radius:4px;margin:2px 0 2px">${marks}</div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(155,168,184,.5);margin-bottom:8px"><span>0</span><span>25</span><span>50</span><span>75</span><span>100 წელი</span></div>
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">ნაპოვნია ${r.total_periods} პერიოდი — ≥2-3 ერთდროული მძიმე ასპექტი (☌ □ ☍)</div>
+    <div style="max-height:340px;overflow-y:auto">${rows}</div>
+    <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">⚠ სიმძიმე · ტრანზიტები: სატურნი, პლუტონი, ურანი, ნეპტუნი, მარსი</div>`;
 }
 
-// ── LUNAR BADGE (tithi-first, deep-link to moon.html) ──
+/* ===== Cinderella gate (ცინდერელას კარიბჭე) ===== */
+function setupCinderellaCard(){
+  const c=document.getElementById('cinderella-card');if(!c)return;
+  if(window._cindReq){
+    c.style.display='block';
+    document.getElementById('cinderella-body').innerHTML=`
+      <button id="cind-btn" onclick="runCinderella()" style="background:linear-gradient(90deg,#7c3aed,#a78bfa);border:none;color:#fff;padding:9px 18px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px">✨ გამოთვლა — 100 წელი დაბადებიდან</button>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-top:6px">ქირონი · ვენერა · იუპიტერი · ნეპტუნი — ჰარმონიული ტრანზიტული კარიბჭეები</div>`;
+  }else c.style.display='none';
+}
+async function runCinderella(){
+  const body=document.getElementById('cinderella-body');
+  const btn=document.getElementById('cind-btn');
+  if(!window._cindReq||!btn)return;
+  btn.disabled=true;btn.textContent='⏳ სკანირება...';
+  try{
+    const res=await fetch(`${BACKEND}/api/cinderella`,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...window._cindReq,years:100})});
+    if(!res.ok)throw new Error('server');
+    renderCinderella(await res.json());
+  }catch(e){
+    body.innerHTML='<div style="color:#f87171;font-size:12px">ვერ მოხერხდა გამოთვლა — სცადეთ მოგვიანებით</div>';
+  }
+}
+function renderCinderella(r){
+  const body=document.getElementById('cinderella-body');
+  const P=r.periods||[];
+  const na=(r.natal_aspects||[]).map(a=>`${a.a_ka} ${a.aspect} ${a.b_ka} (${a.orb}°)`).join(' · ');
+  const natalRow=Object.entries(r.natal).map(([k,v])=>
+    `<span style="margin-right:10px;white-space:nowrap">${({chiron:'ქირონი',venus:'ვენერა',jupiter:'იუპიტერი',neptune:'ნეპტუნი'})[k]} ${v.deg}° ${v.sign_ka}${v.retro?' ℞':''}</span>`).join('');
+  // timeline strip: markers by age
+  const marks=P.map(p=>{
+    const l=(p.age/(r.years_scanned||100)*100).toFixed(2);
+    const hgt=p.stars.length*5+4;
+    return `<div title="${p.peak} · ${p.stars}" style="position:absolute;left:${l}%;bottom:0;width:3px;height:${hgt}px;background:${p.stars.length>=3?'#f0c96b':'#a78bfa'};border-radius:2px"></div>`;
+  }).join('');
+  const rows=P.map(p=>{
+    const ln=p.links.map(l=>`ტ.${l.t_ka} ${l.aspect} ნ.${l.n_ka} (${l.orb}°)`).join(', ');
+    const tc=Object.entries(p.transit_chart).map(([k,v])=>
+      `<span style="margin-right:9px;white-space:nowrap">${({chiron:'ქირონი',venus:'ვენერა',jupiter:'იუპიტერი',neptune:'ნეპტუნი'})[k]} ${v.deg}° ${v.sign_ka}${v.retro?' ℞':''}</span>`).join('');
+    return `<details style="border-bottom:1px solid rgba(124,58,237,.15);padding:5px 0">
+      <summary style="cursor:pointer;font-size:11.5px;color:#d7dde6;display:flex;gap:8px;align-items:baseline;list-style:none">
+        <span style="color:#f0c96b;width:34px;display:inline-block">${p.stars}</span>
+        <span style="min-width:150px">${p.start} — ${p.end}</span>
+        <span style="color:#9ba8b8">ასაკი ${p.age}</span>
+        <span style="color:rgba(155,168,184,.5);font-size:10px">${p.days}დღ</span>
+      </summary>
+      <div style="font-size:11px;color:#a78bfa;padding:4px 0 2px 42px">${ln}</div>
+      <div style="font-size:10px;color:#9ba8b8;padding:0 0 6px 42px">პიკი ${p.peak} · ტრანზიტები: ${tc}</div>
+    </details>`;
+  }).join('');
+  body.innerHTML=`
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">ნატალური: ${natalRow}</div>
+    <div style="font-size:12px;color:#e9d5ff;margin-bottom:8px">${r.predisposed
+      ?`💫 ნატალური წინაპირობა: <b style="color:#a78bfa">${na}</b> — საკმარისია ერთი ჰარმონიული ტრანზიტიც`
+      :'ნატალური წინაპირობა არ არის — საჭიროა ≥2 ერთდროული ჰარმონიული ტრანზიტი'}</div>
+    <div style="position:relative;height:22px;background:rgba(45,31,110,.25);border-radius:4px;margin:6px 0 2px">${marks}</div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:rgba(155,168,184,.5);margin-bottom:8px"><span>0</span><span>25</span><span>50</span><span>75</span><span>100 წელი</span></div>
+    <div style="font-size:11px;color:#9ba8b8;margin-bottom:4px">ნაპოვნია ${r.total_periods} პერიოდი</div>
+    <div style="max-height:340px;overflow-y:auto">${rows}</div>
+    <div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:8px;letter-spacing:1px">☌ შეერთება · △ ტრიგონი · ⚻ ინკონიუნქცია · ⚹ სექსტილი · ★ სიძლიერე</div>`;
+}
+
+function showSingleChart(data,label,dual){
+  // Compute ALL aspects (main+virtual+asteroid) including AC/MC
+  data._allAspects=calcAllNatalAspects(data);
+  _d1=data;_d2=null;_crossAsp=[];_swapped=false;_origD1=data;_origD2=null;
+  document.getElementById('acg-section').style.display='none';
+  document.getElementById('wheel-wrap').style.display='block';
+  document.body.style.overflow='';
+  document.getElementById('mode-label').textContent=label;
+  document.getElementById('asp-filters').style.display='block';
+  document.getElementById('legend-wrap').style.display='none';
+  const ow=document.getElementById('own-aspects-wrap');if(ow)ow.innerHTML='';
+  const sb=document.getElementById('swap-btn');if(sb)sb.remove();
+  document.getElementById('chart-area').style.display='block';
+  document.querySelector('.tables-wrap').style.display='grid';
+  document.getElementById('planet-b-wrap').style.display='none';
+  drawWheel(data,null,null);
+  drawPlanetTable(data.planets,false,'planet-tbody');
+  drawHouseTable(data);
+  const initFiltered=data._allAspects.filter(isAspectVisible);
+  drawAspectTable(initFiltered,'aspect-tbody','aspect-table-title',`⚡ ასპექტები — სულ ${initFiltered.length}`);
+  if(data.lunar)displayLunarBadge(data.lunar);
+  renderDominants(data);
+  setupCinderellaCard();
+  setupHardPeriodsCard();
+  setupSkymapCard();
+  setupSkyChartCard();
+  if(currentMode!=='pastlife'){const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}else{plPlaceTable();}
+  const _sc=document.getElementById('synastry-score-card');if(_sc)_sc.style.display='none';
+  document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+let _d1=null,_d2=null,_name1='',_name2='',_crossAsp=[];
+let _swapped=false;
+let _origD1=null,_origD2=null; // always original order
+
+function showDoubleChart(d1,d2,name1,name2,label,crossAsp){
+  _d1=d1;_d2=d2;_name1=name1;_name2=name2;_crossAsp=crossAsp;_swapped=false;
+  _origD1=d1;_origD2=d2;
+  _renderDouble(d1,d2,name1,name2,label,crossAsp);
+}
+
+function swapPersons(){
+  _swapped=!_swapped;
+  const d1=_swapped?_d2:_d1,d2=_swapped?_d1:_d2;
+  const n1=_swapped?_name2:_name1,n2=_swapped?_name1:_name2;
+  // Flip p1/p2 labels in stored aspects (same aspects, just columns swap)
+  const crossAsp=_crossAsp.map(a=>_swapped?{...a,p1:a.p2,p2:a.p1}:a);
+  _renderDouble(d1,d2,n1,n2,document.getElementById('mode-label').textContent,crossAsp);
+}
+
+function _renderDouble(d1,d2,name1,name2,label,crossAsp){
+  document.getElementById('mode-label').textContent=label;
+  const _dc=document.getElementById('dominants-card');if(_dc)_dc.style.display='none';
+  const _cc=document.getElementById('cinderella-card');if(_cc)_cc.style.display='none';
+  const _hc=document.getElementById('hardperiods-card');if(_hc)_hc.style.display='none';
+  const _sk=document.getElementById('skymap-card');if(_sk)_sk.style.display='none';
+  const _sg=document.getElementById('skychart-card');if(_sg)_sg.style.display='none';
+  renderSynastryScore(label,crossAsp);
+  if(currentMode==='pastlife'){plPlaceTable();}else{const _pw=document.getElementById('pl-incarn-wrap');if(_pw)_pw.remove();if(window._plMap){window._plMap.remove();window._plMap=null;}}
+  document.getElementById('legend-wrap').style.display='flex';
+  document.getElementById('leg-a').textContent=name1;
+  document.getElementById('leg-b').textContent=name2;
+  // swap button
+  let swapBtn=document.getElementById('swap-btn');
+  if(!swapBtn){
+    swapBtn=document.createElement('button');
+    swapBtn.id='swap-btn';
+    swapBtn.onclick=swapPersons;
+    swapBtn.style.cssText='font-family:Cinzel,serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#a78bfa;background:rgba(8,6,20,.7);border:1px solid rgba(100,65,200,.4);border-radius:16px;padding:6px 14px;cursor:pointer;margin-left:12px;';
+    document.getElementById('legend-wrap').appendChild(swapBtn);
+  }
+  swapBtn.textContent=_swapped?'↩ აღდგენა':'⇄ შებრუნება';
+  document.getElementById('chart-area').style.display='block';
+  drawPlanetTable(d1.planets,false,'planet-tbody');
+  document.getElementById('planet-b-wrap').style.display='block';
+  document.getElementById('planet-b-title').textContent=`🪐 ${name2} — პლანეტები`;
+  document.getElementById('planet-table-title').textContent=`🪐 ${name1} — პლანეტები`;
+  drawPlanetTable(d2.planets,true,'planet-b-tbody');
+  document.querySelector('.tables-wrap').style.display='grid';
+  drawHouseTable(d1);
+  const ow=document.getElementById('own-aspects-wrap');if(ow)ow.innerHTML='';
+  // Show filters, apply, draw
+  document.getElementById('asp-filters').style.display='flex';
+  const filteredAsp=crossAsp.filter(isAspectVisible);
+  drawAspectTable(filteredAsp,'aspect-tbody','aspect-table-title',`⚡ ჯვარედინი ასპექტები: ${name1} × ${name2}`);
+  drawWheel(d1,d2,filteredAsp);
+  document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function showOwnAspects(d1,d2,name1,name2){
+  let wrap=document.getElementById('own-aspects-wrap');
+  if(!wrap){
+    wrap=document.createElement('div');
+    wrap.id='own-aspects-wrap';
+    document.getElementById('chart-area').appendChild(wrap);
+  }
+  wrap.innerHTML=`
+    <div class="sec-title">${name1} — საკუთარი ასპექტები</div>
+    <div class="data-card" style="margin-bottom:8px;padding:0 0 8px">
+      <table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
+      <tbody id="asp-p1-tbody"></tbody></table>
+    </div>
+    <div class="sec-title">${name2} — საკუთარი ასპექტები</div>
+    <div class="data-card" style="margin-bottom:8px;padding:0 0 8px">
+      <table><thead><tr><th>პ1</th><th>ასპ.</th><th>პ2</th><th>ტიპი</th><th>ორბი</th></tr></thead>
+      <tbody id="asp-p2-tbody"></tbody></table>
+    </div>`;
+  drawAspectTable(d1.aspects||[],'asp-p1-tbody');
+  drawAspectTable(d2.aspects||[],'asp-p2-tbody',null,null,true);
+}
+
 function displayLunarBadge(L){
   if(!L)return;
   const show=(day,pctTxt)=>{
@@ -2317,6 +2478,7 @@ function displayLunarBadge(L){
         const time=`${String(q.hour).padStart(2,'0')}:${String(q.minute).padStart(2,'0')}`;
         const tz=q.tz_name||'UTC';
         url+=`?date=${date}&time=${time}&tz=${encodeURIComponent(tz)}`;
+        // hand over the already-fetched payload so moon.html renders instantly
         const mp=window._moonPayload;
         if(mp&&mp.date===date&&mp.tz===tz){
           try{localStorage.setItem('magnus_moon_handoff',JSON.stringify({ts:Date.now(),date,tz,payload:mp.payload}));}catch(e){}
@@ -2334,6 +2496,7 @@ function displayLunarBadge(L){
     const ns=nextStr(L.hours_to_next);
     show(L.lunar_day, ns?`შემდეგი ${ns} · ${L.pct_elapsed}% გასული`:`${L.pct_elapsed}% გასული`);
   };
+  // ZET convention: lunar day = tithi (elongation/12°), not synodic — same source as moon.html
   if(L.tithi!=null){
     const ns=nextStr(L.hours_to_next);
     const pct=(L.tithi_pct!=null)?`${(+L.tithi_pct).toFixed(1)}% გასული`:'';
@@ -2348,7 +2511,7 @@ function displayLunarBadge(L){
       .then(r=>r.json())
       .then(d=>{
         if(d&&d.tithi!=null){
-          window._moonPayload={date,tz:q.tz_name||'UTC',payload:d};
+          window._moonPayload={date,tz:q.tz_name||'UTC',payload:d}; // handoff cache for moon.html
           show(d.tithi,(d.tithi_pct!=null)?`${(+d.tithi_pct).toFixed(1)}% გასული`:'');
         }
         else synodic();
@@ -2357,302 +2520,435 @@ function displayLunarBadge(L){
   }else synodic();
 }
 
-// ── SHOW SINGLE / DOUBLE CHART ──
-let _d1=null,_d2=null,_crossAsp=[],_swapped=false,_origD1=null,_origD2=null,_name1='',_name2='';
-function showSingleChart(data,label,keepPastLife){
-  _d1=data;_d2=null;_crossAsp=[];_swapped=false;_origD1=data;_origD2=null;
-  document.getElementById('chart-area').style.display='block';
-  document.getElementById('acg-section').style.display='none';
-  document.getElementById('wheel-wrap').style.display='block';
-  document.getElementById('mode-label').textContent=label;
-  document.getElementById('legend-wrap').style.display='none';
-  document.getElementById('planet-b-wrap').style.display='none';
-  document.getElementById('asp-filters').style.display='block';
-  if(data.asc!=null&&!data._timeUnknown){
-    const acSi=Math.floor(data.asc/30)%12,mcSi=Math.floor(data.mc/30)%12;
-    data._aspPlanets={'AC':{degree:data.asc,sign:SIGN_KA[acSi],house:1,retrograde:false},'MC':{degree:data.mc,sign:SIGN_KA[mcSi],house:10,retrograde:false}};
-  }
-  data._allAspects=calcAllNatalAspects(data);
-  const filtered=data._allAspects.filter(isAspectVisible);
-  drawWheel(data,null,filtered);
-  drawPlanetTable(data.planets,false,'planet-tbody');
-  document.getElementById('planet-table-title').textContent='🪐 პლანეტები';
-  drawHouseTable(data);
-  drawAspectTable(filtered,'aspect-tbody','aspect-table-title',`⚡ ასპექტები — სულ ${filtered.length}`,false);
-  ['f-virtual','f-asteroid'].forEach(id=>{
-    const cb=document.getElementById(id);if(cb)cb.onchange=applyAspFilter;
-  });
-  if(data.lunar)displayLunarBadge(data.lunar);
-  renderDominants(data);
-  renderSynastryScore(label,null);
-  const cc=document.getElementById('cinderella-card');if(cc)cc.style.display=window._cindReq?'block':'none';
-  const hc=document.getElementById('hardperiods-card');if(hc)hc.style.display=window._cindReq?'block':'none';
-  setupSkymapCard();setupSkyChartCard();
-  if(!keepPastLife){const pw=document.getElementById('past-life-wrap');if(pw)pw.remove();
-    const iw=document.getElementById('pl-incarn-wrap');if(iw)iw.remove();}
-  document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
-}
-function showDoubleChart(d1,d2,name1,name2,label,cross){
-  _d1=d1;_d2=d2;_crossAsp=cross||[];_swapped=false;_origD1=d1;_origD2=d2;_name1=name1;_name2=name2;
-  document.getElementById('chart-area').style.display='block';
-  document.getElementById('acg-section').style.display='none';
-  document.getElementById('wheel-wrap').style.display='block';
-  document.getElementById('mode-label').textContent=label;
-  document.getElementById('legend-wrap').style.display='flex';
-  document.getElementById('leg-a').textContent=name1;
-  document.getElementById('leg-b').textContent=name2;
-  document.getElementById('asp-filters').style.display='block';
-  const filtered=_crossAsp.filter(isAspectVisible);
-  drawWheel(d1,d2,filtered);
-  drawPlanetTable(d1.planets,false,'planet-tbody');
-  document.getElementById('planet-table-title').textContent='🪐 '+name1;
-  drawHouseTable(d1);
-  document.getElementById('planet-b-wrap').style.display='block';
-  document.getElementById('planet-b-title').textContent='🪐 '+name2;
-  drawPlanetTable(d2.planets,true,'planet-b-tbody');
-  drawAspectTable(filtered,'aspect-tbody','aspect-table-title',`⚡ ჯვარედინი ასპექტები: ${name1} × ${name2}`);
-  ['f-virtual','f-asteroid'].forEach(id=>{
-    const cb=document.getElementById(id);if(cb)cb.onchange=applyAspFilter;
-  });
-  if(d1.lunar)displayLunarBadge(d1.lunar);
-  renderDominants(d1);
-  renderSynastryScore(label,_crossAsp);
-  const cc=document.getElementById('cinderella-card');if(cc)cc.style.display='none';
-  const hc=document.getElementById('hardperiods-card');if(hc)hc.style.display='none';
-  setupSkymapCard();setupSkyChartCard();
-  const pw=document.getElementById('past-life-wrap');if(pw&&label.indexOf('ინკარნაცია')<0)pw.remove();
-  document.getElementById('chart-area').scrollIntoView({behavior:'smooth',block:'start'});
+
+// Draw moon arc segment — annular sector inside R1, transparent white fill
+function drawMoonArc(svg,moonDeg,asc,arcStartOffset,arcLen){
+  const Rout=R1;       // outer edge = main zodiac circle
+  const Rin=R1-11;     // inner edge = half width
+  const startDeg=moonDeg+arcStartOffset;
+  const endDeg=startDeg+arcLen;
+  const a1=e2s(startDeg,asc),a2=e2s(endDeg,asc);
+  const large=arcLen>180?1:0;
+  // Four corners of the annular sector
+  const ox1=CX+Math.cos(a1)*Rout,oy1=CY+Math.sin(a1)*Rout;
+  const ox2=CX+Math.cos(a2)*Rout,oy2=CY+Math.sin(a2)*Rout;
+  const ix2=CX+Math.cos(a2)*Rin, iy2=CY+Math.sin(a2)*Rin;
+  const ix1=CX+Math.cos(a1)*Rin, iy1=CY+Math.sin(a1)*Rin;
+  // e2s reverses direction: outer CCW (sweep=0), inner CW (sweep=1) — same as house band
+  const d=`M${ox1},${oy1} A${Rout},${Rout} 0 ${large},0 ${ox2},${oy2} L${ix2},${iy2} A${Rin},${Rin} 0 ${large},1 ${ix1},${iy1} Z`;
+  el('path',{d,fill:'rgba(255,255,255,0.22)',stroke:'rgba(255,255,255,0.5)','stroke-width':0.8},svg);
 }
 
-// ── DRAW WHEEL ──
-function drawWheel(data,data2,crossAspects){
+// ── WHEEL DRAW ──
+let _aspLines=[]; // track drawn aspect lines for hover
+
+function highlightAspects(planetName,isInner){
+  const svg=document.getElementById('wheel');
+  // When swapped: outer ring = orig P2 (stored as p2), inner = orig P1 (stored as p1)
+  // When not swapped: outer = orig P1 (p1), inner = orig P2 (p2)
+  svg.querySelectorAll('.asp-line').forEach(line=>{
+    let inv;
+    if(line.dataset.dual){
+      if(_swapped){
+        // outer is orig P2 (line.p2), inner is orig P1 (line.p1)
+        inv=(!isInner&&line.dataset.p2===planetName)||(isInner&&line.dataset.p1===planetName);
+      }else{
+        // outer is orig P1 (line.p1), inner is orig P2 (line.p2)
+        inv=(!isInner&&line.dataset.p1===planetName)||(isInner&&line.dataset.p2===planetName);
+      }
+    }else{
+      inv=line.dataset.p1===planetName||line.dataset.p2===planetName;
+    }
+    line.style.opacity=inv?'0.95':'0.04';
+    line.style.strokeWidth=inv?'2':'0.4';
+  });
+  document.querySelectorAll('#aspect-tbody tr').forEach(tr=>{
+    tr.style.opacity=tr.textContent.includes(planetName)?'1':'0.25';
+  });
+}
+
+function clearHighlight(){
+  const svg=document.getElementById('wheel');
+  svg.querySelectorAll('.asp-line').forEach(line=>{
+    line.style.opacity='0.45';
+    line.style.strokeWidth='0.8';
+  });
+  document.querySelectorAll('#aspect-tbody tr,#planet-tbody tr,#planet-b-tbody tr').forEach(tr=>{
+    tr.style.opacity='1';
+  });
+}
+
+function drawWheel(data1,data2,dualAsp){
   const svg=document.getElementById('wheel');
   svg.innerHTML='';
-  const tu=data._timeUnknown;
-  const asc=tu?0:(data.asc||0);
+  const asc=data1._timeUnknown?0:data1.asc;
+  const R3d=data2?193:R3;
+  const R5d=data2?105:R5;
   const defs=el('defs',{},svg);
-  const bg=el('radialGradient',{id:'wbg',cx:'50%',cy:'50%',r:'50%'},defs);
-  el('stop',{offset:'0%','stop-color':'#120e2a'},bg);
-  el('stop',{offset:'100%','stop-color':'#04030e'},bg);
-  el('circle',{cx:CX,cy:CY,r:R1+28,fill:'url(#wbg)'},svg);
-  // zodiac ring
+  // filters
+  const sf=el('filter',{id:'sunF',x:'-60%',y:'-60%',width:'220%',height:'220%'},defs);
+  el('feGaussianBlur',{stdDeviation:'3',result:'blur'},sf);
+  const fm=el('feMerge',{},sf);el('feMergeNode',{in:'blur'},fm);el('feMergeNode',{in:'SourceGraphic'},fm);
+  const mf=el('filter',{id:'moonF',x:'-60%',y:'-60%',width:'220%',height:'220%'},defs);
+  el('feGaussianBlur',{stdDeviation:'3',result:'blur'},mf);
+  const mfc=el('feFlood',{'flood-color':'#4090ff','flood-opacity':'0.5','result':'color'},mf);
+  el('feComposite',{in:'color',in2:'blur',operator:'in','result':'colorBlur'},mf);
+  const mfmg=el('feMerge',{},mf);el('feMergeNode',{in:'colorBlur'},mfmg);el('feMergeNode',{in:'SourceGraphic'},mfmg);
+  // bg
+  const bgG=el('radialGradient',{id:'bgG',cx:'50%',cy:'50%',r:'50%'},defs);
+  el('stop',{offset:'0%','stop-color':'#120e2a'},bgG);
+  el('stop',{offset:'100%','stop-color':'#04030e'},bgG);
+  el('rect',{width:700,height:700,fill:'url(#bgG)'},svg);
+
+  // zodiac band
+  const EFILL=['#1a0808','#081008','#08101a','#08101a','#1a0808','#081008','#08101a','#081018','#1a0808','#081008','#08101a','#081018'];
   for(let i=0;i<12;i++){
-    const a0=e2s(i*30,asc),a1=e2s((i+1)*30,asc);
-    const p=(a,r)=>`${CX+Math.cos(a)*r},${CY+Math.sin(a)*r}`;
-    el('path',{d:`M${p(a0,R2)} L${p(a0,R1)} A${R1},${R1} 0 0,0 ${p(a1,R1)} L${p(a1,R2)} A${R2},${R2} 0 0,1 ${p(a0,R2)} Z`,
-      fill:i%2?'rgba(12,10,34,.9)':'rgba(16,13,42,.9)',stroke:'rgba(61,42,138,.5)','stroke-width':.6},svg);
-    const am=e2s(i*30+15,asc);
-    txt(svg,ZSYM[i],CX+Math.cos(am)*(R1+R2)/2,CY+Math.sin(am)*(R1+R2)/2,
-      {fill:ZCOL[i],'font-size':20,'font-family':'serif'});
+    const p=(d,r)=>{const a=e2s(d,asc);return`${CX+Math.cos(a)*r},${CY+Math.sin(a)*r}`;};
+    el('path',{d:`M${p(i*30,R1)} A${R1},${R1} 0 0,0 ${p((i+1)*30,R1)} L${p((i+1)*30,R2)} A${R2},${R2} 0 0,1 ${p(i*30,R2)} Z`,fill:EFILL[i]},svg);
+    el('path',{d:`M${p(i*30,R2)} A${R2},${R2} 0 0,0 ${p((i+1)*30,R2)}`,fill:'none',stroke:ZCOL[i],'stroke-width':2,opacity:.6},svg);
   }
+  for(let i=0;i<12;i++){
+    const a=e2s(i*30,asc);
+    el('line',{x1:CX+Math.cos(a)*R1,y1:CY+Math.sin(a)*R1,x2:CX+Math.cos(a)*R2,y2:CY+Math.sin(a)*R2,stroke:ZCOL[i],'stroke-width':1.2,opacity:.85},svg);
+  }
+
+  // house band (narrower in dual mode)
+  if(!data1._timeUnknown&&data1.houses){
+    for(let i=0;i<12;i++){
+      const h1=data1.houses[i],h2=data1.houses[(i+1)%12];
+      const span=((h2-h1)+360)%360,la=span>180?1:0;
+      const p=(d,r)=>{const a=e2s(d,asc);return`${CX+Math.cos(a)*r},${CY+Math.sin(a)*r}`;};
+      el('path',{d:`M${p(h1,R2)} A${R2},${R2} 0 ${la},0 ${p(h2,R2)} L${p(h2,R3d)} A${R3d},${R3d} 0 ${la},1 ${p(h1,R3d)} Z`,fill:i%2?'rgba(6,5,18,1)':'rgba(10,8,26,1)'},svg);
+    }
+  }
+
+  // inner circle for second person (if synastry/transit)
+  const R_iz_out=data2?155:0;
+  const R_iz_in=data2?116:0;
+  if(data2){
+    // inner zodiac band fills (element tinted, darker)
+    const EFILL2=['#120606','#060a06','#060a12','#060a12','#120606','#060a06','#060a12','#060810','#120606','#060a06','#060a12','#060810'];
+    for(let i=0;i<12;i++){
+      const p=(d,r)=>{const a=e2s(d,asc);return`${CX+Math.cos(a)*r},${CY+Math.sin(a)*r}`;};
+      el('path',{d:`M${p(i*30,R_iz_out)} A${R_iz_out},${R_iz_out} 0 0,0 ${p((i+1)*30,R_iz_out)} L${p((i+1)*30,R_iz_in)} A${R_iz_in},${R_iz_in} 0 0,1 ${p(i*30,R_iz_in)} Z`,fill:EFILL2[i]},svg);
+      // inner edge colored border
+      el('path',{d:`M${p(i*30,R_iz_in)} A${R_iz_in},${R_iz_in} 0 0,0 ${p((i+1)*30,R_iz_in)}`,fill:'none',stroke:ZCOL[i],'stroke-width':1.2,opacity:.5},svg);
+    }
+    // divider lines inner zodiac
+    for(let i=0;i<12;i++){
+      const a=e2s(i*30,asc);
+      el('line',{x1:CX+Math.cos(a)*R_iz_out,y1:CY+Math.sin(a)*R_iz_out,x2:CX+Math.cos(a)*R_iz_in,y2:CY+Math.sin(a)*R_iz_in,stroke:ZCOL[i],'stroke-width':.9,opacity:.7},svg);
+    }
+    // inner zodiac symbols
+    const Rzs2=(R_iz_out+R_iz_in)/2;
+    for(let i=0;i<12;i++){
+      const a=e2s(i*30+15,asc);
+      const zt=el('text',{'text-anchor':'middle','dominant-baseline':'central',x:CX+Math.cos(a)*Rzs2,y:CY+Math.sin(a)*Rzs2,fill:ZCOL[i],'font-size':11,'font-family':'serif','font-weight':'bold'},svg);
+      zt.textContent=ZSYM[i];
+    }
+    // degree ticks on inner zodiac outer edge
+    for(let deg=0;deg<360;deg+=10){
+      const a=e2s(deg,asc),is30=deg%30===0;
+      el('line',{x1:CX+Math.cos(a)*R_iz_out,y1:CY+Math.sin(a)*R_iz_out,x2:CX+Math.cos(a)*(R_iz_out-(is30?8:4)),y2:CY+Math.sin(a)*(R_iz_out-(is30?8:4)),stroke:is30?'rgba(200,160,255,.7)':'rgba(120,80,180,.5)','stroke-width':is30?1:.6},svg);
+    }
+    // inner fill circle
+    el('circle',{cx:CX,cy:CY,r:R_iz_in,fill:'rgba(4,3,14,1)'},svg);
+    el('circle',{cx:CX,cy:CY,r:R5d,fill:'rgba(4,3,14,1)'},svg);
+    el('circle',{cx:CX,cy:CY,r:R5d,fill:'none',stroke:'rgba(120,80,200,.5)','stroke-width':1.2},svg);
+  }else{
+    el('circle',{cx:CX,cy:CY,r:R4,fill:'rgba(4,3,14,1)'},svg);
+  }
+
   // degree ticks
-  for(let d=0;d<360;d++){
-    const a=e2s(d,asc),is30=d%30===0,is10=d%10===0,len=is30?16:is10?10:4;
-    el('line',{x1:CX+Math.cos(a)*R1,y1:CY+Math.sin(a)*R1,
-      x2:CX+Math.cos(a)*(R1-len),y2:CY+Math.sin(a)*(R1-len),
-      stroke:is30?'rgba(220,200,255,.9)':is10?'rgba(150,110,230,.7)':'rgba(70,50,140,.5)',
-      'stroke-width':is30?1.6:is10?1.1:.5},svg);
+  for(let deg=0;deg<360;deg++){
+    const a=e2s(deg,asc),co=Math.cos(a),si2=Math.sin(a);
+    const is30=deg%30===0,is10=deg%10===0,is5=deg%5===0;
+    const len=is30?20:is10?13:is5?8:5;
+    const stroke=is30?'rgba(255,220,255,1)':is10?'rgba(180,130,255,0.95)':is5?'rgba(120,80,200,0.8)':'rgba(80,55,150,0.65)';
+    const sw=is30?2:is10?1.4:is5?0.9:0.5;
+    el('line',{x1:CX+co*R1,y1:CY+si2*R1,x2:CX+co*(R1-len),y2:CY+si2*(R1-len),stroke,'stroke-width':sw},svg);
   }
-  // houses
-  if(!tu&&data.houses){
-    const ROM=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
-    data.houses.forEach((deg,i)=>{
-      const a=e2s(deg,asc),ang=(i===0||i===3||i===6||i===9);
-      el('line',{x1:CX+Math.cos(a)*R4,y1:CY+Math.sin(a)*R4,
-        x2:CX+Math.cos(a)*R2,y2:CY+Math.sin(a)*R2,
-        stroke:ang?'rgba(232,192,110,.85)':'rgba(100,70,200,.4)','stroke-width':ang?1.8:.8},svg);
-      const mid=e2s(midpoint(deg,data.houses[(i+1)%12]),asc);
-      txt(svg,ROM[i],CX+Math.cos(mid)*(R3+R4)/2,CY+Math.sin(mid)*(R3+R4)/2,
-        {fill:'rgba(180,150,255,.6)','font-size':10,'font-family':'Cinzel,serif'});
-    });
-    const la=e2s(asc,asc);
-    txt(svg,'AC',CX+Math.cos(la)*(R1+18),CY+Math.sin(la)*(R1+18),{fill:'#e8c06e','font-size':11,'font-weight':'bold','font-family':'Cinzel,serif'});
-    const ma=e2s(data.mc,asc);
-    txt(svg,'MC',CX+Math.cos(ma)*(R1+18),CY+Math.sin(ma)*(R1+18),{fill:'#e8c06e','font-size':11,'font-weight':'bold','font-family':'Cinzel,serif'});
+  for(let deg=0;deg<360;deg+=10){
+    if(deg%30===0)continue;
+    const a=e2s(deg,asc),nr=R1-33;
+    const nx=CX+Math.cos(a)*nr,ny=CY+Math.sin(a)*nr;
+    txt(svg,String(deg%30),nx,ny,{fill:'rgba(160,120,240,0.9)','font-size':7.5,'font-family':'serif',transform:`rotate(${(a*180/Math.PI)+90},${nx},${ny})`});
   }
-  el('circle',{cx:CX,cy:CY,r:R2,fill:'none',stroke:'rgba(100,65,200,.7)','stroke-width':1.2},svg);
-  el('circle',{cx:CX,cy:CY,r:R1,fill:'none',stroke:'rgba(140,90,230,.8)','stroke-width':1.6},svg);
-  el('circle',{cx:CX,cy:CY,r:R4,fill:'rgba(4,3,14,.95)',stroke:'rgba(50,32,120,.6)','stroke-width':1},svg);
-  // planet placer with collision resolution
-  function place(planets,ring,scale){
-    const present=PORDER.filter(n=>planets[n]&&planets[n].degree!=null);
-    const trueA={};for(const n of present)trueA[n]=e2s(planets[n].degree,asc);
-    const dispA={};for(const n of present)dispA[n]=trueA[n];
-    const MINGAP=20/(ring);
-    for(let it=0;it<300;it++){let mv=false;
-      for(let i=0;i<present.length;i++)for(let j=i+1;j<present.length;j++){
-        const a=present[i],b=present[j];
-        let d=dispA[b]-dispA[a];
+
+  // circles
+  el('circle',{cx:CX,cy:CY,r:R1,fill:'none',stroke:'rgba(140,90,230,0.85)','stroke-width':1.8},svg);
+  el('circle',{cx:CX,cy:CY,r:R2,fill:'none',stroke:'rgba(100,65,200,0.8)','stroke-width':1.5},svg);
+  el('circle',{cx:CX,cy:CY,r:R3d,fill:'none',stroke:'rgba(70,45,160,0.75)','stroke-width':1.2},svg);
+  if(data2){
+    el('circle',{cx:CX,cy:CY,r:R_iz_out,fill:'none',stroke:'rgba(100,65,200,.65)','stroke-width':1},svg);
+    el('circle',{cx:CX,cy:CY,r:R_iz_in,fill:'none',stroke:'rgba(167,139,250,.45)','stroke-width':1},svg);
+    el('circle',{cx:CX,cy:CY,r:R5d,fill:'none',stroke:'rgba(120,80,200,.5)','stroke-width':1.2},svg);
+  }else{
+    el('circle',{cx:CX,cy:CY,r:R4,fill:'none',stroke:'rgba(50,32,120,0.7)','stroke-width':1},svg);
+  }
+
+  // zodiac symbols outer
+  const Rzs=(R1+R2)/2;
+  for(let i=0;i<12;i++){
+    const a=e2s(i*30+15,asc);
+    const zt=el('text',{'text-anchor':'middle','dominant-baseline':'central',x:CX+Math.cos(a)*Rzs,y:CY+Math.sin(a)*Rzs,fill:ZCOL[i],'font-size':20,'font-family':'serif','font-weight':'bold'},svg);
+    zt.textContent=ZSYM[i];
+  }
+
+  // house lines + numbers
+  if(!data1._timeUnknown&&data1.houses){
+    const Rhn=(R2+R3)/2;
+    for(let i=0;i<12;i++){
+      const a=e2s(data1.houses[i],asc);
+      const isAngle=[0,3,6,9].includes(i);
+      el('line',{x1:CX+Math.cos(a)*R2,y1:CY+Math.sin(a)*R2,x2:CX+Math.cos(a)*R3d,y2:CY+Math.sin(a)*R3d,stroke:isAngle?'#e8c06e':'rgba(100,65,200,.6)','stroke-width':isAngle?2:.8},svg);
+      const next=data1.houses[(i+1)%12];
+      let mid=data1.houses[i]+((next-data1.houses[i]+360)%360)/2;
+      if(mid>=360)mid-=360;
+      const ma=e2s(mid,asc);
+      txt(svg,String(i+1),CX+Math.cos(ma)*(R2+R3d)/2,CY+Math.sin(ma)*(R2+R3d)/2,{fill:'rgba(180,150,255,0.85)','font-size':11,'font-family':'Cinzel,serif','font-weight':'bold'});
+    }
+  }
+
+  // aspect lines — dualAsp overrides when provided (filtered); fallback to chart aspects
+  const aspR=data2?R5d:R4;
+  const allPlanetsForLines=data2?{...(data1.planets||{}),...(data2.planets||{})}:(data1.planets||{});
+  const lineAspects=dualAsp!=null?dualAsp:(data2&&_origD1&&_origD2?_crossAsp.filter(isAspectVisible):data1._allAspects?data1._allAspects.filter(isAspectVisible):(data1.aspects||[]));
+  for(const asp of lineAspects){
+    let deg1,deg2;
+    if(data2&&_origD1&&_origD2){
+      deg1=(_origD1.planets[asp.p1]??_origD1._aspPlanets?.[asp.p1])?.degree;
+      deg2=(_origD2.planets[asp.p2]??_origD2._aspPlanets?.[asp.p2])?.degree;
+    }else{
+      const p=allPlanetsForLines;
+      deg1=p[asp.p1]?.degree;
+      deg2=p[asp.p2]?.degree;
+      // AC/MC fallback
+      if(deg1==null&&asp.p1==='AC')deg1=data1.asc;
+      if(deg1==null&&asp.p1==='MC')deg1=data1.mc;
+      if(deg2==null&&asp.p2==='AC')deg2=data1.asc;
+      if(deg2==null&&asp.p2==='MC')deg2=data1.mc;
+    }
+    if(deg1==null||deg2==null)continue;
+    const a1=e2s(deg1,asc),a2=e2s(deg2,asc);
+    const pp1=pxy(a1,aspR),pp2=pxy(a2,aspR);
+    const ln=el('line',{x1:pp1.x,y1:pp1.y,x2:pp2.x,y2:pp2.y,stroke:asp.color,'stroke-width':1,opacity:.5,'class':'asp-line'},svg);
+    ln.dataset.p1=asp.p1;ln.dataset.p2=asp.p2;
+    if(data2)ln.dataset.dual='1';
+  }
+
+
+  // draw planets helper
+  function drawPlanets(data,Rg,colorMod,isInner){
+    const present=Object.keys(data.planets);
+    const trueA={};
+    for(const n of present)trueA[n]=e2s(data.planets[n].degree,asc);
+    const sorted=[...present].sort((a,b)=>trueA[a]-trueA[b]);
+    const dispA={};
+    for(const n of present)dispA[n]=trueA[n];
+    const MINGAP=isInner?18/Rg:22/Rg;
+    for(let it=0;it<400;it++){
+      let moved=false;
+      for(let i=0;i<sorted.length;i++)for(let j=i+1;j<sorted.length;j++){
+        const a=sorted[i],b=sorted[j];let d=dispA[b]-dispA[a];
         while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;
-        if(Math.abs(d)<MINGAP&&Math.abs(d)>0.0001){
-          const push=(MINGAP-Math.abs(d))/2,dir=d>0?1:-1;
-          dispA[a]-=push*dir;dispA[b]+=push*dir;mv=true;}}
-      if(!mv)break;}
-    const out={};
-    for(const n of present){
-      const info=PI[n]||{sym:'?',color:'#fff'};
-      const tA=trueA[n];
-      el('line',{x1:CX+Math.cos(tA)*(ring-8),y1:CY+Math.sin(tA)*(ring-8),
-        x2:CX+Math.cos(tA)*(ring-2),y2:CY+Math.sin(tA)*(ring-2),
-        stroke:info.color,'stroke-width':1.3},svg);
-      const g=pxy(dispA[n],ring+10);
-      if(n==='მზე'){
-        el('circle',{cx:g.x,cy:g.y,r:8*scale,fill:'none',stroke:'#f9c646','stroke-width':2},svg);
-        el('circle',{cx:g.x,cy:g.y,r:2*scale,fill:'#f9c646'},svg);
+        if(Math.abs(d)<MINGAP&&Math.abs(d)>0.0001){const push=(MINGAP-Math.abs(d))/2,dir=d>0?1:-1;dispA[a]-=push*dir;dispA[b]+=push*dir;moved=true;}
+      }
+      if(!moved)break;
+    }
+    for(const name of present){
+      const info=PI[name]||{sym:'?',color:'#fff'};
+      const tA=trueA[name];
+      const color=isInner?'#a78bfa':info.color;
+      const symColor=isInner?info.color:info.color;
+      let diff=dispA[name]-tA;
+      while(diff>Math.PI)diff-=2*Math.PI;while(diff<-Math.PI)diff+=2*Math.PI;
+      const wasMoved=Math.abs(diff)>0.015;
+      const gxy=pxy(wasMoved?dispA[name]:tA,Rg);
+      const tickR1=isInner?R_iz_out:R1+1,tickR2=isInner?R_iz_out+6:R1+9;
+      el('line',{x1:CX+Math.cos(tA)*tickR1,y1:CY+Math.sin(tA)*tickR1,x2:CX+Math.cos(tA)*tickR2,y2:CY+Math.sin(tA)*tickR2,stroke:color,'stroke-width':1.5},svg);
+      el('circle',{cx:CX+Math.cos(tA)*tickR1,cy:CY+Math.sin(tA)*tickR1,r:1.8,fill:color},svg);
+      if(wasMoved)el('line',{x1:CX+Math.cos(tA)*(tickR2),y1:CY+Math.sin(tA)*(tickR2),x2:gxy.x,y2:gxy.y,stroke:color,'stroke-width':.5,opacity:.4,'stroke-dasharray':'2 2'},svg);
+      const fsz=isInner?12:18;
+      if(name==='მზე'&&!isInner){
+        const sg2=el('g',{},svg);
+        el('circle',{cx:gxy.x,cy:gxy.y,r:10,fill:'rgba(249,198,70,0.12)'},sg2);
+        el('circle',{cx:gxy.x,cy:gxy.y,r:8,fill:'none',stroke:'#f9c646','stroke-width':'2',filter:'url(#sunF)'},sg2);
+        el('circle',{cx:gxy.x,cy:gxy.y,r:2,fill:'#f9c646'},sg2);
+      }else if(name==='მზე'&&isInner){
+        // small sun ☉ for inner person
+        el('circle',{cx:gxy.x,cy:gxy.y,r:6,fill:'none',stroke:'#f9c646','stroke-width':'1.5'},svg);
+        el('circle',{cx:gxy.x,cy:gxy.y,r:1.5,fill:'#f9c646'},svg);
+      }else if(name==='მთვარე'&&!isInner){
+        const mg=el('g',{filter:'url(#moonF)'},svg);
+        txt(mg,'☽',gxy.x,gxy.y,{fill:'#b8d8ff','font-size':20,'font-family':'serif'});
       }else{
-        txt(svg,info.sym,g.x,g.y,{fill:info.color,'font-size':16*scale,'font-family':'serif'});
+        txt(svg,info.sym,gxy.x,gxy.y,{fill:symColor,'font-size':fsz,'font-family':'serif'});
       }
-      if(planets[n].retrograde===true||planets[n].retrograde==='true')
-        txt(svg,'℞',g.x+9*scale,g.y-7*scale,{fill:'#f87171','font-size':6,'font-family':'serif'});
-      out[n]={x:g.x,y:g.y,deg:planets[n].degree};
+      if(data.planets[name].retrograde)txt(svg,'℞',gxy.x+(isInner?8:10),gxy.y-(isInner?6:8),{fill:'#f87171','font-size':7,'font-family':'serif'});
+      // Hover hit area for aspect highlighting
+      const hit=el('circle',{cx:gxy.x,cy:gxy.y,r:14,fill:'transparent','stroke-width':0},svg);
+      hit.dataset.planet=name;
+      hit.dataset.inner=isInner?'1':'0';
+      hit.style.cursor='crosshair';hit.style.pointerEvents='all';
+      hit.addEventListener('mouseenter',()=>highlightAspects(name,isInner));
+      hit.addEventListener('mouseleave',()=>clearHighlight());
     }
-    return out;
   }
-  const pos1=place({...data.planets,...(data._aspPlanets||{})},R2+18,1);
-  let pos2=null;
-  if(data2)pos2=place({...data2.planets,...(data2._aspPlanets||{})},R4+18,0.85);
-  // aspect lines
-  const asps=crossAspects||data._allAspects||[];
-  for(const a of asps){
-    const p1=pos1[a.p1],p2=data2?(pos2&&pos2[a.p2]):pos1[a.p2];
-    if(!p1||!p2)continue;
-    const a1=e2s(p1.deg,asc),a2=e2s(p2.deg,asc);
-    el('line',{x1:CX+Math.cos(a1)*R4,y1:CY+Math.sin(a1)*R4,
-      x2:CX+Math.cos(a2)*R4,y2:CY+Math.sin(a2)*R4,
-      stroke:a.color,'stroke-width':.8,opacity:.55,'stroke-dasharray':'3 3'},svg);
+
+  // draw person 1 outside zodiac
+  drawPlanets(data1,R1+30,false,false);
+
+  // Moon arc: time-unknown range (~13° centered) or progression 1-year movement (~13° from start)
+  if(data1.planets['მთვარე']){
+    const moonDeg=data1.planets['მთვარე'].degree;
+    const MOON_DAILY=13.2; // avg degrees per day
+    if(data1._timeUnknown){
+      // Arc centered on noon moon — range across full day
+      drawMoonArc(svg,moonDeg,asc,-MOON_DAILY/2,MOON_DAILY);
+    }else if(data1._isProgression){
+      // Arc from progressed moon forward ~13° (1 year of movement)
+      drawMoonArc(svg,moonDeg,asc,0,MOON_DAILY);
+    }
+  }
+
+  // draw person 2 inside inner ring
+  if(data2)drawPlanets(data2,R_iz_out+18,false,true);
+
+  // ASC/MC for person 1
+  if(!data1._timeUnknown){
+    const angCol='#e8c06e';
+    const ascA=e2s(asc,asc);
+    el('line',{x1:CX+Math.cos(ascA)*R1,y1:CY+Math.sin(ascA)*R1,x2:CX+Math.cos(ascA)*(R1+28),y2:CY+Math.sin(ascA)*(R1+28),stroke:angCol,'stroke-width':2.5},svg);
+    const acTxt=txt(svg,'AC',CX+Math.cos(ascA)*(R1+42),CY+Math.sin(ascA)*(R1+42),{fill:angCol,'font-size':12,'font-weight':'bold','font-family':'Cinzel,serif'});
+    const acHit=el('circle',{cx:CX+Math.cos(ascA)*(R1+42),cy:CY+Math.sin(ascA)*(R1+42),r:18,fill:'rgba(0,0,0,.01)',stroke:'none'},svg);
+    acHit.style.cursor='crosshair';acHit.style.pointerEvents='all';
+    acHit.addEventListener('mouseenter',()=>highlightAspects('AC',false));acHit.addEventListener('mouseleave',()=>clearHighlight());
+    const mcA=e2s(data1.mc,asc);
+    const mcDist=R1+50,mcR=17;
+    const mcCX=CX+Math.cos(mcA)*mcDist,mcCY=CY+Math.sin(mcA)*mcDist;
+    el('line',{x1:CX+Math.cos(mcA)*R1,y1:CY+Math.sin(mcA)*R1,x2:CX+Math.cos(mcA)*(mcDist-mcR-2),y2:CY+Math.sin(mcA)*(mcDist-mcR-2),stroke:angCol,'stroke-width':2.5},svg);
+    el('circle',{cx:mcCX,cy:mcCY,r:mcR,fill:'rgba(10,8,20,.95)',stroke:angCol,'stroke-width':2},svg);
+    txt(svg,'MC',mcCX,mcCY,{fill:angCol,'font-size':11,'font-weight':'bold','font-family':'Cinzel,serif'});
+    const mcHit=el('circle',{cx:mcCX,cy:mcCY,r:mcR,fill:'rgba(0,0,0,.01)',stroke:'none'},svg);
+    mcHit.style.cursor='crosshair';mcHit.style.pointerEvents='all';
+    mcHit.addEventListener('mouseenter',()=>highlightAspects('MC',false));mcHit.addEventListener('mouseleave',()=>clearHighlight());
+  }
+
+  // ASC/MC and houses for person 2 (inner circle) in dual mode
+  if(data2&&!data2._timeUnknown&&data2.houses){
+    const asc2=data2.asc;
+    const angCol2='#a78bfa';
+    // house lines inside inner zodiac ring
+    for(let i=0;i<12;i++){
+      const h1=data2.houses[i],h2=data2.houses[(i+1)%12];
+      const span2=((h2-h1)+360)%360,la2=span2>180?1:0;
+      const p2=(d,r)=>{const a=e2s(d,asc);return`${CX+Math.cos(a)*r},${CY+Math.sin(a)*r}`;};
+      el('path',{d:`M${p2(h1,R_iz_in)} A${R_iz_in},${R_iz_in} 0 ${la2},0 ${p2(h2,R_iz_in)} L${p2(h2,R5d)} A${R5d},${R5d} 0 ${la2},1 ${p2(h1,R5d)} Z`,fill:i%2?'rgba(6,4,18,.9)':'rgba(10,7,26,.9)'},svg);
+      const a2=e2s(data2.houses[i],asc);
+      const isAngle2=[0,3,6,9].includes(i);
+      el('line',{x1:CX+Math.cos(a2)*R_iz_in,y1:CY+Math.sin(a2)*R_iz_in,x2:CX+Math.cos(a2)*R5d,y2:CY+Math.sin(a2)*R5d,stroke:isAngle2?angCol2:'rgba(100,65,200,.45)','stroke-width':isAngle2?1.5:.7},svg);
+      const next2=data2.houses[(i+1)%12];
+      let mid2=data2.houses[i]+((next2-data2.houses[i]+360)%360)/2;
+      if(mid2>=360)mid2-=360;
+      const ma2=e2s(mid2,asc);
+      const Rhn2=(R_iz_in+R5d)/2;
+      txt(svg,String(i+1),CX+Math.cos(ma2)*Rhn2,CY+Math.sin(ma2)*Rhn2,{fill:'rgba(167,139,250,.75)','font-size':8,'font-family':'Cinzel,serif','font-weight':'bold'});
+    }
+    // inner ASC line
+    const ascA2=e2s(asc2,asc);
+    el('line',{x1:CX+Math.cos(ascA2)*R_iz_out,y1:CY+Math.sin(ascA2)*R_iz_out,x2:CX+Math.cos(ascA2)*(R_iz_out+10),y2:CY+Math.sin(ascA2)*(R_iz_out+10),stroke:angCol2,'stroke-width':1.8},svg);
+    txt(svg,'ac',CX+Math.cos(ascA2)*(R_iz_out+18),CY+Math.sin(ascA2)*(R_iz_out+18),{fill:angCol2,'font-size':8,'font-weight':'bold','font-family':'Cinzel,serif'});
+    const acHit2=el('circle',{cx:CX+Math.cos(ascA2)*(R_iz_out+18),cy:CY+Math.sin(ascA2)*(R_iz_out+18),r:14,fill:'rgba(0,0,0,.01)',stroke:'none'},svg);
+    acHit2.style.cursor='crosshair';acHit2.style.pointerEvents='all';
+    acHit2.addEventListener('mouseenter',()=>highlightAspects('AC',true));acHit2.addEventListener('mouseleave',()=>clearHighlight());
+    // inner MC
+    const mcA2=e2s(data2.mc,asc);
+    el('line',{x1:CX+Math.cos(mcA2)*R_iz_out,y1:CY+Math.sin(mcA2)*R_iz_out,x2:CX+Math.cos(mcA2)*(R_iz_out+10),y2:CY+Math.sin(mcA2)*(R_iz_out+10),stroke:angCol2,'stroke-width':1.8},svg);
+    txt(svg,'mc',CX+Math.cos(mcA2)*(R_iz_out+18),CY+Math.sin(mcA2)*(R_iz_out+18),{fill:angCol2,'font-size':8,'font-weight':'bold','font-family':'Cinzel,serif'});
+    const mcHit2=el('circle',{cx:CX+Math.cos(mcA2)*(R_iz_out+18),cy:CY+Math.sin(mcA2)*(R_iz_out+18),r:14,fill:'rgba(0,0,0,.01)',stroke:'none'},svg);
+    mcHit2.style.cursor='crosshair';mcHit2.style.pointerEvents='all';
+    mcHit2.addEventListener('mouseenter',()=>highlightAspects('MC',true));mcHit2.addEventListener('mouseleave',()=>clearHighlight());
   }
 }
 
-// ── PLANET / HOUSE / ASPECT TABLES ──
-function drawPlanetTable(planets,isSecond,tbodyId){
-  const tb=document.getElementById(tbodyId||'planet-tbody');
-  if(!tb)return;tb.innerHTML='';
-  for(const name of PORDER){
-    const p=planets[name];if(!p||p.degree==null)continue;
-    const info=PI[name]||{sym:'?',color:'#aaa'};
-    const si=Math.floor(p.degree/30)%12;
-    const sym=name==='მზე'?sunSVG(18):name==='მთვარე'?'<span class="moon-sym" style="font-size:16px">☽</span>':`<span class="p-sym" style="color:${info.color}">${info.sym}</span>`;
-    const isRetro=p.retrograde===true||p.retrograde==='true';
+// ── TABLES ──
+function drawPlanetTable(planets,isB,tbodyId){
+  const tbody=document.getElementById(tbodyId);
+  tbody.innerHTML='';
+  const shown=new Set();
+  const order=[...PORDER,...Object.keys(planets).filter(k=>!PORDER.includes(k))];
+  for(const name of order){
+    if(!planets[name]||shown.has(name))continue;
+    shown.add(name);
+    const info=PI[name]||{sym:'★',color:'#aaa'};
+    const d=planets[name];
+    const si=SIGN_KA.indexOf(d.sign);
+    const sCol=si>=0?ZCOL[si]:'#aaa';
+    const sc=si>=0?signClass(si):'';
+    const symCell=name==='მზე'?sunSVG(18):name==='მთვარე'?'<span class="moon-sym" style="font-size:16px">☽</span>':`<span class="p-sym" style="color:${isB?'#a78bfa':info.color};font-size:16px;font-family:serif">${info.sym}</span>`;
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${sym}</td><td style="color:${info.color};font-size:11px">${name}</td>
-      <td class="deg-val">${fmtDeg(p.degree)}</td>
-      <td><span class="${signClass(si)}" style="font-size:14px;font-family:serif">${ZSYM[si]}</span> <span style="font-size:10px;color:${ZCOL[si]}">${SIGN_KA[si]}</span></td>
-      <td><span class="house-badge">${p.house||'—'}</span></td>
-      <td>${isRetro?'<span class="retro">℞</span>':''}</td>`;
-    tb.appendChild(tr);
+    tr.innerHTML=`<td>${symCell}</td><td style="color:${isB?'#a78bfa':info.color};font-size:11px;white-space:nowrap">${name}</td><td class="deg-val">${fmtDeg(d.degree)}</td><td><span class="${sc}" style="font-size:13px;font-family:serif">${si>=0?ZSYM[si]:''}</span> <span style="font-size:10px;color:${sCol}">${d.sign}</span></td><td><span class="house-badge" style="${isB?'border-color:rgba(167,139,250,.4);color:#a78bfa':''}">H${d.house||'?'}</span></td><td>${d.retrograde?'<span class="retro">℞</span>':''}</td>`;
+    tbody.appendChild(tr);
   }
 }
+
 function drawHouseTable(data){
-  const tb=document.getElementById('house-tbody');
-  const card=document.getElementById('house-card');
-  if(!tb)return;
-  if(data._timeUnknown||!data.houses){if(card)card.style.display='none';return;}
-  if(card)card.style.display='block';
-  tb.innerHTML='';
-  const ROM=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+  const tbody=document.getElementById('house-tbody');
+  tbody.innerHTML='';
+  if(!data.houses){tbody.innerHTML='<tr><td colspan="3" style="color:rgba(120,100,180,.5);text-align:center;padding:12px;font-size:11px">სახლები არ არის</td></tr>';return;}
+  const ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
   const ANG={0:'AC',3:'IC',6:'DC',9:'MC'};
-  data.houses.forEach((deg,i)=>{
-    const si=Math.floor(deg/30)%12;const ang=ANG[i];
+  for(let i=0;i<12;i++){
+    const deg=data.houses[i];
+    const si=Math.floor(deg/30)%12;
+    const ang=ANG[i];
+    const sc=signClass(si);
     const tr=document.createElement('tr');
-    tr.innerHTML=`<td style="color:${ang?'#c084fc':'rgba(155,168,184,.7)'};font-family:Cinzel,serif;font-size:11px">${ROM[i]}${ang?' <span style="font-size:9px;opacity:.7">'+ang+'</span>':''}</td>
-      <td><span class="${signClass(si)}" style="font-size:13px;font-family:serif">${ZSYM[si]}</span> <span style="font-size:10px;color:${ZCOL[si]}">${SIGN_KA[si]}</span></td>
-      <td class="deg-val">${fmtDeg(deg)}</td>`;
-    tb.appendChild(tr);
-  });
-}
-function drawAspectTable(aspects,tbodyId,titleId,titleText){
-  const tb=document.getElementById(tbodyId||'aspect-tbody');
-  if(!tb)return;tb.innerHTML='';
-  if(titleId&&titleText){const t=document.getElementById(titleId);if(t)t.textContent=titleText;}
-  (aspects||[]).forEach(a=>{
-    const i1=PI[a.p1]||{sym:'?',color:'#aaa'},i2=PI[a.p2]||{sym:'?',color:'#aaa'};
-    const s1=a.p1==='მზე'?sunSVG(14):`<span style="color:${i1.color};font-family:serif;font-size:13px">${i1.sym}</span>`;
-    const s2=a.p2==='მზე'?sunSVG(14):`<span style="color:${i2.color};font-family:serif;font-size:13px">${i2.sym}</span>`;
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td>${s1} <span style="font-size:10px;color:${i1.color}">${a.p1}</span></td>
-      <td><span class="asp-sym" style="color:${a.color}">${a.sym}</span></td>
-      <td>${s2} <span style="font-size:10px;color:${i2.color}">${a.p2}</span></td>
-      <td style="color:${a.color};font-size:10px">${a.type} ${a.angle}°</td>
-      <td style="color:rgba(140,100,200,.7);font-size:10px">${a.orb}°</td>`;
-    tb.appendChild(tr);
-  });
+    tr.innerHTML=`<td style="color:${ang?'#c084fc':'rgba(155,168,184,.7)'};font-family:'Cinzel',serif;font-size:11px;font-weight:${ang?'600':'400'}">${ROMAN[i]}${ang?` <span style="font-size:9px;opacity:.7">${ang}</span>`:''}</td><td><span class="${sc}" style="font-size:13px;font-family:serif">${ZSYM[si]||''}</span> <span style="font-size:10px;color:${ZCOL[si]}">${SIGN_KA[si]||''}</span></td><td class="deg-val">${fmtDeg(deg)}</td>`;
+    tbody.appendChild(tr);
+  }
 }
 
-/* ══ FUTURE DRAGON — current Pluto → next Rahu crossing → rotated natal ══ */
-const _fdNorm=x=>((x%360)+360)%360;
-const _fdRahu=t=>_fdNorm(125.0445479-0.0529537648*((t-Date.UTC(2000,0,1,12))/86400000));
-const _fdFmt=L=>{L=_fdNorm(L);const s=Math.floor(L/30),d=L%30;
-  return Math.floor(d)+'°'+String(Math.floor((d-Math.floor(d))*60)).padStart(2,'0')+"' "+ZSYM[s];};
-const _FD_PLA=['მზე','მთვარე','მერკური','ვენერა','მარსი','იუპიტერი','სატურნი','ურანი','ნეპტუნი','პლუტონი','ჩრდ. კვანძი','სამხ. კვანძი'];
-let _fdRot=null;
-async function futureDragon(){
-  const btn=document.getElementById('fd-btn'),out=document.getElementById('fd-out');
-  const q=window._lastChartReq;
-  if(!q||!q.year){showError('ჯერ ააგე რუქა');return;}
-  btn.textContent='⏳...';btn.disabled=true;
-  try{
-    // natal — same request the chart used
-    const rn=await fetch(`${BACKEND}/chart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(q)});
-    const natal=await rn.json();
-    if(natal.error)throw new Error(natal.error);
-    const natalRahu=natal.planets['ჩრდ. კვანძი']?.degree;
-    if(natalRahu==null)throw new Error('ნატალური ჩრდ. კვანძი ვერ მოიძებნა');
-    // current Pluto
-    const now=new Date();
-    const qc={...q,year:now.getUTCFullYear(),month:now.getUTCMonth()+1,day:now.getUTCDate(),hour:12,minute:0,second:0,tz_name:'UTC'};
-    const rc=await fetch(`${BACKEND}/chart`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(qc)});
-    const cur=await rc.json();
-    const plutoNow=cur.planets?.['პლუტონი']?.degree;
-    if(plutoNow==null)throw new Error('მიმდინარე პლუტო ვერ მოიძებნა');
-    // next mean-Rahu crossing of that longitude (node retrograde-linear)
-    const days=_fdNorm(_fdRahu(Date.now())-plutoNow)/0.0529537648;
-    const d=new Date(Date.now()+days*86400000);
-    const delta=_fdNorm(plutoNow-natalRahu);
-    // rotate natal
-    _fdRot={...natal,planets:{},aspects:[],_timeUnknown:false};
-    for(const[name,p]of Object.entries(natal.planets)){
-      const nd=_fdNorm(p.degree+delta);
-      _fdRot.planets[name]={...p,degree:nd,sign:SIGN_KA[Math.floor(nd/30)%12]};
-    }
-    if(natal.asc!=null)_fdRot.asc=_fdNorm(natal.asc+delta);
-    if(natal.mc!=null)_fdRot.mc=_fdNorm(natal.mc+delta);
-    if(natal.houses)_fdRot.houses=natal.houses.map(h=>_fdNorm(h+delta));
-    for(const name of Object.keys(_fdRot.planets)){
-      const deg=_fdRot.planets[name].degree;
-      if(_fdRot.houses){
-        for(let i=0;i<12;i++){
-          const s=_fdRot.houses[i],e2=_fdRot.houses[(i+1)%12];
-          const span=((e2-s)+360)%360,dist=((deg-s)+360)%360;
-          if(dist<span){_fdRot.planets[name].house=i+1;break;}
-        }
-      }
-    }
-    // render
-    document.getElementById('fd-date').textContent=
-      d.getUTCDate()+'.'+String(d.getUTCMonth()+1).padStart(2,'0')+'.'+d.getUTCFullYear();
-    document.getElementById('fd-mech').innerHTML=
-      '♇ ახლა: '+_fdFmt(plutoNow)+' · ☊ ახლა: '+_fdFmt(_fdRahu(Date.now()))+
-      '<br>Δ = '+delta.toFixed(2)+'° · '+Math.round(days)+' დღეში (~'+(days/365.25).toFixed(1)+' წ.)';
-    const tb=document.getElementById('fd-tbody');tb.innerHTML='';
-    _FD_PLA.forEach(name=>{
-      const p=natal.planets[name];if(!p||p.degree==null)return;
-      const info=PI[name]||{color:'#aaa'};
-      const tr=document.createElement('tr');
-      tr.innerHTML='<td style="color:'+info.color+'">'+name+'</td>'+
-        '<td style="color:#9ba8b8" class="deg-val">'+_fdFmt(p.degree)+'</td>'+
-        '<td style="color:#c9a84c">→</td>'+
-        '<td style="color:#f0d080" class="deg-val">'+_fdFmt(_fdNorm(p.degree+delta))+'</td>';
-      tb.appendChild(tr);
-    });
-    out.style.display='block';
-    out.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }catch(e){showError(e.message);}
-  finally{btn.textContent='☊ მომავლის დრაკონი';btn.disabled=false;}
+const ASP_ORDER=['შეერთება','ოპოზიცია','ტრინი','კვადრატი','სექსტილი','კვინკონსი'];
+function drawAspectTable(aspects,tbodyId='aspect-tbody',titleId,titleText,isB){
+  if(titleId&&titleText){const t=document.getElementById(titleId);if(t)t.textContent=titleText;}
+  const tbody=document.getElementById(tbodyId);
+  if(!tbody)return;
+  tbody.innerHTML='';
+  if(!aspects||!aspects.length){tbody.innerHTML='<tr><td colspan="5" style="color:rgba(100,80,150,.5);text-align:center;padding:16px;font-size:12px">ასპექტები არ მოიძებნა</td></tr>';return;}
+  // Sort: first by p1 planet (PORDER), then by aspect type (ASP_ORDER)
+  aspects=[...aspects].sort((a,b)=>{
+    const pi1=(PORDER.indexOf(a.p1)+99)%99,pi2=(PORDER.indexOf(b.p1)+99)%99;
+    if(pi1!==pi2)return pi1-pi2;
+    const ai1=ASP_ORDER.indexOf(a.type),ai2=ASP_ORDER.indexOf(b.type);
+    return ai1-ai2;
+  });
+  const col=isB?'#a78bfa':null;
+  for(const asp of aspects){
+    const i1=PI[asp.p1]||{sym:'?',color:'#aaa'};
+    const i2=PI[asp.p2]||{sym:'?',color:'#aaa'};
+    const c1=col||i1.color,c2=col||i2.color;
+    const s1=asp.p1==='მზე'?sunSVG(15):`<span style="color:${c1};font-size:14px;font-family:serif">${i1.sym}</span>`;
+    const s2=asp.p2==='მზე'?sunSVG(15):`<span style="color:${c2};font-size:14px;font-family:serif">${i2.sym}</span>`;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${s1} <span style="font-size:10px;color:${c1}">${asp.p1}</span></td><td><span class="asp-sym" style="color:${asp.color}">${asp.sym}</span></td><td>${s2} <span style="font-size:10px;color:${c2}">${asp.p2}</span></td><td style="color:${asp.color};font-size:10px;white-space:nowrap">${asp.type}</td><td style="color:rgba(140,100,200,.7);font-size:10px">${asp.orb}°</td>`;
+    tbody.appendChild(tr);
+  }
 }
-function futureDragonWheel(){
-  if(!_fdRot){showError('ჯერ გამოთვალე მომავლის დრაკონი');return;}
-  showSingleChart(_fdRot,'☊ მომავლის დრაკონის რუქა — როტირებული ნატალი',false);
-}
+
+// Set today's date for transit by default
+setToday('tt');
+setToday('pd');
+
+// Attach filter listeners
+['f-virtual','f-asteroid'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){
+    el.addEventListener('change',applyAspFilter);
+    el.addEventListener('click',applyAspFilter);
+  }
+});
 </script>
 </body>
 </html>
