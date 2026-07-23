@@ -1,29 +1,39 @@
 /* ═══════════════════════════════════════════════════════════════════
-   futurelife.js — MAGNUS · მომავალი სიცოცხლე (Future Incarnations)
-   Self-injecting module for astro.html. Zero edits to existing code.
-   Mirrors the past-life scanner forward: draconic Pluto → all real
-   Pluto passages over that degree in the next 1000 years (~4 epochs).
-   Uses astro.html globals: getPersonData, fetchChart, calcDraconicChart,
-   fetchPlutoAt, showError, showSingleChart, showDoubleChart,
-   calcCrossAspects, searchCity, ZSYM, SIGN_KA.
+   futurelife.js — MAGNUS · მომავალი სიცოცხლე  (v2 — reverse method)
+   Method (mirror of past-life):
+     past:   natal DRACONIC Pluto → when REAL Pluto was there (past)
+     future: REAL Pluto now → when future DRACONIC Pluto (Pluto−Node
+             at T) reaches that degree → epoch → cast future natal.
+   Self-injecting; zero edits to astro.html besides the script tag.
+   Uses globals: getPersonData, fetchChart, fetchPlutoAt, showError,
+   showSingleChart, showDoubleChart, calcCrossAspects, calcDraconicChart,
+   searchCity, ZSYM, SIGN_KA.
    ═══════════════════════════════════════════════════════════════════ */
 (function(){
 'use strict';
 
-/* ── 1. Inject tab button ── */
+const SCAN_YEARS=120;   // horizon; draconic-Pluto cycle ≈ 17.3y → ~7 epochs
+const MAX_EPOCHS=8;
+
+/* mean lunar node (Rahu), tropical, degrees */
+function meanNode(y,m){
+  const t=Date.UTC(y,(m||6)-1,15,12,0,0);
+  const d=(t-Date.UTC(2000,0,1,12))/86400000;
+  return (((125.0445479-0.0529537648*d)%360)+360)%360;
+}
+const norm=x=>((x%360)+360)%360;
+
+/* ── UI injection ── */
 function injectTab(){
   const bar=document.querySelector('.tab-bar');
   if(!bar||document.getElementById('fl-tab-btn'))return;
   const btn=document.createElement('button');
   btn.className='tab-btn';btn.id='fl-tab-btn';
   btn.textContent='მომავალი სიცოცხლე';
-  btn.onclick=activateFutureLife;
-  // place right after the pastlife button
+  btn.onclick=activate;
   const past=[...bar.querySelectorAll('.tab-btn')].find(b=>b.textContent.includes('წარსული'));
   if(past&&past.nextSibling)bar.insertBefore(btn,past.nextSibling);else bar.appendChild(btn);
 }
-
-/* ── 2. Inject form section ── */
 function injectForm(){
   const card=document.querySelector('.form-card');
   if(!card||document.getElementById('form-futurelife'))return;
@@ -32,8 +42,7 @@ function injectForm(){
   div.innerHTML=`
     <div class="person-label">🐉 მომავალი ინკარნაცია</div>
     <div class="field wide" style="margin-bottom:10px">
-      <label>სახელი</label>
-      <input id="fl-name" placeholder="სახელი">
+      <label>სახელი</label><input id="fl-name" placeholder="სახელი">
     </div>
     <div class="form-grid">
       <div class="field"><label>დღე</label><input type="number" id="fl-day" value="1" min="1" max="31"></div>
@@ -56,38 +65,40 @@ function injectForm(){
     </div>
     <input type="hidden" id="fl-tz" value="UTC">
     <div class="tz-display" id="fl-tz-display">—</div>
-    <p style="font-size:10px;color:rgba(150,120,220,.6);margin:8px 0;font-style:italic">☊ დრაკონული პლუტო → ეპოქები, როცა რეალური პლუტო კვლავ იქნება იმ ადგილას — მომდევნო 1000 წელი</p>
+    <p style="font-size:10px;color:rgba(150,120,220,.6);margin:8px 0;font-style:italic">
+      ♇ მიმდინარე პლუტო = მომავალი სიცოცხლის დრაკონული პლუტო ·
+      ეპოქა, როცა (♇−☊) ამ გრადუსს მიაღწევს → მომავალი ნატალური რუქა</p>
     <button class="gen-btn" id="fl-gen-btn" style="margin-top:6px">🐉 მომავალი ინკარნაციების ძებნა</button>`;
   card.appendChild(div);
-  document.getElementById('fl-gen-btn').onclick=runFutureLife;
+  document.getElementById('fl-gen-btn').onclick=run;
 }
-
-/* ── 3. Tab activation (replicates setMode without touching it) ── */
-function activateFutureLife(){
+function activate(){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('fl-tab-btn').classList.add('active');
   document.querySelectorAll('.form-section').forEach(s=>s.classList.remove('active'));
   document.getElementById('form-futurelife').classList.add('active');
   const ca=document.getElementById('chart-area');if(ca)ca.style.display='none';
   const acg=document.getElementById('acg-section');if(acg)acg.style.display='none';
-  if(typeof currentMode!=='undefined')try{currentMode='futurelife';}catch(e){}
+  try{currentMode='futurelife';}catch(e){}
 }
 
-/* ── 4. Main run ── */
-async function runFutureLife(){
+/* ── main ── */
+async function run(){
   const btn=document.getElementById('fl-gen-btn');
   btn.disabled=true;btn.textContent='⏳ იტვირთება...';
   try{
     const p=getPersonData('fl');
     if(!p.lat||!p.lon){showError('შეიყვანეთ ქალაქი');return;}
-    const d=await fetchChart(p);d._timeUnknown=false;
-    window._plNatal=d;
-    const draco=calcDraconicChart(d);
-    if(!draco)return;
-    const dracoPl=draco.planets['პლუტონი'];
-    if(!dracoPl){showError('პლუტო ვერ მოიძებნა');return;}
-    const si=Math.floor(dracoPl.degree/30)%12;
-    const dg=Math.floor(dracoPl.degree%30),mn=Math.floor((dracoPl.degree%1)*60);
+    // natal (for comparison charts)
+    const natal=await fetchChart(p);natal._timeUnknown=false;
+    window._plNatal=natal;
+    // target = REAL Pluto NOW
+    const now=new Date();
+    const plutoNow=await fetchPlutoAt(now.getFullYear(),now.getMonth()+1);
+    if(plutoNow==null){showError('მიმდინარე პლუტო ვერ მოიძებნა');return;}
+    const si=Math.floor(plutoNow/30)%12;
+    const dg=Math.floor(plutoNow%30),mn=Math.floor((plutoNow%1)*60);
+    // layout
     const ca=document.getElementById('chart-area');
     ca.style.display='block';
     const af=document.getElementById('asp-filters');if(af)af.style.display='none';
@@ -102,84 +113,99 @@ async function runFutureLife(){
       wrap.style.cssText='margin:12px 0;padding:14px 18px;background:rgba(8,6,20,.8);border:1px solid rgba(180,140,40,.4);border-radius:12px;';
       ca.appendChild(wrap);
     }
-    wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(240,208,128,.8);margin-bottom:8px">🐉 მომავალი ინკარნაციები — 1000 წელი</div>
-      <div style="font-size:12px;color:#c8b8f0;margin-bottom:10px">დრაკონული პლუტო: <strong style="color:#f0c96b">${ZSYM[si]} ${dg}°${String(mn).padStart(2,'0')}' ${SIGN_KA[si]}</strong></div>
+    wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(240,208,128,.8);margin-bottom:8px">🐉 მომავალი ინკარნაციები</div>
+      <div style="font-size:12px;color:#c8b8f0;margin-bottom:4px">მიმდინარე პლუტო (= მომავალი დრაკონული პლუტო):
+        <strong style="color:#f0c96b">${ZSYM[si]} ${dg}°${String(mn).padStart(2,'0')}' ${SIGN_KA[si]}</strong></div>
+      <div style="font-size:10px;color:rgba(155,168,184,.55);margin-bottom:10px">ეძებს მომენტებს, როცა (♇ − ☊) ზუსტად ამ გრადუსზეა — მომდევნო ${SCAN_YEARS} წელი</div>
       <div id="fl-result"></div>`;
     ca.scrollIntoView({behavior:'smooth',block:'start'});
-    await findFutureLifeDates(dracoPl.degree,document.getElementById('fl-result'),p);
+    await scan(plutoNow,document.getElementById('fl-result'),p);
   }catch(e){showError(e.message);console.error(e);}
   finally{btn.disabled=false;btn.textContent='🐉 მომავალი ინკარნაციების ძებნა';}
 }
 
-/* ── 5. Forward scanner — all Pluto passages, next 1000 years ── */
-async function findFutureLifeDates(targetDeg,resultEl,p){
+/* draconic Pluto at (year,month): real Pluto − mean node */
+async function dracoPlutoAt(y,m){
+  const pl=await fetchPlutoAt(y,m);
+  if(pl==null)return null;
+  return norm(pl-meanNode(y,m));
+}
+
+/* ── forward scan: (Pluto−Node)(T) crossing target ── */
+async function scan(targetDeg,resultEl,p){
   const si=Math.floor(targetDeg/30)%12;
   const deg=Math.floor(targetDeg%30),mn=Math.floor((targetDeg%1)*60);
   const targetLabel=`${ZSYM[si]} ${deg}°${String(mn).padStart(2,'0')}' ${SIGN_KA[si]}`;
-  const startY=new Date().getFullYear()+1,endY=startY+1000;
+  const startY=new Date().getFullYear(),endY=startY+SCAN_YEARS;
   resultEl.innerHTML='<span style="color:#a78bfa">🔍 სკანირება '+startY+'–'+endY+'...</span>';
-  const years=[];for(let y=startY;y<=endY;y+=5)years.push(y);
-  const degs=await Promise.all(years.map(y=>fetchPlutoAt(y)));
-  const brackets=[];
-  for(let i=0;i<degs.length-1;i++){
-    const d1=degs[i],d2=degs[i+1];
-    if(d1==null||d2==null)continue;
-    const motion=((d2-d1)+360)%360;
-    if(motion>60)continue;
-    const toTarget=((targetDeg-d1)+360)%360;
-    if(toTarget<=motion)brackets.push([years[i],years[i+1]]);
+  // coarse: yearly samples (draconic Pluto advances ~+20.8°/year)
+  const years=[];for(let y=startY;y<=endY;y++)years.push(y);
+  const dps=[];
+  for(let i=0;i<years.length;i+=25){
+    const chunk=years.slice(i,i+25);
+    const vals=await Promise.all(chunk.map(y=>dracoPlutoAt(y,6)));
+    dps.push(...vals);
+    resultEl.innerHTML='<span style="color:#a78bfa">🔍 სკანირება... '+Math.min(i+25,years.length)+'/'+years.length+' წელი</span>';
   }
-  if(!brackets.length){resultEl.textContent='⚠️ '+endY+' წლამდე გავლა ვერ მოიძებნა';return;}
+  // find forward crossings (mod-safe, same pattern as past-life scanner)
+  const brackets=[];
+  for(let i=0;i<dps.length-1;i++){
+    const d1=dps[i],d2=dps[i+1];
+    if(d1==null||d2==null)continue;
+    const motion=norm(d2-d1);
+    if(motion>60)continue;                 // guard against bad samples
+    const toTarget=norm(targetDeg-d1);
+    if(toTarget<=motion)brackets.push(years[i]);
+    if(brackets.length>=MAX_EPOCHS)break;
+  }
+  if(!brackets.length){resultEl.textContent='⚠️ '+endY+' წლამდე გადაკვეთა ვერ მოიძებნა';return;}
+  // refine each bracket to month
   const MONTHS=['იანვ','თებ','მარ','აპრ','მაის','ივნ','ივლ','აგვ','სექ','ოქტ','ნოემ','დეკ'];
   const found=[];
-  for(const br of brackets.slice(0,6)){
-    resultEl.innerHTML='<span style="color:#a78bfa">🔍 დაზუსტება '+br[0]+'–'+br[1]+'... ('+(found.length+1)+'/'+brackets.length+')</span>';
-    const yr0=br[0]-1,yr1=br[1]+1,yearRange=[];
-    for(let y=yr0;y<=yr1;y++)yearRange.push(y);
-    const yearDegs=await Promise.all(yearRange.map(y=>fetchPlutoAt(y)));
-    let bestYear=yr0,bestOrb=999;
-    for(let i=0;i<yearDegs.length;i++){
-      if(yearDegs[i]==null)continue;
-      const orb=Math.min(((yearDegs[i]-targetDeg+360)%360),((targetDeg-yearDegs[i]+360)%360));
-      if(orb<bestOrb){bestOrb=orb;bestYear=yearRange[i];}
+  for(const y0 of brackets){
+    resultEl.innerHTML='<span style="color:#a78bfa">🔍 დაზუსტება '+y0+'–'+(y0+1)+'... ('+(found.length+1)+'/'+brackets.length+')</span>';
+    let best=null;
+    for(const yy of[y0,y0+1]){
+      const mvals=await Promise.all([1,2,3,4,5,6,7,8,9,10,11,12].map(m=>dracoPlutoAt(yy,m)));
+      for(let m=0;m<12;m++){
+        if(mvals[m]==null)continue;
+        const orb=Math.min(norm(mvals[m]-targetDeg),norm(targetDeg-mvals[m]));
+        if(!best||orb<best.orb)best={year:yy,month:m+1,orb};
+      }
     }
-    const monthDegs=await Promise.all([1,2,3,4,5,6,7,8,9,10,11,12].map(m=>fetchPlutoAt(bestYear,m)));
-    let bestMonth=6,bestMOrb=999;
-    for(let m=0;m<12;m++){
-      if(monthDegs[m]==null)continue;
-      const orb=Math.min(((monthDegs[m]-targetDeg+360)%360),((targetDeg-monthDegs[m]+360)%360));
-      if(orb<bestMOrb){bestMOrb=orb;bestMonth=m+1;}
-    }
-    found.push({year:bestYear,month:bestMonth,orb:bestMOrb});
+    if(best)found.push(best);
   }
+  // dedupe adjacent (bracket pairs can converge on same month)
+  const uniq=[];
+  for(const f of found)
+    if(!uniq.some(u=>Math.abs((u.year*12+u.month)-(f.year*12+f.month))<=13))uniq.push(f);
   const nowY=new Date().getFullYear();
-  resultEl.innerHTML=found.map((f,i)=>`
+  resultEl.innerHTML=uniq.map((f,i)=>`
     <div style="padding:8px;margin-bottom:6px;background:rgba(120,80,20,.25);border-radius:8px;border-left:3px solid #f0c96b;font-size:11px;color:#e8dcc0;line-height:1.8">
-      🐉 <strong>ინკარნაცია ${i+1}</strong> · პლუტო <span style="color:#f0c96b">${targetLabel}</span>–ზე:<br>
+      🐉 <strong>მომავალი ინკარნაცია ${i+1}</strong> · დრაკ. ♇ <span style="color:#f0c96b">${targetLabel}</span>–ზე:<br>
       <span style="font-size:14px;color:#f9c646;font-family:Cinzel,serif">${MONTHS[f.month-1]}. ${f.year}</span>
       <span style="font-size:10px;color:rgba(200,180,140,.6)"> · ±${Math.round(f.orb*10)/10}° · ${f.year-nowY} წელიწადში</span>
       <button data-y="${f.year}" data-m="${f.month}" class="fl-chart-btn"
-        style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:6px;padding:1px 9px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:8px">📜 რუქა</button>
-    </div>`).join('');
+        style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:6px;padding:1px 9px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:8px">📜 ნატალური რუქა</button>
+    </div>`).join('')+
+    `<div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:4px;letter-spacing:1px">ციკლი ≈ 17.3 წელი (♇−☊ სრული ბრუნი) · MAGNUS-ის საკუთარი უკუმეთოდი წარსული ინკარნაციისა</div>`;
   resultEl.querySelectorAll('.fl-chart-btn').forEach(b=>{
-    b.onclick=()=>flShowChart(+b.dataset.y,+b.dataset.m);
+    b.onclick=()=>showFuture(+b.dataset.y,+b.dataset.m,p);
   });
 }
 
-/* ── 6. Future chart vs natal ── */
-async function flShowChart(year,month){
+/* ── cast the future natal chart, compare vs current natal ── */
+async function showFuture(year,month,p){
   try{
-    const p=getPersonData('fl');
-    const futData=await fetchChart({year,month,day:15,hour:12,minute:0,second:0,lat:p.lat,lon:p.lon,tz_name:p.tz_name});
-    futData._timeUnknown=false;
+    const fut=await fetchChart({year,month,day:15,hour:12,minute:0,second:0,lat:p.lat,lon:p.lon,tz_name:p.tz_name});
+    fut._timeUnknown=false;
     const name=document.getElementById('fl-name').value||'';
     if(window._plNatal){
-      const cross=calcCrossAspects(window._plNatal.planets,futData.planets);
-      showDoubleChart(window._plNatal,futData,'ნატალი',''+year,'🐉 '+name+' — მომავალი ინკარნაცია '+year,cross);
+      const cross=calcCrossAspects(window._plNatal.planets,fut.planets);
+      showDoubleChart(window._plNatal,fut,'ნატალი',''+year,'🐉 '+name+' — მომავალი ნატალი '+year,cross);
     }else{
-      showSingleChart(futData,'🐉 '+name+' — მომავალი ინკარნაცია '+year,false);
+      showSingleChart(fut,'🐉 '+name+' — მომავალი ნატალი '+year,false);
     }
-    // keep the epochs list visible under the chart
     const wrap=document.getElementById('future-life-wrap');
     const ca=document.getElementById('chart-area');
     if(wrap&&ca&&wrap.parentNode===ca)ca.appendChild(wrap);
