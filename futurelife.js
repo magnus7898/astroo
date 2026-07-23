@@ -66,7 +66,7 @@ function injectForm(){
     <input type="hidden" id="fl-tz" value="UTC">
     <div class="tz-display" id="fl-tz-display">—</div>
     <p style="font-size:10px;color:rgba(150,120,220,.6);margin:8px 0;font-style:italic">
-      ♇ მიმდინარე პლუტო = მომავალი სიცოცხლის დრაკონული პლუტო ·
+      ♇ ნატალური პლუტო = მომავალი სიცოცხლის დრაკონული პლუტო ·
       ეპოქა, როცა (♇−☊) ამ გრადუსს მიაღწევს → მომავალი ნატალური რუქა</p>
     <button class="gen-btn" id="fl-gen-btn" style="margin-top:6px">🐉 მომავალი ინკარნაციების ძებნა</button>`;
   card.appendChild(div);
@@ -93,9 +93,9 @@ async function run(){
     const natal=await fetchChart(p);natal._timeUnknown=false;
     window._plNatal=natal;
     // target = REAL Pluto NOW
-    const now=new Date();
-    const plutoNow=await fetchPlutoAt(now.getFullYear(),now.getMonth()+1);
-    if(plutoNow==null){showError('მიმდინარე პლუტო ვერ მოიძებნა');return;}
+// target = THIS LIFE'S NATAL Pluto (its degree = future life's draconic Pluto)
+    const plutoNow=natal.planets['პლუტონი']?.degree;
+    if(plutoNow==null){showError('ნატალური პლუტო ვერ მოიძებნა');return;}
     const si=Math.floor(plutoNow/30)%12;
     const dg=Math.floor(plutoNow%30),mn=Math.floor((plutoNow%1)*60);
     // layout
@@ -114,7 +114,7 @@ async function run(){
       ca.appendChild(wrap);
     }
     wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(240,208,128,.8);margin-bottom:8px">🐉 მომავალი ინკარნაციები</div>
-      <div style="font-size:12px;color:#c8b8f0;margin-bottom:4px">მიმდინარე პლუტო (= მომავალი დრაკონული პლუტო):
+      <div style="font-size:12px;color:#c8b8f0;margin-bottom:4px">ნატალური პლუტო (= მომავალი სიცოცხლის დრაკონული პლუტო):
         <strong style="color:#f0c96b">${ZSYM[si]} ${dg}°${String(mn).padStart(2,'0')}' ${SIGN_KA[si]}</strong></div>
       <div style="font-size:10px;color:rgba(155,168,184,.55);margin-bottom:10px">ეძებს მომენტებს, როცა (♇ − ☊) ზუსტად ამ გრადუსზეა — მომდევნო ${SCAN_YEARS} წელი</div>
       <div id="fl-result"></div>`;
