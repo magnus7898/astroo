@@ -1,21 +1,30 @@
 /* ═══════════════════════════════════════════════════════════════════
-   futurelife.js — MAGNUS · მომავალი სიცოცხლე  (v3 — final method)
-   Symmetric reverse of past-life:
-     past:   real Pluto(T) = natalPluto − natalNode  (≈250y backward)
-     future: real Pluto(T) = natalPluto + natalNode  (≈250y forward)
-   At T, rotating the future chart onto THIS dragon axis (−natalNode)
-   puts its Pluto exactly on the current natal Pluto. Then T's chart
-   becomes the future natal.
-   One-line include in astro.html; zero other edits.
+   futurelife.js — MAGNUS · მომავალი სიცოცხლე  (v4)
+   Method (symmetric reverse of the past-life scanner):
+     past:   real Pluto(T) = natal ♇ − natal ☊   (≈250y backward)
+     future: real Pluto(T) = natal ♇ + natal ☊   (≈250y forward)
+   At T, rotating T's chart onto THIS dragon axis (−natal ☊) puts its
+   Pluto exactly on the current natal Pluto. T's chart = future natal.
+   Candidates are ranked by RESONANCE with the current natal chart
+   (Pluto–Pluto excluded, since the method guarantees it).
+   Self-injecting: astro.html needs only <script src="futurelife.js">.
+   Uses globals: getPersonData, fetchChart, fetchPlutoAt, showError,
+   showSingleChart, showDoubleChart, calcCrossAspects, searchCity,
+   SIGN_KA, ZSYM.
    ═══════════════════════════════════════════════════════════════════ */
 (function(){
 'use strict';
-const SPAN_YEARS=1000, MAX_EPOCHS=6;
+
+const SPAN_YEARS=1000;      // search horizon
+const MAX_EPOCHS=6;         // Pluto returns ≈ every 248y → ~4 in 1000y
+
 const norm=x=>((x%360)+360)%360;
 const fmtL=L=>{L=norm(L);const s=Math.floor(L/30),d=L%30;
   return Math.floor(d)+'°'+String(Math.floor((d%1)*60)).padStart(2,'0')+"' "+SIGN_KA[s];};
 
-/* ── UI injection ── */
+let _flNatalNode=null;      // rotation constant for the dragon axis
+
+/* ═══ 1. UI INJECTION ═══════════════════════════════════════════ */
 function injectTab(){
   const bar=document.querySelector('.tab-bar');
   if(!bar||document.getElementById('fl-tab-btn'))return;
@@ -26,6 +35,7 @@ function injectTab(){
   const past=[...bar.querySelectorAll('.tab-btn')].find(b=>b.textContent.includes('წარსული'));
   if(past&&past.nextSibling)bar.insertBefore(btn,past.nextSibling);else bar.appendChild(btn);
 }
+
 function injectForm(){
   const card=document.querySelector('.form-card');
   if(!card||document.getElementById('form-futurelife'))return;
@@ -58,11 +68,13 @@ function injectForm(){
     <input type="hidden" id="fl-tz" value="UTC">
     <div class="tz-display" id="fl-tz-display">—</div>
     <p style="font-size:10px;color:rgba(150,120,220,.6);margin:8px 0;font-style:italic">
-      🐉 მომავალი დრაკონული ♇ = ნატალური ♇ · რეალური პლუტო მიზნის გრადუსზე ≈ ყოველ 250 წელიწადში</p>
+      🐉 მომავალი დრაკონული ♇ = ნატალური ♇ · რეალური პლუტო სამიზნე გრადუსზე ≈ ყოველ 250 წელიწადში ·
+      რანჟირება ნატალურ რუქასთან რეზონანსით</p>
     <button class="gen-btn" id="fl-gen-btn" style="margin-top:6px">🐉 მომავალი ინკარნაციების ძებნა</button>`;
   card.appendChild(div);
   document.getElementById('fl-gen-btn').onclick=run;
 }
+
 function activate(){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('fl-tab-btn').classList.add('active');
@@ -73,8 +85,36 @@ function activate(){
   try{currentMode='futurelife';}catch(e){}
 }
 
-/* ── main ── */
-let _flNatalNode=null;
+/* ═══ 2. RESONANCE SCORING ══════════════════════════════════════ */
+const FL_LUM=new Set(['მზე','მთვარე','AC','MC']);
+const FL_PERS=new Set(['მზე','მთვარე','მერკური','ვენერა','მარსი']);
+const FL_KARMIC=new Set(['ჩრდ. კვანძი','სამხ. კვანძი','პლუტონი','სატურნი']);
+
+function scoreResonance(cross){
+  let score=0,tight=0,karmic=0,lum=0;
+  for(const a of cross){
+    // Pluto–Pluto is guaranteed by the method — never counts
+    if(a.p1==='პლუტონი'&&a.p2==='პლუტონი')continue;
+    const maxo=(a.type==='შეერთება'||a.type==='ოპოზიცია')?12:(a.type==='კვინკონსი'?6:10);
+    const t=Math.max(0,1-a.orb/maxo);
+    let w=0.5;
+    if(FL_LUM.has(a.p1)&&FL_LUM.has(a.p2))w=3;
+    else if(FL_LUM.has(a.p1)||FL_LUM.has(a.p2))w=2;
+    else if(FL_PERS.has(a.p1)&&FL_PERS.has(a.p2))w=1.5;
+    if(FL_KARMIC.has(a.p1)||FL_KARMIC.has(a.p2))w+=1;
+    if(a.type==='შეერთება')w*=1.3;
+    else if(a.type==='ოპოზიცია'||a.type==='ტრინი')w*=1.1;
+    score+=w*t*t;
+    if(a.orb<=2){
+      tight++;
+      if(FL_KARMIC.has(a.p1)||FL_KARMIC.has(a.p2))karmic++;
+      if(FL_LUM.has(a.p1)||FL_LUM.has(a.p2))lum++;
+    }
+  }
+  return{score:Math.round(score*10)/10,tight,karmic,lum};
+}
+
+/* ═══ 3. MAIN ══════════════════════════════════════════════════ */
 async function run(){
   const btn=document.getElementById('fl-gen-btn');
   btn.disabled=true;btn.textContent='⏳ იტვირთება...';
@@ -87,9 +127,8 @@ async function run(){
     const natalNode=natal.planets['ჩრდ. კვანძი']?.degree;
     if(natalPluto==null||natalNode==null){showError('ნატალური პლუტო/კვანძი ვერ მოიძებნა');return;}
     _flNatalNode=natalNode;
-    // TARGET: real Pluto must reach natalPluto + natalNode
-    // (then future chart rotated by −natalNode puts its Pluto on natal Pluto)
     const targetDeg=norm(natalPluto+natalNode);
+
     const ca=document.getElementById('chart-area');
     ca.style.display='block';
     const af=document.getElementById('asp-filters');if(af)af.style.display='none';
@@ -98,6 +137,7 @@ async function run(){
     document.getElementById('planet-b-wrap').style.display='none';
     document.getElementById('wheel-wrap').style.display='none';
     const acg=document.getElementById('acg-section');if(acg)acg.style.display='none';
+
     let wrap=document.getElementById('future-life-wrap');
     if(!wrap){
       wrap=document.createElement('div');wrap.id='future-life-wrap';
@@ -107,19 +147,21 @@ async function run(){
     wrap.innerHTML=`<div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:3px;color:rgba(240,208,128,.8);margin-bottom:8px">🐉 მომავალი ინკარნაციები — ${SPAN_YEARS} წელი</div>
       <div style="font-size:12px;color:#c8b8f0;margin-bottom:4px">ნატალური ♇ <strong style="color:#c050a0">${fmtL(natalPluto)}</strong>
         · ☊ <strong style="color:#60c060">${fmtL(natalNode)}</strong>
-        → სამიზნე: <strong style="color:#f0c96b">${fmtL(targetDeg)}</strong></div>
+        → სამიზნე <strong style="color:#f0c96b">${fmtL(targetDeg)}</strong></div>
       <div style="font-size:10px;color:rgba(155,168,184,.55);margin-bottom:10px">როცა რეალური ♇ ამ გრადუსზეა, მომავალი დრაკონული ♇ = ნატალური ♇</div>
       <div id="fl-result"></div>`;
     ca.scrollIntoView({behavior:'smooth',block:'start'});
-    await scan(targetDeg,natalPluto,document.getElementById('fl-result'),p);
+    await scan(targetDeg,document.getElementById('fl-result'),p);
   }catch(e){showError(e.message);console.error(e);}
   finally{btn.disabled=false;btn.textContent='🐉 მომავალი ინკარნაციების ძებნა';}
 }
 
-/* ── forward scan of REAL Pluto over fixed target (mirror of findPastLifeDate) ── */
-async function scan(targetDeg,natalPluto,resultEl,p){
+/* ═══ 4. FORWARD SCAN + RESONANCE GRADING ══════════════════════ */
+async function scan(targetDeg,resultEl,p){
   const startY=new Date().getFullYear()+1,endY=startY+SPAN_YEARS;
   resultEl.innerHTML='<span style="color:#a78bfa">🔍 სკანირება '+startY+'–'+endY+'...</span>';
+
+  // coarse 5-year sweep of real Pluto
   const years=[];for(let y=startY;y<=endY;y+=5)years.push(y);
   const degs=[];
   for(let i=0;i<years.length;i+=25){
@@ -127,6 +169,8 @@ async function scan(targetDeg,natalPluto,resultEl,p){
     degs.push(...await Promise.all(chunk.map(y=>fetchPlutoAt(y))));
     resultEl.innerHTML='<span style="color:#a78bfa">🔍 სკანირება... '+Math.min(i+25,years.length)+'/'+years.length+'</span>';
   }
+
+  // brackets where Pluto crosses the target
   const brackets=[];
   for(let i=0;i<degs.length-1;i++){
     const d1=degs[i],d2=degs[i+1];
@@ -138,6 +182,8 @@ async function scan(targetDeg,natalPluto,resultEl,p){
     if(brackets.length>=MAX_EPOCHS)break;
   }
   if(!brackets.length){resultEl.textContent='⚠️ '+endY+' წლამდე გავლა ვერ მოიძებნა';return;}
+
+  // refine each bracket → year → month
   const MONTHS=['იანვ','თებ','მარ','აპრ','მაის','ივნ','ივლ','აგვ','სექ','ოქტ','ნოემ','დეკ'];
   const found=[];
   for(const br of brackets){
@@ -160,30 +206,67 @@ async function scan(targetDeg,natalPluto,resultEl,p){
     }
     found.push({year:bestYear,month:bestMonth,orb:bestMOrb});
   }
+
+  // resonance pass — fetch each epoch chart, score vs current natal
+  window._flCharts={};
+  for(let i=0;i<found.length;i++){
+    const f=found[i];
+    resultEl.innerHTML='<span style="color:#a78bfa">🔗 რეზონანსის ანალიზი... ('+(i+1)+'/'+found.length+')</span>';
+    try{
+      const fut=await fetchChart({year:f.year,month:f.month,day:15,hour:12,minute:0,second:0,
+        lat:p.lat,lon:p.lon,tz_name:p.tz_name});
+      fut._timeUnknown=false;
+      window._flCharts[f.year+'-'+f.month]=fut;
+      const cross=calcCrossAspects(window._plNatal.planets,fut.planets);
+      Object.assign(f,scoreResonance(cross),{n:cross.length});
+    }catch(e){Object.assign(f,{score:0,tight:0,karmic:0,lum:0,n:0});}
+  }
+
+  found.sort((a,b)=>b.score-a.score);
+  const best=found[0]?.score||1;
   const nowY=new Date().getFullYear();
-  resultEl.innerHTML=found.map((f,i)=>`
-    <div style="padding:8px;margin-bottom:6px;background:rgba(120,80,20,.25);border-radius:8px;border-left:3px solid #f0c96b;font-size:11px;color:#e8dcc0;line-height:1.8">
-      🐉 <strong>მომავალი ინკარნაცია ${i+1}</strong> · რეალური ♇ სამიზნეზე:<br>
+  const GRADE=s=>s>=best*0.8?['#f0c96b','★★★ ძლიერი რეზონანსი','🔮 ']
+              :s>=best*0.5?['#a78bfa','★★ საშუალო','']
+              :['#5a6472','★ სუსტი — მხოლოდ პლუტო',''];
+
+  resultEl.innerHTML=found.map((f,i)=>{
+    const[gc,gl,pre]=GRADE(f.score);
+    const strong=f.score>=best*0.8;
+    return `<div style="padding:8px;margin-bottom:6px;background:rgba(120,80,20,${strong?'.28':'.12'});border-radius:8px;border-left:3px solid ${gc};font-size:11px;color:#e8dcc0;line-height:1.8;${strong?'':'opacity:.7'}">
+      ${pre}<strong>მომავალი ინკარნაცია ${i+1}</strong>
+      <span style="color:${gc};font-size:10.5px;margin-left:6px">${gl}</span><br>
       <span style="font-size:14px;color:#f9c646;font-family:Cinzel,serif">${MONTHS[f.month-1]}. ${f.year}</span>
       <span style="font-size:10px;color:rgba(200,180,140,.6)"> · ±${Math.round(f.orb*10)/10}° · ${f.year-nowY} წელიწადში</span>
       <button data-y="${f.year}" data-m="${f.month}" class="fl-chart-btn"
         style="background:none;border:1px solid rgba(240,201,107,.5);color:#f0c96b;border-radius:6px;padding:1px 9px;font-size:10px;cursor:pointer;font-family:inherit;margin-left:8px">📜 რუქა</button>
-    </div>`).join('');
+      <div style="font-size:10px;color:#c8b8f0;padding-top:3px">
+        🔗 ქულა <b style="color:${gc}">${f.score}</b> ·
+        ${f.tight} მჭიდრო კავშირი (≤2°) · ${f.lum} მნათობი/კუთხე · ${f.karmic} კარმული ·
+        სულ ${f.n} ასპექტი</div>
+    </div>`;}).join('')+
+    `<div style="font-size:9px;color:rgba(155,168,184,.45);margin-top:4px;letter-spacing:1px">
+      პლუტო-პლუტო გამორიცხულია ქულიდან (მეთოდით გარანტირებულია) · მეტი კავშირი = უფრო სავარაუდო შემდეგი სიცოცხლე</div>`;
+
   resultEl.querySelectorAll('.fl-chart-btn').forEach(b=>{
     b.onclick=()=>showFuture(+b.dataset.y,+b.dataset.m,p);
   });
 }
 
-/* ── future moment: dragon chart (on THIS dragon axis) → future natal ── */
+/* ═══ 5. DRAGON CHART → FUTURE NATAL ═══════════════════════════ */
 async function showFuture(year,month,p){
   try{
-    const fut=await fetchChart({year,month,day:15,hour:12,minute:0,second:0,lat:p.lat,lon:p.lon,tz_name:p.tz_name});
-    fut._timeUnknown=false;
+    let fut=window._flCharts&&window._flCharts[year+'-'+month];
+    if(!fut){
+      fut=await fetchChart({year,month,day:15,hour:12,minute:0,second:0,
+        lat:p.lat,lon:p.lon,tz_name:p.tz_name});
+      fut._timeUnknown=false;
+    }
     const name=document.getElementById('fl-name').value||'';
-    // rotate the future chart onto the CURRENT dragon axis (−natal node)
+
+    // rotate T's chart onto the CURRENT dragon axis (−natal node)
     const nn=_flNatalNode||0;
     const shift=d=>norm(d-nn);
-    const drago={...fut,planets:{},aspects:[]};
+    const drago={...fut,planets:{},aspects:[],_timeUnknown:false};
     for(const[nm,pl]of Object.entries(fut.planets)){
       const nd=shift(pl.degree);
       drago.planets[nm]={...pl,degree:nd,sign:SIGN_KA[Math.floor(nd/30)%12]};
@@ -191,8 +274,8 @@ async function showFuture(year,month,p){
     if(fut.asc!=null)drago.asc=shift(fut.asc);
     if(fut.mc!=null)drago.mc=shift(fut.mc);
     if(fut.houses)drago.houses=fut.houses.map(shift);
-    drago._timeUnknown=false;
-    // verification: dragon Pluto vs natal Pluto
+
+    // verification line: dragon ♇ vs natal ♇
     const dpl=drago.planets['პლუტონი']?.degree;
     const npl=window._plNatal?.planets['პლუტონი']?.degree;
     let verify='';
@@ -200,8 +283,10 @@ async function showFuture(year,month,p){
       const orb=Math.min(norm(dpl-npl),norm(npl-dpl));
       verify=' · 🐉♇ '+fmtL(dpl)+' ≈ ნატ.♇ '+fmtL(npl)+' (±'+orb.toFixed(2)+'°)';
     }
+
     showSingleChart(drago,'🐉 '+name+' — მომავალი დრაკონული '+year+verify,false);
-    // flip button → future natal vs current natal
+
+    // flip → future natal vs current natal
     const ml=document.getElementById('mode-label');
     const old=document.getElementById('fl-flip-btn');if(old)old.remove();
     if(ml){
@@ -226,7 +311,7 @@ async function showFuture(year,month,p){
   }catch(e){showError(e.message);}
 }
 
-/* ── init ── */
+/* ═══ INIT ═════════════════════════════════════════════════════ */
 function init(){injectTab();injectForm();}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
 else init();
